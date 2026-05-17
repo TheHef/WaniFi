@@ -119,10 +119,9 @@
                   x-text="status.active_wan === 'primary' && (liveStats||{}).active_wan_latency ? (liveStats||{}).active_wan_latency + ' ms' : '—'"></span>
           </div>
           <div class="flex items-center justify-between py-1.5 gap-4">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 shrink-0"
-                  x-text="status.active_wan === 'primary' ? 'Active for' : 'Status'"></span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 shrink-0">Active for</span>
             <span class="text-sm" :class="status.active_wan === 'primary' ? 'text-slate-100' : 'text-slate-600'"
-                  x-text="status.active_wan === 'primary' ? fmtSince(status.state_changed_at) : 'Offline'"></span>
+                  x-text="status.active_wan === 'primary' ? fmtSince(status.state_changed_at) : '—'"></span>
           </div>
         </div>
       </div>
@@ -230,10 +229,9 @@
                   x-text="status.active_wan === 'failover' && (liveStats||{}).active_wan_latency ? (liveStats||{}).active_wan_latency + ' ms' : '—'"></span>
           </div>
           <div class="flex items-center justify-between py-1.5 gap-4">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 shrink-0"
-                  x-text="status.active_wan === 'failover' ? 'Active for' : 'Status'"></span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 shrink-0">Active for</span>
             <span class="text-sm" :class="status.active_wan === 'failover' ? 'text-slate-100' : 'text-slate-600'"
-                  x-text="status.active_wan === 'failover' ? fmtSince(status.state_changed_at) : 'Standby'"></span>
+                  x-text="status.active_wan === 'failover' ? fmtSince(status.state_changed_at) : '—'"></span>
           </div>
         </div>
       </div>
