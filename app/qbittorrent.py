@@ -30,7 +30,17 @@ class QBittorrentClient:
                 return True, "ok"
             if body == "Banned":
                 return False, "IP temporarily banned by qBittorrent (too many failed logins)"
-            return False, f"qBittorrent: {body or f'HTTP {r.status_code}'}"
+            # Empty body = bypass auth may be enabled — verify by calling a real endpoint
+            if not body:
+                self._sid = r.cookies.get("SID")
+                probe = await client.get(
+                    f"{self.base}/api/v2/app/version",
+                    cookies=self._cookies(),
+                    headers={"Referer": self.base},
+                )
+                if probe.status_code == 200:
+                    return True, "ok"
+            return False, f"qBittorrent replied: {body or f'HTTP {r.status_code}'}"
         except Exception as e:
             return False, str(e)
 
