@@ -33,12 +33,12 @@
 
       <div x-show="settings.unifi_host && (settings.unifi_api_key_set || settings.unifi_api_key)">
 
-        <div class="grid md:grid-cols-2 gap-4">
+        <p class="text-xs text-slate-500 mb-3">Drag your WAN interfaces to the correct slots:</p>
+        <div class="grid md:grid-cols-[1fr_48px_1fr] gap-0 items-start">
 
           <!-- Left: discovered interfaces -->
           <div>
-            <p class="text-xs text-slate-500 mb-3">Drag your WAN interfaces to the correct slots:</p>
-            <div x-show="discoveredWans.length > 0" class="flex flex-col gap-2">
+            <div x-show="discoveredWans.length > 0" class="flex flex-col gap-3">
               <template x-for="w in discoveredWans" :key="w.subsystem">
                 <div draggable="true"
                      @dragstart="$event.dataTransfer.setData('wan', JSON.stringify(w))"
@@ -67,8 +67,22 @@
             </div>
           </div>
 
+          <!-- Middle: drag hint arrow -->
+          <div class="hidden md:flex items-center justify-center pt-16 text-slate-700 pointer-events-none select-none">
+            <svg viewBox="0 0 48 80" class="w-10 h-20 opacity-40" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <!-- top fork to primary -->
+              <path d="M8 40 Q8 12 40 12"/>
+              <polyline points="34,7 40,12 34,17"/>
+              <!-- bottom fork to failover -->
+              <path d="M8 40 Q8 68 40 68"/>
+              <polyline points="34,63 40,68 34,73"/>
+              <!-- stem -->
+              <line x1="2" y1="40" x2="8" y2="40"/>
+            </svg>
+          </div>
+
           <!-- Right: WAN slots (primary on top, failover below) -->
-          <div class="flex flex-col gap-4">
+          <div class="flex flex-col gap-8">
             <div @dragover.prevent="$el.classList.add('border-emerald-400','bg-emerald-500/10')"
                  @dragleave="$el.classList.remove('border-emerald-400','bg-emerald-500/10')"
                  @drop="$el.classList.remove('border-emerald-400','bg-emerald-500/10'); dropWan($event,'primary')"
