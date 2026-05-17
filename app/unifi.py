@@ -151,19 +151,32 @@ def _collect_extra_devices(items: list[dict]) -> list[dict]:
     return out
 
 
+SIGNAL_FIELDS = (
+    "signal", "rssi", "rsrp", "rsrq", "sinr",
+    "lte_rssi", "lte_rsrp", "lte_rsrq", "lte_sinr",
+    "cell_signal", "cellular_signal", "wan_signal", "radio_signal",
+    "network_type", "radio", "operator", "carrier",
+    "connection_type", "cell_id", "lte_band", "band",
+)
+
+NESTED_KEYS = (
+    "lte_stats", "cellular", "cellular_stats", "modem_status",
+    "radio_status", "wan", "cell", "lte", "wwan", "modem",
+)
+
+
 def _cellular_signal(dev: dict) -> dict:
     """Collect signal metrics from a cellular device (U5G-Max, U-LTE, etc.).
 
-    Looks in both the top-level device object and each port_table entry,
-    since UniFi has placed these fields in either location depending on
-    firmware version.
+    Looks at the top level, port_table entries, and known nested objects
+    since field placement varies between firmware versions and models.
     """
-    fields = ("signal", "rssi", "rsrp", "rsrq", "sinr",
-              "network_type", "radio", "operator", "carrier")
     out: dict = {}
 
-    def grab(src: dict):
-        for f in fields:
+    def grab(src):
+        if not isinstance(src, dict):
+            return
+        for f in SIGNAL_FIELDS:
             if f in out:
                 continue
             v = src.get(f)
@@ -171,7 +184,20 @@ def _cellular_signal(dev: dict) -> dict:
                 out[f] = v
 
     grab(dev)
-    for port in dev.get("port_table", []):
+    for port in dev.get("port_table", []) or []:
         grab(port)
+    for key in NESTED_KEYS:
+        nested = dev.get(key)
+        if isinstance(nested, dict):
+            grab(nested)
+        elif isinstance(nested, list):
+            for item in nested:
+                grab(item)
+
+    # Normalise: the dashboard reads xdev.signal or xdev.rsrp first.
+    # If we only found a "signal" object instead of a number, ignore it.
+    for k in ("signal", "rsrp", "rssi"):
+        if isinstance(out.get(k), (dict, list)):
+            del out[k]
 
     return out

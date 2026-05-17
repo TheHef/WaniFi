@@ -163,21 +163,10 @@ async def api_debug_wan(_: bool = Depends(require_auth)):
     try:
         health = await client._get(f"/proxy/network/api/s/{client.site}/stat/health")
         device = await client._get(f"/proxy/network/api/s/{client.site}/stat/device")
-        keep_port_keys = {"name","ifname","ip","up","type","media","speed",
-                          "rx_bytes-r","tx_bytes-r","signal","is_uplink",
-                          "wan_ip","name_isp","isp_name"}
-        devices = [{
-            "name":  d.get("name"),
-            "model": d.get("model"),
-            "type":  d.get("type"),
-            "uplink":       d.get("uplink"),
-            "uplink_table": d.get("uplink_table"),
-            "port_table": [
-                {k: v for k, v in p.items() if k in keep_port_keys}
-                for p in d.get("port_table", [])
-            ],
-        } for d in device.get("data", [])]
-        return {"health_all_subsystems": health.get("data", []), "devices": devices}
+        return {
+            "health_all_subsystems": health.get("data", []),
+            "devices": device.get("data", []),
+        }
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
     finally:
