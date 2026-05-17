@@ -69,8 +69,8 @@ window.app = function () {
       await this.loadEmbySettings();
       await this.loadIntegrations();
 
-      // First run: redirect to settings if UniFi is not configured yet
-      if (!this.settings.unifi_host && !this.settings.unifi_api_key_set && !fromPath) {
+      // First run: redirect to settings if API key has never been saved
+      if (!this.settings.unifi_api_key_set && !fromPath) {
         this.tab = 'settings';
         history.replaceState(null, '', '/settings');
       }
