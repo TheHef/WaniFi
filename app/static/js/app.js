@@ -309,6 +309,23 @@ window.app = function () {
       if (mbps < 0.01) return '0 Mbps';
       return mbps.toFixed(1) + ' Mbps';
     },
+    signalBars(dbm) {
+      // RSSI/RSRP to 0-5 bar mapping. ≥-65 = 5 bars, ≤-110 = 0 bars.
+      if (dbm == null) return 0;
+      if (dbm >= -65) return 5;
+      if (dbm >= -75) return 4;
+      if (dbm >= -85) return 3;
+      if (dbm >= -95) return 2;
+      if (dbm >= -110) return 1;
+      return 0;
+    },
+    signalColor(dbm) {
+      const b = this.signalBars(dbm);
+      if (b >= 4) return 'text-emerald-400';
+      if (b >= 3) return 'text-sky-400';
+      if (b >= 2) return 'text-amber-400';
+      return 'text-red-400';
+    },
     fmtSince(iso) {
       if (!iso) return '—';
       const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);

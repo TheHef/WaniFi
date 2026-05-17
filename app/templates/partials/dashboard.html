@@ -190,7 +190,7 @@
           <span class="text-xs text-slate-400 font-medium mt-0.5"
                 x-text="fmtModel(xdev.model) || fmtModel(xdev.name) || xdev.model || xdev.name"></span>
           <div class="mt-1.5 pt-1.5 border-t border-slate-700/60 w-full space-y-0.5"
-               x-show="xdev.cpu != null || xdev.mem != null">
+               x-show="xdev.cpu != null || xdev.mem != null || xdev.signal != null || xdev.rsrp != null">
             <div class="flex items-center justify-between gap-3" x-show="xdev.cpu != null">
               <span class="text-slate-500 text-xs">CPU</span>
               <span class="font-mono text-xs"
@@ -202,6 +202,21 @@
               <span class="font-mono text-xs"
                     :class="xdev.mem > 85 ? 'text-red-400' : xdev.mem > 65 ? 'text-amber-400' : 'text-slate-300'"
                     x-text="xdev.mem + '%'"></span>
+            </div>
+            <div class="flex items-center justify-between gap-3"
+                 x-show="xdev.signal != null || xdev.rsrp != null"
+                 x-data="{ get dbm() { return xdev.signal ?? xdev.rsrp; } }">
+              <span class="text-slate-500 text-xs">Signal</span>
+              <span class="inline-flex items-center gap-1">
+                <span class="inline-flex items-end gap-px h-2.5" :class="signalColor(dbm)">
+                  <template x-for="i in 5" :key="i">
+                    <span class="w-0.5 rounded-sm"
+                          :class="i <= signalBars(dbm) ? 'bg-current' : 'bg-slate-700'"
+                          :style="'height: ' + (i*20) + '%'"></span>
+                  </template>
+                </span>
+                <span class="font-mono text-xs" :class="signalColor(dbm)" x-text="dbm + ' dBm'"></span>
+              </span>
             </div>
           </div>
           <div class="mt-1.5 pt-1.5 border-t border-slate-700/60 w-full space-y-0.5">

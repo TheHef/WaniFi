@@ -127,6 +127,7 @@ def _collect_extra_devices(items: list[dict]) -> list[dict]:
             continue
         wan_ip = ""
         isp_name = ""
+        signal = _cellular_signal(d)
         for port in d.get("port_table", []):
             if port.get("wan_ip"):
                 wan_ip = port["wan_ip"]
@@ -145,5 +146,32 @@ def _collect_extra_devices(items: list[dict]) -> list[dict]:
             "isp_name": isp_name,
             "cpu":      cpu,
             "mem":      mem,
+            **signal,
         })
+    return out
+
+
+def _cellular_signal(dev: dict) -> dict:
+    """Collect signal metrics from a cellular device (U5G-Max, U-LTE, etc.).
+
+    Looks in both the top-level device object and each port_table entry,
+    since UniFi has placed these fields in either location depending on
+    firmware version.
+    """
+    fields = ("signal", "rssi", "rsrp", "rsrq", "sinr",
+              "network_type", "radio", "operator", "carrier")
+    out: dict = {}
+
+    def grab(src: dict):
+        for f in fields:
+            if f in out:
+                continue
+            v = src.get(f)
+            if v not in (None, "", 0):
+                out[f] = v
+
+    grab(dev)
+    for port in dev.get("port_table", []):
+        grab(port)
+
     return out
