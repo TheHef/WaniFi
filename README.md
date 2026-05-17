@@ -219,8 +219,14 @@ optional, deeply appreciated.
 
 MIT. See [LICENSE](LICENSE).
 
-## Trademarks
+## Trademarks and third-party assets
 
-UniFi product names and device images shown in the UI are trademarks of
-Ubiquiti Inc. They are used here only to identify the hardware your
-controller reports, with no implied endorsement or affiliation.
+UniFi product names and the device images in `app/static/devices/` are
+trademarks and copyrighted material of Ubiquiti Inc. They are included
+here only to identify the hardware your controller reports, with no
+implied endorsement or affiliation.
+
+**The MIT license on the rest of this repository does not apply to those
+images.** They are used under a nominative-use rationale, not granted
+onward. If you fork or redistribute WaniFi and want to play it safe,
+replace them with your own icons or remove them entirely.
