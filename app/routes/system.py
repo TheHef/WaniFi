@@ -203,7 +203,12 @@ async def api_probe_cellular(_: bool = Depends(require_auth)):
 
     results: dict = {}
     try:
-        # Find the U5G Max device id from /stat/device
+        # Resolve the v1 site UUID
+        sites_v1 = await client._get("/proxy/network/integration/v1/sites")
+        site_uuid = next((s.get("id") for s in sites_v1.get("data", [])
+                          if s.get("internalReference") == client.site or s.get("name", "").lower() == "default"), None)
+        results["site_uuid"] = site_uuid
+
         device_data = await client._get(f"/proxy/network/api/s/{client.site}/stat/device")
         umbb = next((d for d in device_data.get("data", [])
                      if d.get("type", "").lower() == "umbb"
@@ -216,21 +221,28 @@ async def api_probe_cellular(_: bool = Depends(require_auth)):
             "_id": umbb.get("_id") if umbb else None,
         } if umbb else None
 
-        if umbb:
-            mac = umbb.get("mac", "")
-            dev_id = umbb.get("_id", "")
-            for tpl in candidates:
-                for suffix in ("", f"/{mac}", f"/{dev_id}"):
-                    path = tpl.format(site=client.site) + suffix
-                    try:
-                        r = await client.client.get(path)
-                        results[path] = {
-                            "status": r.status_code,
-                            "size": len(r.content),
-                            "snippet": r.text[:500] if r.status_code < 400 else None,
-                        }
-                    except Exception as e:
-                        results[path] = {"error": str(e)}
+        if site_uuid:
+            # v1 device endpoints with proper UUID
+            v1_paths = [
+                f"/proxy/network/integration/v1/sites/{site_uuid}/devices",
+            ]
+            if umbb:
+                dev_id = umbb.get("_id", "")
+                mac = umbb.get("mac", "")
+                v1_paths += [
+                    f"/proxy/network/integration/v1/sites/{site_uuid}/devices/{dev_id}",
+                    f"/proxy/network/integration/v1/sites/{site_uuid}/devices/{mac}",
+                ]
+            for path in v1_paths:
+                try:
+                    r = await client.client.get(path)
+                    results[path] = {
+                        "status": r.status_code,
+                        "size": len(r.content),
+                        "snippet": r.text[:1500] if r.status_code < 400 else r.text[:200],
+                    }
+                except Exception as e:
+                    results[path] = {"error": str(e)}
         return results
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
