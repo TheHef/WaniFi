@@ -27,6 +27,7 @@ window.app = function () {
 
     manualContainer: '',
     manualMsg: '', settingsMsg: '', notifyMsg: '', qbMsg: '', importMsg: '', debugMsg: '',
+    runMsg: null,
 
     eventsLimit: 20, eventsSearch: '', eventsLevel: '',
 
@@ -211,6 +212,13 @@ window.app = function () {
       await this.refreshLive();
     },
 
+    async runRule(id) {
+      const r = await fetch('/api/rules/' + id + '/run', { method: 'POST' });
+      const d = await r.json().catch(() => ({}));
+      this.runMsg = { id, ok: d.ok, text: d.ok ? '✓ ' + (d.message || 'ok') : '✗ ' + (d.message || 'error') };
+      setTimeout(() => { if (this.runMsg.id === id) this.runMsg = null; }, 4000);
+    },
+
     // ---- Events -----------------------------------------------------------
     deleteEvent(id, message) {
       this.confirmModal = {
@@ -241,23 +249,34 @@ window.app = function () {
     },
 
     async saveQbSettings() {
-      const payload = { ...this.qbSettings };
-      if (!payload.qb_password) delete payload.qb_password;
-      const r = await fetch('/api/qb-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      this.qbMsg = r.ok ? '✓ Saved' : '✗ Error';
-      await this.loadQbSettings();
-      setTimeout(() => this.qbMsg = '', 3000);
+      try {
+        const payload = { qb_url: this.qbSettings.qb_url, qb_username: this.qbSettings.qb_username };
+        if (this.qbSettings.qb_password) payload.qb_password = this.qbSettings.qb_password;
+        const r = await fetch('/api/qb-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const d = await r.json().catch(() => ({}));
+        this.qbMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ ' + (d.detail || d.error || 'Error');
+        await this.loadQbSettings();
+        setTimeout(() => this.qbMsg = '', 3000);
+      } catch (e) {
+        this.qbMsg = '✗ ' + e.message;
+        setTimeout(() => this.qbMsg = '', 4000);
+      }
     },
 
     async testQb() {
       await this.saveQbSettings();
       this.qbMsg = 'Testing…';
-      const d = await fetch('/api/test-qb', { method: 'POST' }).then(r => r.json());
-      this.qbMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      try {
+        const r = await fetch('/api/test-qb', { method: 'POST' });
+        const d = await r.json().catch(() => ({}));
+        this.qbMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      } catch (e) {
+        this.qbMsg = '✗ ' + e.message;
+      }
       setTimeout(() => this.qbMsg = '', 5000);
     },
 

@@ -86,6 +86,26 @@ async def delete_rule(rule_id: int, _: bool = Depends(require_auth)):
     return {"ok": True}
 
 
+@router.post("/{rule_id}/run")
+async def run_rule(rule_id: int, _: bool = Depends(require_auth)):
+    with db() as conn:
+        row = conn.execute("SELECT * FROM rules WHERE id=?", (rule_id,)).fetchone()
+        if not row:
+            raise HTTPException(404)
+    rule = dict(row)
+    if rule["rule_type"] == "host_command":
+        from ..watcher import execute_host_command
+        ok, msg = await execute_host_command(rule["command"])
+    elif rule["rule_type"] == "qbittorrent":
+        from ..watcher import _qb_action
+        ok, msg = await _qb_action(rule["action"], rule["container"])
+    else:
+        from ..docker_ops import container_action
+        ok, msg = container_action(rule["container"], rule["action"])
+    log_event("info" if ok else "error", f"Rule '{rule['name']}' run manually: {msg}")
+    return {"ok": ok, "message": msg}
+
+
 @router.post("/{rule_id}/toggle")
 async def toggle_rule(rule_id: int, _: bool = Depends(require_auth)):
     with db() as conn:

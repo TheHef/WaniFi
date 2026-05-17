@@ -97,6 +97,7 @@
           <th class="text-left pl-4 pr-5 py-3 border-l border-slate-800">Rule</th>
           <th class="text-left px-4 py-3 border-l border-slate-800">Trigger</th>
           <th class="text-left px-4 py-3 border-l border-slate-800">Action</th>
+          <th class="text-center px-4 py-3 border-l border-slate-800">Run</th>
           <th class="text-center px-4 py-3 border-l border-slate-800">Enabled</th>
           <th class="text-center px-4 py-3 border-l border-slate-800">Edit</th>
           <th class="text-center px-4 py-3 border-l border-slate-800">Delete</th>
@@ -143,6 +144,21 @@
                 x-text="({failover:'→ On failover', restored:'→ On restored', down:'→ On WAN down', high_latency:'→ On high latency'})[r.trigger] || ('→ ' + r.trigger)"></td>
             <td class="px-4 py-3 text-slate-400 text-sm border-l border-slate-800"
                 x-text="r.rule_type === 'host_command' ? 'run' : r.rule_type === 'qbittorrent' ? ({alt_speed_on:'turtle on', alt_speed_off:'turtle off', set_dl_limit:'dl limit', set_ul_limit:'ul limit', pause_all:'pause all', resume_all:'resume all'})[r.action] || r.action : r.action"></td>
+            <td class="px-4 py-3 border-l border-slate-800 text-center">
+              <div class="flex flex-col items-center gap-1">
+                <button @click="runRule(r.id)"
+                        class="w-7 h-7 inline-flex items-center justify-center rounded-lg text-slate-600 hover:text-emerald-400 hover:bg-emerald-500/10 transition"
+                        title="Run now">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                  </svg>
+                </button>
+                <span x-show="runMsg && runMsg.id === r.id"
+                      class="text-xs font-medium leading-tight"
+                      :class="runMsg && runMsg.ok ? 'text-emerald-400' : 'text-red-400'"
+                      x-text="runMsg ? runMsg.text : ''"></span>
+              </div>
+            </td>
             <td class="px-4 py-3 border-l border-slate-800 text-center">
               <button @click="toggleRule(r.id)" class="px-2.5 py-1 rounded-full text-xs font-medium transition"
                       :class="r.enabled ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-700 text-slate-500'"
