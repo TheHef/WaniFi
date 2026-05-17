@@ -265,32 +265,40 @@ window.app = function () {
     },
 
     // ---- Backup / restore -------------------------------------------------
-    async importSettings(event) {
+    async importBackup(event) {
       const file = event.target.files[0];
       if (!file) return;
       event.target.value = '';
       this.confirmModal = {
         open: true,
-        label: `Overwrite settings from "${file.name}"?`,
+        label: `Restore from "${file.name}"? This replaces current settings, rules and events.`,
         confirm: async () => {
           this.confirmModal.open = false;
           try {
             const data = JSON.parse(await file.text());
-            if (!data.wanifi_export_version) {
-              this.importMsg = '✗ Not a valid WaniFi settings file';
+            if (!data.wanifi_backup_version && !data.wanifi_export_version) {
+              this.importMsg = '✗ Not a valid WaniFi backup file';
             } else {
-              const r = await fetch('/api/settings', {
+              const r = await fetch('/api/backup/import', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
               });
-              this.importMsg = r.ok ? '✓ Settings imported' : '✗ Import failed';
-              if (r.ok) await this.loadSettings();
+              const d = await r.json().catch(() => ({}));
+              if (r.ok && d.ok) {
+                const c = d.imported || {};
+                this.importMsg = `✓ Restored ${c.settings || 0} settings, ${c.rules || 0} rules, ${c.events || 0} events`;
+                await this.loadSettings();
+                await this.loadNotifySettings();
+                await this.refreshLive();
+              } else {
+                this.importMsg = '✗ ' + (d.detail || d.error || 'Restore failed');
+              }
             }
           } catch {
             this.importMsg = '✗ Invalid file';
           }
-          setTimeout(() => this.importMsg = '', 4000);
+          setTimeout(() => this.importMsg = '', 5000);
         },
       };
     },

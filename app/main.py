@@ -12,6 +12,7 @@ from .auth import is_setup_done, require_auth_redirect
 from .config import APP_VERSION, log
 from .db import init_db
 from .routes import auth as auth_routes
+from .routes import backup as backup_routes
 from .routes import events as events_routes
 from .routes import manual as manual_routes
 from .routes import notify as notify_routes
@@ -57,6 +58,7 @@ app.include_router(events_routes.router)
 app.include_router(manual_routes.router)
 app.include_router(notify_routes.router)
 app.include_router(notify_routes.test_router)
+app.include_router(backup_routes.router)
 
 
 def _shell(request: Request):
