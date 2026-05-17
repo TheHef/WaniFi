@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block head_extra %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-<script src="/static/js/device-icons.js"></script>
-<script src="/static/js/charts.js"></script>
-<script src="/static/js/app.js"></script>
+<script src="/static/js/device-icons.js?v={{ version }}"></script>
+<script src="/static/js/charts.js?v={{ version }}"></script>
+<script src="/static/js/app.js?v={{ version }}"></script>
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 {% endblock %}
 {% block body %}
