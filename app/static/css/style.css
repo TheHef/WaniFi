@@ -1,0 +1,13 @@
+[x-cloak] { display: none !important; }
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid rgb(51 65 85 / 0.5);
+}
+.stat-row:last-child { border-bottom: none; }
+
+/* Sticky thead in events tab needs overflow: clip on container */
+.table-shell { overflow: clip; }

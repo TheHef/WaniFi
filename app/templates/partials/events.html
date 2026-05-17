@@ -1,0 +1,69 @@
+<section x-show="tab === 'events'">
+  <div class="flex gap-3 mb-3">
+    <input x-model="eventsSearch" type="search" placeholder="Search messages, timestamps…"
+           class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-500 transition">
+    <select x-model="eventsLevel"
+            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-slate-500 transition">
+      <option value="">All levels</option>
+      <option value="info">Info</option>
+      <option value="warn">Warn</option>
+      <option value="error">Error</option>
+    </select>
+  </div>
+  <div class="bg-slate-900 border border-slate-700/60 rounded-2xl table-shell">
+    <table class="w-full text-sm">
+      <thead class="text-xs font-semibold text-slate-500 uppercase tracking-wider bg-slate-950 sticky top-[7.75rem] z-10">
+        <tr>
+          <th class="text-left px-5 py-3">Timestamp</th>
+          <th class="text-left px-5 py-3">Level</th>
+          <th class="text-left px-5 py-3">Message</th>
+          <th class="px-5 py-3"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <template x-for="e in filteredEvents.slice(0, eventsLimit)" :key="e.id">
+          <tr class="border-t border-slate-800 group"
+              :class="{
+                'bg-red-500/5':     e.level === 'error' || e.message.includes('-> down'),
+                'bg-emerald-500/5': e.message.includes('-> primary'),
+              }">
+            <td class="px-5 py-3 font-mono text-xs whitespace-nowrap text-slate-500" x-text="new Date(e.ts).toLocaleString()"></td>
+            <td class="px-5 py-3">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold"
+                    :class="{
+                      'bg-emerald-500/20 text-emerald-300': e.message.includes('-> primary'),
+                      'bg-red-500/20 text-red-300':         e.level === 'error' || e.message.includes('-> down'),
+                      'bg-amber-500/20 text-amber-300':     e.level !== 'error' && !e.message.includes('-> down') && !e.message.includes('-> primary'),
+                    }" x-text="e.level"></span>
+            </td>
+            <td class="px-5 py-3 font-medium"
+                :class="{
+                  'text-red-300':     e.level === 'error' || e.message.includes('-> down'),
+                  'text-emerald-300': e.message.includes('-> primary'),
+                  'text-amber-300':   e.level !== 'error' && !e.message.includes('-> down') && !e.message.includes('-> primary'),
+                }" x-text="e.message"></td>
+            <td class="px-4 py-3 text-right">
+              <button @click="deleteEvent(e.id, e.message)"
+                      class="w-6 h-6 flex items-center justify-center rounded text-slate-700 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition ml-auto" title="Delete event">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </template>
+        <tr x-show="filteredEvents.length === 0">
+          <td colspan="4" class="px-5 py-10 text-center text-slate-600"
+              x-text="eventsSearch || eventsLevel ? 'No events match your search' : 'No events yet'"></td>
+        </tr>
+      </tbody>
+    </table>
+    <div x-show="filteredEvents.length > eventsLimit" class="border-t border-slate-800 px-5 py-4 flex items-center justify-between">
+      <span class="text-xs text-slate-500" x-text="'Showing ' + Math.min(eventsLimit, filteredEvents.length) + ' of ' + filteredEvents.length + ' events'"></span>
+      <button @click="eventsLimit += 20"
+              class="bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-slate-500 text-slate-200 text-sm font-semibold px-5 py-2 rounded-xl transition">
+        Load more
+      </button>
+    </div>
+  </div>
+</section>

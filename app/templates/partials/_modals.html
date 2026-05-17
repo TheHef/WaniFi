@@ -1,0 +1,103 @@
+<!-- Edit rule modal -->
+<div x-show="editModal.open" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-100"  x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="editModal.open = false"></div>
+  <div class="relative bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-6 w-full max-w-lg"
+       x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+       x-transition:leave="transition ease-in duration-100"  x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
+    <h3 class="text-base font-semibold text-slate-100 mb-5">Edit rule</h3>
+    <div class="mb-3">
+      <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Name</label>
+      <input x-model="editModal.rule.name" type="text"
+             :placeholder="editModal.rule.rule_type === 'host_command' ? editModal.rule.command : editModal.rule.container"
+             class="w-full mt-1.5 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
+    </div>
+    <div class="mb-3">
+      <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Trigger</label>
+      <select x-model="editModal.rule.trigger" class="w-full mt-1.5 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+    </div>
+    <template x-if="editModal.rule.rule_type === 'docker'">
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Container</label>
+          <select x-model="editModal.rule.container" class="w-full mt-1.5 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+            <template x-for="c in containers" :key="c.name">
+              <option :value="c.name" x-text="c.name"></option>
+            </template>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Action</label>
+          <select x-model="editModal.rule.action" class="w-full mt-1.5 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+            <option value="stop">Stop container</option>
+            <option value="start">Start container</option>
+            <option value="restart">Restart container</option>
+            <option value="pause">Pause container</option>
+            <option value="unpause">Unpause container</option>
+          </select>
+        </div>
+      </div>
+    </template>
+    <template x-if="editModal.rule.rule_type === 'host_command'">
+      <div class="mb-3">
+        <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Command</label>
+        <input x-model="editModal.rule.command" type="text"
+               class="w-full mt-1.5 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-slate-200 focus:outline-none focus:border-violet-500 transition">
+      </div>
+    </template>
+    <div class="flex gap-3 justify-end mt-5">
+      <button @click="editModal.open = false" class="px-4 py-2 rounded-xl text-sm font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 transition">Cancel</button>
+      <button @click="saveEditRule()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 hover:bg-blue-400 text-white transition">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div x-show="confirmModal.open" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-100"  x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="confirmModal.open = false"></div>
+  <div class="relative bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-6 w-full max-w-sm"
+       x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+       x-transition:leave="transition ease-in duration-100"  x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-9 h-9 rounded-full bg-red-500/15 flex items-center justify-center shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-base font-semibold text-slate-100">Are you sure?</h3>
+        <p class="text-sm text-slate-400">This action cannot be undone.</p>
+      </div>
+    </div>
+    <div class="bg-slate-900 rounded-xl px-4 py-3 mb-5 text-sm text-slate-300 font-mono truncate" x-text="confirmModal.label"></div>
+    <div class="flex gap-3 justify-end">
+      <button @click="confirmModal.open = false" class="px-4 py-2 rounded-xl text-sm font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 transition">Cancel</button>
+      <button @click="confirmModal.confirm()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-red-500 hover:bg-red-400 text-white transition">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Back to top -->
+<button x-data="{ show: false, init() { addEventListener('scroll', () => this.show = scrollY > 300); } }"
+        x-show="show"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 translate-y-2"
+        @click="scrollTo({ top: 0, behavior: 'smooth' })"
+        class="fixed bottom-6 right-6 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 text-slate-300 hover:text-white shadow-lg transition"
+        title="Back to top">
+  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+    <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"/>
+  </svg>
+</button>

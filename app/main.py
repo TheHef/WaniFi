@@ -1,0 +1,85 @@
+"""WaniFi — UniFi WAN failover monitor with Docker / host-command automation."""
+import asyncio
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+from .auth import is_setup_done, require_auth_redirect
+from .config import APP_VERSION, log
+from .db import init_db
+from .routes import auth as auth_routes
+from .routes import events as events_routes
+from .routes import manual as manual_routes
+from .routes import notify as notify_routes
+from .routes import rules as rules_routes
+from .routes import settings as settings_routes
+from .routes import system as system_routes
+from .watcher import live_stats_loop, state, watcher_loop
+
+BASE_DIR = Path(__file__).parent
+STATIC_DIR = BASE_DIR / "static"
+STATIC_DIR.mkdir(exist_ok=True)
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    init_db()
+    log.info("WaniFi v%s starting", APP_VERSION)
+    if not is_setup_done():
+        log.warning("Admin password not set — visit /setup to initialise")
+    state.task      = asyncio.create_task(watcher_loop())
+    state.live_task = asyncio.create_task(live_stats_loop())
+    yield
+    for t in (state.task, state.live_task):
+        if t:
+            t.cancel()
+            try:
+                await t
+            except asyncio.CancelledError:
+                pass
+
+
+app = FastAPI(lifespan=lifespan, title="WaniFi", version=APP_VERSION)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+auth_routes.init(templates)
+
+app.include_router(auth_routes.router)
+app.include_router(system_routes.router)
+app.include_router(rules_routes.router)
+app.include_router(settings_routes.router)
+app.include_router(events_routes.router)
+app.include_router(manual_routes.router)
+app.include_router(notify_routes.router)
+app.include_router(notify_routes.test_router)
+
+
+def _shell(request: Request):
+    redirect = require_auth_redirect(request)
+    if redirect:
+        return redirect
+    resp = templates.TemplateResponse(
+        "app.html",
+        {"request": request, "version": APP_VERSION},
+    )
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request):
+    return _shell(request)
+
+
+@app.get("/overview",      response_class=HTMLResponse)
+@app.get("/rules",         response_class=HTMLResponse)
+@app.get("/settings",      response_class=HTMLResponse)
+@app.get("/events",        response_class=HTMLResponse)
+@app.get("/notifications", response_class=HTMLResponse)
+async def spa_pages(request: Request):
+    return _shell(request)

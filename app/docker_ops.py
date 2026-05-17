@@ -1,0 +1,55 @@
+"""Docker container operations via a shared SDK client."""
+from typing import Optional
+
+import docker
+
+from .config import log
+
+VALID_ACTIONS = ("stop", "start", "restart", "pause", "unpause")
+
+_client: Optional[docker.DockerClient] = None
+
+
+def get_client() -> docker.DockerClient:
+    global _client
+    if _client is None:
+        _client = docker.DockerClient(base_url="unix:///var/run/docker.sock")
+    return _client
+
+
+def docker_ok() -> bool:
+    try:
+        get_client().ping()
+        return True
+    except Exception:
+        return False
+
+
+def list_containers() -> list[dict]:
+    try:
+        containers = get_client().containers.list(all=True)
+        return [
+            {
+                "name":   c.name,
+                "id":     c.short_id,
+                "status": c.status,
+                "image":  c.image.tags[0] if c.image.tags else "",
+            }
+            for c in containers
+        ]
+    except Exception as e:
+        log.error("Docker list failed: %s", e)
+        return []
+
+
+def container_action(name: str, action: str) -> tuple[bool, str]:
+    if action not in VALID_ACTIONS:
+        return False, f"Unknown action: {action}"
+    try:
+        c = get_client().containers.get(name)
+        getattr(c, action)(**({"timeout": 5} if action in ("stop", "restart") else {}))
+        return True, f"{action} OK"
+    except docker.errors.NotFound:
+        return False, f"Container {name} not found"
+    except Exception as e:
+        return False, str(e)

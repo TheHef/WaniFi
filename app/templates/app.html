@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="/static/js/device-icons.js"></script>
+<script src="/static/js/charts.js"></script>
+<script src="/static/js/app.js"></script>
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+{% endblock %}
+{% block body %}
+<div x-data="app()" x-init="init()" x-cloak>
+  {% include "partials/_header.html" %}
+  <main class="max-w-6xl mx-auto px-4 py-6">
+    {% include "partials/dashboard.html" %}
+    {% include "partials/rules.html" %}
+    {% include "partials/settings.html" %}
+    {% include "partials/events.html" %}
+  </main>
+  {% include "partials/_footer.html" %}
+  {% include "partials/_modals.html" %}
+</div>
+{% endblock %}

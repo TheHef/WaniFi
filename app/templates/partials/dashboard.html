@@ -1,0 +1,288 @@
+<section x-show="tab === 'dashboard'">
+
+  <!-- Top status cards -->
+  <div class="grid md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-slate-900 border border-slate-700/60 rounded-2xl p-5 relative overflow-hidden">
+      <div class="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl"
+           :class="status.active_wan === 'primary' ? 'bg-emerald-500' : status.active_wan === 'failover' ? 'bg-amber-500' : 'bg-red-500'"></div>
+      <div class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">Status</div>
+      <div class="text-3xl font-black tracking-tight" :class="{
+            'text-emerald-400': status.active_wan === 'primary',
+            'text-amber-400':   status.active_wan === 'failover',
+            'text-red-400':     status.active_wan === 'down',
+            'text-slate-600':   !status.active_wan,
+          }">
+        <span x-show="status.active_wan === 'primary'">✓ <span x-text="status.primary_wan_name || 'Primary'"></span></span>
+        <span x-show="status.active_wan === 'failover'">⚠ <span x-text="status.failover_wan_name || 'Failover'"></span></span>
+        <span x-show="status.active_wan === 'down'">✗ Down</span>
+        <span x-show="!status.active_wan">—</span>
+      </div>
+      <div class="font-mono text-sm text-slate-300 mt-1.5" x-show="(liveStats||{}).active_wan_ip" x-text="(liveStats||{}).active_wan_ip"></div>
+      <div class="text-xs text-slate-500 mt-1" x-text="status.last_check ? 'Last checked: ' + new Date(status.last_check).toLocaleString() : 'Waiting…'"></div>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-700/60 rounded-2xl p-5">
+      <div class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Connections</div>
+      <div class="space-y-1.5 text-sm">
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400">Primary</span>
+          <span class="text-emerald-400 font-medium" x-text="status.primary_wan_name || status.primary_wan || '—'"></span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400">Failover</span>
+          <span class="text-amber-400 font-medium" x-text="status.failover_wan_name || status.failover_wan || '—'"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-700/60 rounded-2xl p-5">
+      <div class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Info</div>
+      <template x-if="status.last_error">
+        <div class="text-sm text-red-400 break-words leading-relaxed" x-text="status.last_error"></div>
+      </template>
+      <template x-if="!status.last_error && status.state_changed_at && status.active_wan === 'failover'">
+        <div>
+          <div class="text-sm font-semibold text-amber-400">Primary WAN down</div>
+          <div class="text-xs text-slate-400 mt-1">Running on failover since:</div>
+          <div class="text-xs text-slate-300 font-mono mt-0.5" x-text="new Date(status.state_changed_at).toLocaleString()"></div>
+        </div>
+      </template>
+      <template x-if="!status.last_error && status.state_changed_at && status.active_wan === 'primary'">
+        <div>
+          <div class="text-sm font-semibold text-emerald-400">Primary WAN active</div>
+          <div class="text-xs text-slate-400 mt-1">Since:</div>
+          <div class="text-xs text-slate-300 font-mono mt-0.5" x-text="new Date(status.state_changed_at).toLocaleString()"></div>
+        </div>
+      </template>
+      <template x-if="!status.last_error && !status.state_changed_at">
+        <div class="text-sm text-slate-600">No events yet</div>
+      </template>
+    </div>
+  </div>
+
+  <!-- WAN cards -->
+  <h2 class="text-base font-semibold text-slate-200 mb-3">WAN Connections</h2>
+  <div class="grid md:grid-cols-2 gap-4 items-start">
+
+    <!-- Primary WAN -->
+    <div class="bg-slate-900 border rounded-2xl p-5 relative overflow-hidden transition-all flex flex-col"
+         :class="status.active_wan === 'primary' ? 'border-emerald-500/40' : 'border-slate-700/60'">
+      <div class="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl transition-all"
+           :class="status.active_wan === 'primary' ? 'bg-emerald-500' : 'bg-slate-700'"></div>
+
+      <div class="mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="text-lg font-bold text-emerald-400" x-text="status.primary_wan_name || 'Primary WAN'"></div>
+          <span class="font-mono text-xs bg-slate-800 border border-slate-700 text-slate-400 px-2 py-0.5 rounded-md" x-text="status.primary_wan"></span>
+        </div>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+              :class="status.active_wan === 'primary' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-400'">
+          <span class="w-1.5 h-1.5 rounded-full animate-pulse" :class="status.active_wan === 'primary' ? 'bg-emerald-400' : 'bg-red-400'"></span>
+          <span x-text="status.active_wan === 'primary' ? 'Active' : 'Offline'"></span>
+        </span>
+      </div>
+
+      <div class="flex items-start gap-4">
+        <!-- Device box -->
+        <div class="flex flex-col items-center bg-slate-800 border rounded-xl p-2 shrink-0 w-28 transition-colors"
+             x-show="(liveStats||{}).gw_model"
+             :class="status.active_wan === 'primary' ? 'border-emerald-500/50' : 'border-slate-700'">
+          <img x-show="deviceIcon((liveStats||{}).gw_model)" :src="deviceIcon((liveStats||{}).gw_model)"
+               class="w-10 h-10 object-contain" :alt="(liveStats||{}).gw_model">
+          <span class="text-xs text-slate-400 font-medium mt-0.5" x-text="fmtModel((liveStats||{}).gw_model) || (liveStats||{}).gw_model"></span>
+          <div class="mt-1.5 pt-1.5 border-t border-slate-700/60 w-full space-y-0.5"
+               x-show="(liveStats||{}).gw_cpu != null || (liveStats||{}).gw_mem != null">
+            <div class="flex items-center justify-between gap-3" x-show="(liveStats||{}).gw_cpu != null">
+              <span class="text-slate-500 text-xs">CPU</span>
+              <span class="font-mono text-xs"
+                    :class="(liveStats||{}).gw_cpu > 80 ? 'text-red-400' : (liveStats||{}).gw_cpu > 50 ? 'text-amber-400' : 'text-slate-300'"
+                    x-text="(liveStats||{}).gw_cpu + '%'"></span>
+            </div>
+            <div class="flex items-center justify-between gap-3" x-show="(liveStats||{}).gw_mem != null">
+              <span class="text-slate-500 text-xs">RAM</span>
+              <span class="font-mono text-xs"
+                    :class="(liveStats||{}).gw_mem > 85 ? 'text-red-400' : (liveStats||{}).gw_mem > 65 ? 'text-amber-400' : 'text-slate-300'"
+                    x-text="(liveStats||{}).gw_mem + '%'"></span>
+            </div>
+          </div>
+          <div class="mt-1.5 pt-1.5 border-t border-slate-700/60 w-full space-y-0.5"
+               x-show="(liveStats||{}).active_wan_rx_mbps != null">
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-slate-500 text-xs">↓</span>
+              <span class="font-mono text-xs font-bold text-emerald-400"
+                    x-text="fmtSpeed(status.active_wan === 'primary' ? (liveStats||{}).active_wan_rx_mbps : 0)"></span>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-slate-500 text-xs">↑</span>
+              <span class="font-mono text-xs font-bold text-sky-400"
+                    x-text="fmtSpeed(status.active_wan === 'primary' ? (liveStats||{}).active_wan_tx_mbps : 0)"></span>
+            </div>
+          </div>
+        </div>
+        <!-- Stats -->
+        <div class="flex-1 min-w-0" x-data="{ get pw() { return (status.raw_wans||[]).find(w=>w.subsystem===status.primary_wan) || {}; } }">
+          <template x-if="status.active_wan === 'primary'">
+            <div class="space-y-0">
+              <div class="stat-row">
+                <span class="text-slate-400 text-sm">WAN IP</span>
+                <span class="font-mono text-sm text-slate-100" x-text="(liveStats||{}).active_wan_ip || pw.wan_ip || '—'"></span>
+              </div>
+              <div class="stat-row" x-show="pw.isp_name">
+                <span class="text-slate-400 text-sm">ISP</span>
+                <span class="text-sm text-slate-100" x-text="pw.isp_name"></span>
+              </div>
+              <div class="stat-row">
+                <span class="text-slate-400 text-sm">Latency</span>
+                <span class="font-mono text-sm text-slate-100" x-text="(liveStats||{}).active_wan_latency ? (liveStats||{}).active_wan_latency + ' ms' : '—'"></span>
+              </div>
+              <div class="stat-row">
+                <span class="text-slate-400 text-sm">Active for</span>
+                <span class="text-sm text-slate-100" x-text="fmtSince(status.state_changed_at)"></span>
+              </div>
+              <div class="stat-row" x-show="(liveStats||{}).gw_ip">
+                <span class="text-slate-400 text-sm">Device IP</span>
+                <span class="font-mono text-sm text-slate-100" x-text="(liveStats||{}).gw_ip"></span>
+              </div>
+            </div>
+          </template>
+          <template x-if="status.active_wan !== 'primary'">
+            <div class="space-y-0">
+              <div class="stat-row" x-show="pw.wan_ip">
+                <span class="text-slate-400 text-sm">WAN IP</span>
+                <span class="font-mono text-sm text-slate-500" x-text="pw.wan_ip"></span>
+              </div>
+              <div class="stat-row" x-show="pw.isp_name">
+                <span class="text-slate-400 text-sm">ISP</span>
+                <span class="text-sm text-slate-500" x-text="pw.isp_name"></span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Failover WAN -->
+    <div class="bg-slate-900 border rounded-2xl p-5 relative overflow-hidden transition-all flex flex-col"
+         x-data="{ get xdev() { return ((liveStats||{}).extra_devices||[])[0] || {}; }, get fw() { return (status.raw_wans||[]).find(w=>w.subsystem===status.failover_wan) || {}; } }"
+         :class="status.active_wan === 'failover' ? 'border-amber-500/40' : 'border-slate-700/60'">
+      <div class="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl transition-all"
+           :class="status.active_wan === 'failover' ? 'bg-amber-500' : 'bg-slate-700'"></div>
+
+      <div class="mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="text-lg font-bold text-amber-400" x-text="status.failover_wan_name || 'Failover WAN'"></div>
+          <span class="font-mono text-xs bg-slate-800 border border-slate-700 text-slate-400 px-2 py-0.5 rounded-md" x-text="status.failover_wan"></span>
+        </div>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+              :class="status.active_wan === 'failover' ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-500/10 text-amber-400/70'">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400" :class="status.active_wan === 'failover' ? 'animate-pulse' : ''"></span>
+          <span x-text="status.active_wan === 'failover' ? 'Active' : 'Standby'"></span>
+        </span>
+      </div>
+
+      <div class="flex items-start gap-4">
+        <div class="flex flex-col items-center bg-slate-800 border rounded-xl p-2 shrink-0 w-28 transition-colors"
+             x-show="((liveStats||{}).extra_devices||[]).length > 0"
+             :class="status.active_wan === 'failover' ? 'border-amber-500/50' : 'border-slate-700'">
+          <img x-show="deviceIcon(xdev.model) || deviceIcon(xdev.name)"
+               :src="deviceIcon(xdev.model) || deviceIcon(xdev.name)"
+               class="w-10 h-10 object-contain" alt="device">
+          <span class="text-xs text-slate-400 font-medium mt-0.5"
+                x-text="fmtModel(xdev.model) || fmtModel(xdev.name) || xdev.model || xdev.name"></span>
+          <div class="mt-1.5 pt-1.5 border-t border-slate-700/60 w-full space-y-0.5"
+               x-show="xdev.cpu != null || xdev.mem != null">
+            <div class="flex items-center justify-between gap-3" x-show="xdev.cpu != null">
+              <span class="text-slate-500 text-xs">CPU</span>
+              <span class="font-mono text-xs"
+                    :class="xdev.cpu > 80 ? 'text-red-400' : xdev.cpu > 50 ? 'text-amber-400' : 'text-slate-300'"
+                    x-text="xdev.cpu + '%'"></span>
+            </div>
+            <div class="flex items-center justify-between gap-3" x-show="xdev.mem != null">
+              <span class="text-slate-500 text-xs">RAM</span>
+              <span class="font-mono text-xs"
+                    :class="xdev.mem > 85 ? 'text-red-400' : xdev.mem > 65 ? 'text-amber-400' : 'text-slate-300'"
+                    x-text="xdev.mem + '%'"></span>
+            </div>
+          </div>
+          <div class="mt-1.5 pt-1.5 border-t border-slate-700/60 w-full space-y-0.5">
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-slate-500 text-xs">↓</span>
+              <span class="font-mono text-xs font-bold"
+                    :class="status.active_wan === 'failover' ? 'text-emerald-400' : 'text-slate-600'"
+                    x-text="status.active_wan === 'failover' ? fmtSpeed((liveStats||{}).active_wan_rx_mbps) : '0 Mbps'"></span>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-slate-500 text-xs">↑</span>
+              <span class="font-mono text-xs font-bold"
+                    :class="status.active_wan === 'failover' ? 'text-sky-400' : 'text-slate-600'"
+                    x-text="status.active_wan === 'failover' ? fmtSpeed((liveStats||{}).active_wan_tx_mbps) : '0 Mbps'"></span>
+            </div>
+          </div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <template x-if="status.active_wan === 'failover'">
+            <div class="space-y-0">
+              <div class="stat-row">
+                <span class="text-slate-400 text-sm">WAN IP</span>
+                <span class="font-mono text-sm text-slate-100" x-text="(liveStats||{}).active_wan_ip || fw.wan_ip || '—'"></span>
+              </div>
+              <div class="stat-row" x-show="fw.isp_name">
+                <span class="text-slate-400 text-sm">ISP</span>
+                <span class="text-sm text-slate-100" x-text="fw.isp_name"></span>
+              </div>
+              <div class="stat-row">
+                <span class="text-slate-400 text-sm">Latency</span>
+                <span class="font-mono text-sm text-slate-100" x-text="(liveStats||{}).active_wan_latency ? (liveStats||{}).active_wan_latency + ' ms' : '—'"></span>
+              </div>
+              <div class="stat-row">
+                <span class="text-slate-400 text-sm">Active for</span>
+                <span class="text-sm text-slate-100" x-text="fmtSince(status.state_changed_at)"></span>
+              </div>
+              <div class="stat-row" x-show="xdev.ip || xdev.wan_ip">
+                <span class="text-slate-400 text-sm">Device IP</span>
+                <span class="font-mono text-sm text-slate-100" x-text="xdev.ip || xdev.wan_ip || '—'"></span>
+              </div>
+            </div>
+          </template>
+          <template x-if="status.active_wan !== 'failover'">
+            <div class="space-y-0">
+              <div class="stat-row" x-show="xdev.wan_ip || xdev.ip">
+                <span class="text-slate-400 text-sm" x-text="xdev.wan_ip ? 'WAN IP' : 'Device IP'"></span>
+                <span class="font-mono text-sm text-slate-300" x-text="xdev.wan_ip || xdev.ip || '—'"></span>
+              </div>
+              <div class="stat-row" x-show="xdev.isp_name">
+                <span class="text-slate-400 text-sm">ISP</span>
+                <span class="text-sm text-slate-300" x-text="xdev.isp_name"></span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WAN metrics charts -->
+  <div class="mt-6" x-data="metricsChart()">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-base font-semibold text-slate-200">WAN Metrics</h2>
+      <div class="flex gap-1">
+        <template x-for="r in ['1h','12h','1d','7d','30d']" :key="r">
+          <button @click="setRange(r)"
+                  class="px-2.5 py-1 rounded-lg text-xs font-semibold transition"
+                  :class="range === r ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-slate-200'"
+                  x-text="r"></button>
+        </template>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="bg-slate-900 border border-slate-700/60 rounded-2xl p-4">
+        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Throughput</div>
+        <div style="height:180px"><canvas id="chart-throughput"></canvas></div>
+      </div>
+      <div class="bg-slate-900 border border-slate-700/60 rounded-2xl p-4">
+        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Latency</div>
+        <div style="height:180px"><canvas id="chart-latency"></canvas></div>
+      </div>
+    </div>
+  </div>
+</section>

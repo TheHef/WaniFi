@@ -1,0 +1,58 @@
+<header class="border-b border-slate-800 bg-slate-900 sticky top-0 z-30">
+  <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3.5 cursor-pointer" @click="tab = 'dashboard'">
+      <div class="w-12 h-12 rounded-xl overflow-hidden shrink-0">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="36" height="36" rx="9" fill="#1e3a5f"/>
+          <rect width="36" height="36" rx="9" fill="url(#hlg)"/>
+          <text x="18" y="26" font-family="Arial Black, sans-serif" font-size="21" font-weight="900" fill="white" text-anchor="middle" opacity="0.95">W</text>
+          <defs>
+            <linearGradient id="hlg" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#1d4ed8"/>
+              <stop offset="100%" stop-color="#0ea5e9"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold leading-tight tracking-tight flex items-center gap-2">WaniFi
+          <span class="text-[10px] font-semibold bg-slate-800 border border-slate-700 text-slate-500 px-1.5 py-0.5 rounded-md tracking-wide">v{{ version }}</span>
+        </h1>
+        <p class="text-sm text-slate-400 mt-0.5">Failover handled.</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 flex items-center gap-2">
+        <span class="text-xs text-slate-500 uppercase tracking-wider">Active WAN</span>
+        <span class="text-sm font-bold" :class="{
+            'text-emerald-400': status.active_wan === 'primary',
+            'text-amber-400':   status.active_wan === 'failover',
+            'text-red-400':     status.active_wan === 'down' || status.active_wan === null,
+          }"
+          x-text="status.active_wan === 'primary' ? (status.primary_wan_name || status.primary_wan)
+                : status.active_wan === 'failover' ? (status.failover_wan_name || status.failover_wan)
+                : (status.active_wan || '—')"></span>
+      </div>
+      <form method="post" action="/logout">
+        <button class="text-sm text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 border border-red-500/30 hover:border-red-500 px-3 py-1.5 rounded-lg transition font-medium">Log out</button>
+      </form>
+    </div>
+  </div>
+  <div class="max-w-6xl mx-auto px-4 flex items-center gap-1 border-t border-slate-800/60">
+    <template x-for="t in [['dashboard','Overview'],['rules','Rules'],['settings','Settings'],['events','Events']]" :key="t[0]">
+      <button @click="tab = t[0]"
+              class="px-4 py-3 text-sm font-medium border-b-2 transition"
+              :class="tab === t[0]
+                ? 'border-blue-500 text-blue-500'
+                : 'border-transparent text-slate-500 hover:text-blue-400'"
+              x-text="t[1]"></button>
+    </template>
+    <div class="ml-auto flex items-center gap-3 py-2 pr-1">
+      <span class="text-xs font-medium" :class="status.docker_ok ? 'text-emerald-400' : 'text-red-400'"
+            x-text="status.docker_ok ? 'Docker Connected' : 'Docker Disconnected'"></span>
+      <span class="text-slate-700">|</span>
+      <span class="text-xs font-medium" :class="liveConnected ? 'text-emerald-400' : 'text-red-400'"
+            x-text="liveConnected ? 'UniFi API Connected' : 'UniFi API Disconnected'"></span>
+    </div>
+  </div>
+</header>

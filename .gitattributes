@@ -1,0 +1,5 @@
+# Force LF line endings for files that are interpreted on Linux
+* text=auto eol=lf
+*.png binary
+*.avif binary
+*.ico binary

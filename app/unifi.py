@@ -1,0 +1,149 @@
+"""Minimal client for the UniFi Network controller (UDM/UCG/UX)."""
+from typing import Optional
+
+import httpx
+
+from .config import UNIFI_HTTP_TIMEOUT, log
+
+GW_TYPES = {"ugw", "udm", "ucg", "usg", "udmpro", "udmse", "ux"}
+NON_WAN_TYPES = {"usw", "uap", "uph", "uck", "ubb"}
+
+
+class UniFiClient:
+    """Async client for the UniFi Network controller (UniFi OS 3.x+ API key auth)."""
+
+    def __init__(self, host: str, api_key: str, site: str = "default", verify: bool = False):
+        self.host = host.rstrip("/")
+        self.site = site
+        self.client = httpx.AsyncClient(
+            base_url=self.host,
+            verify=verify,
+            timeout=UNIFI_HTTP_TIMEOUT,
+            follow_redirects=False,
+            headers={"X-API-KEY": api_key, "Accept": "application/json"},
+        )
+
+    async def _get(self, path: str) -> dict:
+        resp = await self.client.get(path)
+        resp.raise_for_status()
+        return resp.json()
+
+    async def get_sites(self) -> list[dict]:
+        data = await self._get("/proxy/network/api/self/sites")
+        return [
+            {"id": s.get("name", ""), "label": s.get("desc") or s.get("name", "")}
+            for s in data.get("data", [])
+        ]
+
+    async def get_gateway_health(self) -> list[dict]:
+        path = f"/proxy/network/api/s/{self.site}/stat/health"
+        data = await self._get(path)
+        return [i for i in data.get("data", []) if i.get("subsystem", "").startswith("wan")]
+
+    async def get_gateway_info(self) -> dict:
+        try:
+            path = f"/proxy/network/api/s/{self.site}/stat/device"
+            data = await self._get(path)
+            items = data.get("data", [])
+            gw = next((d for d in items if d.get("type", "").lower() in GW_TYPES), None)
+            if not gw:
+                return {}
+
+            extra_devices = _collect_extra_devices(items)
+            uplink = gw.get("uplink", {})
+            gw_cpu, gw_mem = _cpu_mem(gw)
+            gw_ip = _management_ip(gw)
+
+            return {
+                "active_wan": uplink.get("comment", ""),
+                "active_wan_type": uplink.get("type", ""),
+                "active_wan_ip": uplink.get("ip", ""),
+                "active_wan_rx_mbps": round(uplink.get("rx_bytes-r", 0) * 8 / 1_000_000, 2),
+                "active_wan_tx_mbps": round(uplink.get("tx_bytes-r", 0) * 8 / 1_000_000, 2),
+                "active_wan_latency": uplink.get("latency"),
+                "active_wan_uptime":  uplink.get("uptime"),
+                "active_wan_xput_down": uplink.get("xput_down"),
+                "active_wan_xput_up":   uplink.get("xput_up"),
+                "gw_name":  gw.get("name", ""),
+                "gw_model": gw.get("model", ""),
+                "gw_ip":    gw_ip,
+                "gw_cpu":   gw_cpu,
+                "gw_mem":   gw_mem,
+                "extra_devices": extra_devices,
+            }
+        except Exception as e:
+            log.warning("Gateway info fetch failed: %s", e)
+            return {}
+
+    async def close(self):
+        await self.client.aclose()
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+def _cpu_mem(dev: dict) -> tuple[Optional[float], Optional[float]]:
+    sys_stats = dev.get("sys_stats", {})
+    legacy = dev.get("system-stats", {})
+    cpu, mem = None, None
+
+    cpu_val = sys_stats.get("cpu_usage") or legacy.get("cpu")
+    if cpu_val is not None:
+        try:
+            cpu = round(float(cpu_val), 1)
+        except (TypeError, ValueError):
+            pass
+
+    mem_used  = sys_stats.get("mem_used")
+    mem_total = sys_stats.get("mem_total")
+    if mem_used is not None and mem_total:
+        mem = round(mem_used / mem_total * 100, 1)
+    else:
+        mem_val = legacy.get("mem")
+        if mem_val is not None:
+            try:
+                mem = round(float(mem_val), 1)
+            except (TypeError, ValueError):
+                pass
+    return cpu, mem
+
+
+def _management_ip(gw: dict) -> str:
+    """Prefer a private LAN IP — gw.ip can be the WAN address on some models."""
+    gw_ip = gw.get("ip", "")
+    for port in gw.get("port_table", []):
+        pip = port.get("ip", "")
+        if pip and not port.get("wan_ip") and not port.get("is_uplink"):
+            if pip.startswith(("10.", "192.168.", "172.")):
+                return pip
+    return gw_ip
+
+
+def _collect_extra_devices(items: list[dict]) -> list[dict]:
+    out = []
+    for d in items:
+        dtype = d.get("type", "").lower()
+        if dtype in GW_TYPES or dtype in NON_WAN_TYPES:
+            continue
+        wan_ip = ""
+        isp_name = ""
+        for port in d.get("port_table", []):
+            if port.get("wan_ip"):
+                wan_ip = port["wan_ip"]
+                isp_name = port.get("isp_name") or port.get("name_isp") or ""
+                break
+            if port.get("is_uplink") and port.get("ip"):
+                wan_ip = port["ip"]
+                break
+        cpu, mem = _cpu_mem(d)
+        out.append({
+            "name":     d.get("name", ""),
+            "model":    d.get("model", ""),
+            "type":     dtype,
+            "ip":       d.get("ip", ""),
+            "wan_ip":   wan_ip,
+            "isp_name": isp_name,
+            "cpu":      cpu,
+            "mem":      mem,
+        })
+    return out

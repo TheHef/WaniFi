@@ -1,0 +1,16 @@
+name: wanifi
+
+services:
+  wanifi:
+    image: ghcr.io/thehef/wanifi:latest
+    container_name: wanifi
+    restart: unless-stopped
+    ports:
+      - "8765:8000"
+    environment:
+      TZ: "Europe/Copenhagen"
+    privileged: true
+    pid: host
+    volumes:
+      - ./data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
