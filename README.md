@@ -16,6 +16,17 @@ pausing qBittorrent on 5G failover so you don't burn through mobile data.
 >
 > Not affiliated with Ubiquiti in any way. Just a UniFi user (and fan).
 
+> ⚠️ **LAN only. Do not expose this to the public internet.**
+>
+> WaniFi needs root-equivalent access to your Docker host to function
+> (`privileged: true`, `pid: host`, mounted Docker socket). It is built to
+> live behind your firewall on a trusted LAN and nothing else. There is no
+> rate limiting, no MFA, no audit logging, and the host-command feature lets
+> the admin run arbitrary shell as root. If you absolutely must reach it
+> from outside, use a VPN (WireGuard, Tailscale) — do **not** port-forward
+> `8765`, and do **not** stick it directly behind a reverse proxy without
+> additional authentication. You have been warned.
+
 ![Overview](docs/screenshots/overview.png)
 
 ## Features
@@ -156,13 +167,25 @@ dashboard every 2 seconds, and detects WAN state changes to fire your rules.
 
 ## Security notes
 
-- WaniFi runs with `privileged: true` and `pid: host` so it can use `nsenter`
-  for host-command rules and Docker socket for container actions. This is
-  effectively root on the host. **Only expose it on a trusted LAN.**
-- If you must expose it externally, put it behind a reverse proxy with
-  additional auth (Authelia, Pangolin, Cloudflare Tunnel + Access, etc.).
-- API keys, ntfy tokens and the bcrypt password hash live in the SQLite
-  database at `data/wanifi.db`. Back it up; it's the only secret.
+WaniFi is designed to run **inside your network**, full stop. The threat
+model assumes only trusted users can reach the UI.
+
+- **Root on the host.** The container runs with `privileged: true`,
+  `pid: host`, and a mounted Docker socket so it can use `nsenter` for
+  host-command rules and the Docker API for container actions. Anyone with
+  admin access to the WaniFi UI effectively has root on your Docker host.
+- **Single-user auth, no MFA, no rate limiting.** The login is one bcrypt
+  password and nothing else. Brute-force protection, IP allowlisting, audit
+  logging — none of that is in here.
+- **Arbitrary shell execution by design.** The "Host Command" rule type
+  runs whatever string you type, as root, on the host. That is the feature.
+  It is also why this should never be reachable from the public internet.
+- **Do not port-forward 8765.** Do not place it behind a reverse proxy
+  exposed to the internet, even with HTTPS. If you need remote access, use
+  a VPN (WireGuard, Tailscale, etc.) so the WaniFi UI stays on a private
+  network where it belongs.
+- **Backup `data/wanifi.db`.** It contains your UniFi API key, ntfy token,
+  and the bcrypt password hash. It is the only secret store.
 
 ## Updating
 
