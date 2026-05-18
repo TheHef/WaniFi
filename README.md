@@ -23,13 +23,22 @@ pausing qBittorrent on 5G failover so you don't burn through mobile data.
 ## Features
 
 - 📡 Polls a UniFi controller (UDM / UCG / UX) via the official API key
-- 🐳 Controls Docker containers through the host's Docker socket
-- 💻 Runs arbitrary shell commands on the Docker host (via `nsenter`)
 - 🔁 Rule triggers: `failover`, `restored`, `down`, `high_latency`
 - 📈 Live throughput / latency graphs with 1h to 30d ranges
-- 🔔 Optional ntfy push notifications
 - 🔐 Single-user login (bcrypt; first-run setup wizard)
 - 💾 SQLite, no other services required
+
+## Integrations
+
+All integrations are opt-in and can be toggled on/off individually in Settings → Tools.
+
+| Integration | What it does |
+|---|---|
+| **Host Command** | Runs arbitrary shell commands on the Docker host via `nsenter` (requires `privileged: true` + `pid: host`) |
+| **Docker** | Starts, stops, pauses and unpauses containers via the mounted Docker socket |
+| **qBittorrent** | Pauses and resumes all torrents via the qBittorrent WebUI API |
+| **Emby** | Pauses active Emby streams and unpauses them when the connection is restored |
+| **ntfy** | Sends push notifications on failover, restore, high latency, and watcher errors |
 
 ## Quick start
 
@@ -93,13 +102,20 @@ In the WaniFi UI go to **Settings**:
 
 ![Settings](docs/screenshots/settings.png)
 
-### 3. Add rules
+### 3. Enable integrations
+
+Go to **Settings → Tools** and toggle on the integrations you want to use. Each integration exposes its own config section (URL, credentials) once enabled.
+
+### 4. Add rules
 
 Rules tie a WAN event to an action. Examples:
 
-- `qbittorrent` · *On failover* · *Pause container*
-- `qbittorrent` · *On restored* · *Unpause container*
-- Host command · *On high latency* · `systemctl restart smokeping`
+- **Docker** · *On failover* · Pause `qbittorrent`
+- **Docker** · *On restored* · Unpause `qbittorrent`
+- **qBittorrent** · *On failover* · Pause all torrents
+- **Emby** · *On failover* · Pause streams
+- **Host Command** · *On high latency* · `systemctl restart smokeping`
+- **ntfy** · sends a push notification automatically on any trigger
 
 ![Rules](docs/screenshots/rules.png)
 
@@ -122,37 +138,6 @@ docker build -t wanifi:local .
 
 Then point the `image:` field in your `compose.yaml` at `wanifi:local` and
 run `docker compose up -d`.
-
-## Architecture
-
-```
-app/
-  main.py          FastAPI app, lifespan, router wiring
-  config.py        constants, logging, paths
-  db.py            SQLite + settings cache + async helpers
-  auth.py          session tokens + first-run setup
-  unifi.py         UniFi Network API client
-  docker_ops.py    Docker singleton + container actions
-  notify.py        ntfy push notifications
-  watcher.py       background polling + rule firing loops
-  models.py        Pydantic request models
-  routes/          one APIRouter per concern
-    auth.py system.py rules.py settings.py
-    events.py manual.py notify.py
-  static/
-    css/style.css
-    js/app.js           Alpine.js SPA logic
-    js/charts.js        Chart.js wrappers
-    js/device-icons.js  UniFi model to icon/name maps
-    devices/            device images
-  templates/
-    base.html app.html login.html setup.html
-    partials/_header.html dashboard.html rules.html
-             settings.html events.html _modals.html
-```
-
-A background task polls the UniFi controller, updates live stats for the
-dashboard every 2 seconds, and detects WAN state changes to fire your rules.
 
 ## Security notes
 
@@ -186,26 +171,6 @@ model assumes only trusted users can reach the UI.
   network where it belongs.
 - **Backup `data/wanifi.db`.** It contains your UniFi API key, ntfy token,
   and the bcrypt password hash. It is the only secret store.
-
-## Updating
-
-```bash
-docker compose pull
-docker compose up -d
-```
-
-Schema migrations run automatically on startup. New image versions are
-published to `ghcr.io/thehef/wanifi` on every push to `main`.
-
-## Troubleshooting
-
-- **Stuck on `/setup` after restart:** the bcrypt hash lives in
-  `data/wanifi.db`. If the bind mount is wrong it'll keep regenerating.
-- **WAN detection wrong:** click **Debug** in Settings to dump live UniFi
-  data to the browser console; verify your `primary_wan` / `failover_wan`
-  match the `subsystem` field shown in the discovered chips.
-- **Container `not found`:** rule containers must match `docker ps` names,
-  not Compose service names.
 
 ## Support
 
