@@ -32,13 +32,13 @@ pausing qBittorrent on 5G failover so you don't burn through mobile data.
 
 All integrations are opt-in and can be toggled on/off individually in Settings → Tools.
 
-| Integration | What it does |
+| Integration | Actions |
 |---|---|
 | **Host Command** | Runs arbitrary shell commands on the Docker host via `nsenter` (requires `privileged: true` + `pid: host`) |
-| **Docker** | Starts, stops, pauses and unpauses containers via the mounted Docker socket |
-| **qBittorrent** | Pauses and resumes all torrents via the qBittorrent WebUI API |
-| **Emby** | Pauses active Emby streams and unpauses them when the connection is restored |
-| **ntfy** | Sends push notifications on failover, restore, high latency, and watcher errors |
+| **Docker** | Stop, start, restart, pause, unpause containers via the mounted Docker socket |
+| **qBittorrent** | Enable/disable alt speed, set download/upload limit, pause/resume all torrents |
+| **Emby** | Set bitrate limit, clear bitrate limit, stop all sessions |
+| **ntfy** | Push notifications on failover, restore, high latency, and watcher errors |
 
 ## Quick start
 
