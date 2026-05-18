@@ -91,9 +91,6 @@ window.app = function () {
       await this.loadJellyfinSettings();
       await this.loadPlexSettings();
       await this.loadIntegrations();
-      this.categoryOpen.media         = !!(this.integrations.emby || this.integrations.jellyfin || this.integrations.plex);
-      this.categoryOpen.torrents      = !!this.integrations.qb;
-      this.categoryOpen.notifications = !!this.integrations.ntfy;
       this._setDefaultRuleType();
 
       // First run: redirect to settings if API key has never been saved
