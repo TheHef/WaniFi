@@ -13,16 +13,20 @@ from .config import APP_VERSION, log
 from .db import init_db
 from .routes import auth as auth_routes
 from .routes import backup as backup_routes
+from .routes import downloaders as downloader_routes
 from .routes import events as events_routes
+from .routes import homelab as homelab_routes
+from .routes import integrations as integrations_routes
 from .routes import manual as manual_routes
 from .routes import notify as notify_routes
+from .routes import notify_channels as notify_channel_routes
 from .routes import emby as emby_routes
 from .routes import jellyfin as jellyfin_routes
 from .routes import plex as plex_routes
-from .routes import integrations as integrations_routes
 from .routes import qbittorrent as qb_routes
 from .routes import rules as rules_routes
 from .routes import settings as settings_routes
+from .routes import stats as stats_routes
 from .routes import system as system_routes
 from .watcher import live_stats_loop, state, watcher_loop
 
@@ -73,15 +77,19 @@ app.include_router(events_routes.router)
 app.include_router(manual_routes.router)
 app.include_router(notify_routes.router)
 app.include_router(notify_routes.test_router)
+app.include_router(notify_channel_routes.router)
 app.include_router(qb_routes.router)
 app.include_router(qb_routes.test_router)
+app.include_router(downloader_routes.router)
 app.include_router(emby_routes.router)
 app.include_router(emby_routes.test_router)
 app.include_router(jellyfin_routes.router)
 app.include_router(jellyfin_routes.test_router)
 app.include_router(plex_routes.router)
 app.include_router(plex_routes.test_router)
+app.include_router(homelab_routes.router)
 app.include_router(integrations_routes.router)
+app.include_router(stats_routes.router)
 app.include_router(backup_routes.router)
 
 

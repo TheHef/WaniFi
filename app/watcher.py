@@ -198,6 +198,159 @@ async def run_plex_action(action: str, value: str = "") -> tuple[bool, str]:
         await client.close()
 
 
+async def run_sabnzbd_action(action: str, value: str = "") -> tuple[bool, str]:
+    from .sabnzbd import SabnzbdClient
+    url     = get_setting("sabnzbd_url", "")
+    api_key = get_setting("sabnzbd_api_key", "")
+    if not (url and api_key):
+        return False, "SABnzbd not configured"
+    client = SabnzbdClient(url, api_key)
+    try:
+        if action == "pause":
+            return await client.pause()
+        if action == "resume":
+            return await client.resume()
+        if action == "set_speed_limit":
+            return await client.set_speed_limit(int(value) if value else 100)
+        return False, f"Unknown SABnzbd action: {action}"
+    finally:
+        await client.close()
+
+
+async def run_transmission_action(action: str, value: str = "") -> tuple[bool, str]:
+    from .transmission import TransmissionClient
+    url  = get_setting("transmission_url", "")
+    user = get_setting("transmission_username", "")
+    pw   = get_setting("transmission_password", "")
+    if not url:
+        return False, "Transmission not configured"
+    client = TransmissionClient(url, user, pw or "")
+    try:
+        if action == "pause_all":
+            return await client.pause_all()
+        if action == "resume_all":
+            return await client.resume_all()
+        if action == "set_speed_limit":
+            return await client.set_speed_limit(int(value) if value else 0)
+        return False, f"Unknown Transmission action: {action}"
+    finally:
+        await client.close()
+
+
+async def run_deluge_action(action: str, value: str = "") -> tuple[bool, str]:
+    from .deluge import DelugeClient
+    url = get_setting("deluge_url", "")
+    pw  = get_setting("deluge_password", "")
+    if not url:
+        return False, "Deluge not configured"
+    client = DelugeClient(url, pw or "")
+    ok, err = await client.login()
+    if not ok:
+        return False, f"Deluge login failed: {err}"
+    try:
+        if action == "pause_all":
+            return await client.pause_all()
+        if action == "resume_all":
+            return await client.resume_all()
+        if action == "set_speed_limit":
+            return await client.set_speed_limit(int(value) if value else -1)
+        return False, f"Unknown Deluge action: {action}"
+    finally:
+        await client.close()
+
+
+async def run_ha_action(action: str, value: str = "") -> tuple[bool, str]:
+    from .homeassistant import HomeAssistantClient
+    url   = get_setting("ha_url", "")
+    token = get_setting("ha_token", "")
+    if not (url and token):
+        return False, "Home Assistant not configured"
+    client = HomeAssistantClient(url, token)
+    try:
+        if action == "call_webhook":
+            return await client.trigger_webhook(value)
+        if action == "turn_on":
+            return await client.call_service("homeassistant", "turn_on", value)
+        if action == "turn_off":
+            return await client.call_service("homeassistant", "turn_off", value)
+        return False, f"Unknown HA action: {action}"
+    finally:
+        await client.close()
+
+
+async def run_proxmox_action(action: str, value: str = "") -> tuple[bool, str]:
+    from .proxmox import ProxmoxClient
+    url  = get_setting("proxmox_url", "")
+    user = get_setting("proxmox_username", "")
+    pw   = get_setting("proxmox_password", "")
+    node = get_setting("proxmox_node", "pve")
+    if not (url and user):
+        return False, "Proxmox not configured"
+    # value format: "node/vmid" or just "vmid" (uses default node)
+    parts = value.split("/", 1) if "/" in value else [node, value]
+    vm_node = parts[0] if len(parts) == 2 else node
+    vmid    = parts[1] if len(parts) == 2 else parts[0]
+    action_map = {
+        "stop_vm":     "stop",
+        "shutdown_vm": "shutdown",
+        "suspend_vm":  "suspend",
+        "resume_vm":   "resume",
+        "start_vm":    "start",
+    }
+    proxmox_action = action_map.get(action)
+    if not proxmox_action:
+        return False, f"Unknown Proxmox action: {action}"
+    client = ProxmoxClient(url, user, pw or "", node)
+    try:
+        return await client.vm_action(vm_node, vmid, proxmox_action)
+    finally:
+        await client.close()
+
+
+async def run_sonarr_action(action: str) -> tuple[bool, str]:
+    from .sonarr import SonarrClient
+    url     = get_setting("sonarr_url", "")
+    api_key = get_setting("sonarr_api_key", "")
+    if not (url and api_key):
+        return False, "Sonarr not configured"
+    client = SonarrClient(url, api_key)
+    try:
+        if action == "disable_indexers":
+            return await client.set_indexers_enabled(False)
+        if action == "enable_indexers":
+            return await client.set_indexers_enabled(True)
+        return False, f"Unknown Sonarr action: {action}"
+    finally:
+        await client.close()
+
+
+async def run_radarr_action(action: str) -> tuple[bool, str]:
+    from .radarr import RadarrClient
+    url     = get_setting("radarr_url", "")
+    api_key = get_setting("radarr_api_key", "")
+    if not (url and api_key):
+        return False, "Radarr not configured"
+    client = RadarrClient(url, api_key)
+    try:
+        if action == "disable_indexers":
+            return await client.set_indexers_enabled(False)
+        if action == "enable_indexers":
+            return await client.set_indexers_enabled(True)
+        return False, f"Unknown Radarr action: {action}"
+    finally:
+        await client.close()
+
+
+async def run_webhook_action(url: str, method: str = "POST") -> tuple[bool, str]:
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=10, verify=False) as client:
+            r = await getattr(client, method.lower())(url)
+            return r.status_code < 400, f"HTTP {r.status_code}"
+    except Exception as e:
+        return False, str(e)
+
+
 async def fire_trigger(trigger: str):
     with db() as conn:
         rules = conn.execute(
@@ -207,18 +360,31 @@ async def fire_trigger(trigger: str):
         return
     for rule in rules:
         rtype = rule["rule_type"]
+
         # Skip if integration is disabled
         integration_key = {
-            "docker":       "integration_docker",
-            "host_command": "integration_host_command",
-            "qbittorrent":  "integration_qb",
-            "emby":         "integration_emby",
-            "jellyfin":     "integration_jellyfin",
-            "plex":         "integration_plex",
+            "docker":        "integration_docker",
+            "host_command":  "integration_host_command",
+            "qbittorrent":   "integration_qb",
+            "sabnzbd":       "integration_sabnzbd",
+            "transmission":  "integration_transmission",
+            "deluge":        "integration_deluge",
+            "emby":          "integration_emby",
+            "jellyfin":      "integration_jellyfin",
+            "plex":          "integration_plex",
+            "homeassistant": "integration_homeassistant",
+            "proxmox":       "integration_proxmox",
+            "sonarr":        "integration_sonarr",
+            "radarr":        "integration_radarr",
         }.get(rtype)
-        if integration_key and get_setting(integration_key, "1") != "1":
+        if integration_key and get_setting(integration_key, "0") != "1":
             await a_log_event("info", f"Rule '{rule['name']}' skipped (integration disabled)")
             continue
+
+        # Optional delay before executing
+        delay = rule["delay_seconds"] if "delay_seconds" in rule.keys() else 0
+        if delay and delay > 0:
+            await asyncio.sleep(delay)
 
         if rtype == "host_command":
             ok, msg = await execute_host_command(rule["command"])
@@ -231,6 +397,24 @@ async def fire_trigger(trigger: str):
             await a_log_event(
                 "info" if ok else "error",
                 f"Rule: qB {rule['action']} on {trigger} -> {msg}",
+            )
+        elif rtype == "sabnzbd":
+            ok, msg = await run_sabnzbd_action(rule["action"], rule["container"])
+            await a_log_event(
+                "info" if ok else "error",
+                f"Rule: SABnzbd {rule['action']} on {trigger} -> {msg}",
+            )
+        elif rtype == "transmission":
+            ok, msg = await run_transmission_action(rule["action"], rule["container"])
+            await a_log_event(
+                "info" if ok else "error",
+                f"Rule: Transmission {rule['action']} on {trigger} -> {msg}",
+            )
+        elif rtype == "deluge":
+            ok, msg = await run_deluge_action(rule["action"], rule["container"])
+            await a_log_event(
+                "info" if ok else "error",
+                f"Rule: Deluge {rule['action']} on {trigger} -> {msg}",
             )
         elif rtype == "emby":
             ok, msg = await run_emby_action(rule["action"], rule["container"])
@@ -249,6 +433,37 @@ async def fire_trigger(trigger: str):
             await a_log_event(
                 "info" if ok else "error",
                 f"Rule: Plex {rule['action']} on {trigger} -> {msg}",
+            )
+        elif rtype == "homeassistant":
+            ok, msg = await run_ha_action(rule["action"], rule["container"])
+            await a_log_event(
+                "info" if ok else "error",
+                f"Rule: HA {rule['action']} on {trigger} -> {msg}",
+            )
+        elif rtype == "proxmox":
+            ok, msg = await run_proxmox_action(rule["action"], rule["container"])
+            await a_log_event(
+                "info" if ok else "error",
+                f"Rule: Proxmox {rule['action']} on {trigger} -> {msg}",
+            )
+        elif rtype == "sonarr":
+            ok, msg = await run_sonarr_action(rule["action"])
+            await a_log_event(
+                "info" if ok else "error",
+                f"Rule: Sonarr {rule['action']} on {trigger} -> {msg}",
+            )
+        elif rtype == "radarr":
+            ok, msg = await run_radarr_action(rule["action"])
+            await a_log_event(
+                "info" if ok else "error",
+                f"Rule: Radarr {rule['action']} on {trigger} -> {msg}",
+            )
+        elif rtype == "webhook":
+            method = rule["container"] or "POST"
+            ok, msg = await run_webhook_action(rule["command"], method)
+            await a_log_event(
+                "info" if ok else "error",
+                f"Rule: webhook {method} {rule['command']} on {trigger} -> {msg}",
             )
         else:
             ok, msg = container_action(rule["container"], rule["action"])

@@ -11,6 +11,14 @@ VALID_QB_ACTIONS           = ("alt_speed_on", "alt_speed_off", "set_dl_limit", "
 VALID_EMBY_ACTIONS         = ("set_bitrate_limit", "clear_bitrate_limit", "stop_all_sessions")
 VALID_JELLYFIN_ACTIONS     = ("set_bitrate_limit", "clear_bitrate_limit", "stop_all_sessions")
 VALID_PLEX_ACTIONS         = ("set_wan_bitrate", "clear_wan_bitrate", "stop_all_streams")
+VALID_SABNZBD_ACTIONS      = ("pause", "resume", "set_speed_limit")
+VALID_TRANSMISSION_ACTIONS = ("pause_all", "resume_all", "set_speed_limit")
+VALID_DELUGE_ACTIONS       = ("pause_all", "resume_all", "set_speed_limit")
+VALID_HA_ACTIONS           = ("call_webhook", "turn_on", "turn_off")
+VALID_PROXMOX_ACTIONS      = ("stop_vm", "shutdown_vm", "suspend_vm", "resume_vm", "start_vm")
+VALID_SONARR_ACTIONS       = ("disable_indexers", "enable_indexers")
+VALID_RADARR_ACTIONS       = ("disable_indexers", "enable_indexers")
+VALID_WEBHOOK_ACTIONS      = ("send",)
 
 
 class SetupIn(BaseModel):
@@ -39,6 +47,7 @@ class RuleIn(BaseModel):
     command: str = ""
     trigger: str
     enabled: bool = True
+    delay_seconds: int = 0
 
 
 class NotifySettingsIn(BaseModel):
@@ -49,6 +58,20 @@ class NotifySettingsIn(BaseModel):
     ntfy_on_restored: bool = True
     ntfy_on_error: bool = False
     ntfy_on_high_latency: bool = False
+
+
+class DiscordSettingsIn(BaseModel):
+    discord_webhook_url: str = ""
+
+
+class TelegramSettingsIn(BaseModel):
+    telegram_bot_token: str = ""
+    telegram_chat_id: str = ""
+
+
+class PushoverSettingsIn(BaseModel):
+    pushover_app_token: str = ""
+    pushover_user_key: str = ""
 
 
 class QbSettingsIn(BaseModel):
@@ -70,3 +93,41 @@ class JellyfinSettingsIn(BaseModel):
 class PlexSettingsIn(BaseModel):
     plex_url: str = ""
     plex_token: Optional[str] = None
+
+
+class SabnzbdSettingsIn(BaseModel):
+    sabnzbd_url: str = ""
+    sabnzbd_api_key: Optional[str] = None
+
+
+class TransmissionSettingsIn(BaseModel):
+    transmission_url: str = ""
+    transmission_username: str = ""
+    transmission_password: Optional[str] = None
+
+
+class DelugeSettingsIn(BaseModel):
+    deluge_url: str = ""
+    deluge_password: Optional[str] = None
+
+
+class HomeAssistantSettingsIn(BaseModel):
+    ha_url: str = ""
+    ha_token: Optional[str] = None
+
+
+class ProxmoxSettingsIn(BaseModel):
+    proxmox_url: str = ""
+    proxmox_username: str = ""
+    proxmox_password: Optional[str] = None
+    proxmox_node: str = ""
+
+
+class SonarrSettingsIn(BaseModel):
+    sonarr_url: str = ""
+    sonarr_api_key: Optional[str] = None
+
+
+class RadarrSettingsIn(BaseModel):
+    radarr_url: str = ""
+    radarr_api_key: Optional[str] = None

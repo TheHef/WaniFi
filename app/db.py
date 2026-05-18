@@ -61,9 +61,10 @@ def init_db():
         )
         cols = {r[1] for r in conn.execute("PRAGMA table_info(rules)").fetchall()}
         for col, ddl in (
-            ("rule_type", "TEXT NOT NULL DEFAULT 'docker'"),
-            ("name",      "TEXT NOT NULL DEFAULT ''"),
-            ("command",   "TEXT NOT NULL DEFAULT ''"),
+            ("rule_type",      "TEXT NOT NULL DEFAULT 'docker'"),
+            ("name",           "TEXT NOT NULL DEFAULT ''"),
+            ("command",        "TEXT NOT NULL DEFAULT ''"),
+            ("delay_seconds",  "INTEGER NOT NULL DEFAULT 0"),
         ):
             if col not in cols:
                 conn.execute(f"ALTER TABLE rules ADD COLUMN {col} {ddl}")

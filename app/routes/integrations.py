@@ -6,7 +6,13 @@ from ..db import get_setting, set_setting
 
 router = APIRouter(prefix="/api/integrations")
 
-INTEGRATION_KEYS = ("host_command", "docker", "qb", "emby", "jellyfin", "plex", "ntfy")
+INTEGRATION_KEYS = (
+    "host_command", "docker",
+    "qb", "sabnzbd", "transmission", "deluge",
+    "emby", "jellyfin", "plex",
+    "ntfy", "discord", "telegram", "pushover",
+    "homeassistant", "proxmox", "sonarr", "radarr",
+)
 
 
 @router.get("")

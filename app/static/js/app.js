@@ -19,15 +19,37 @@ window.app = function () {
       ntfy_on_failover: true, ntfy_on_restored: true,
       ntfy_on_error: false, ntfy_on_high_latency: false,
     },
-    qbSettings:       { qb_url: '', qb_username: '', qb_password: '', qb_password_set: false },
-    embySettings:     { emby_url: '', emby_token: '', emby_token_set: false },
-    jellyfinSettings: { jellyfin_url: '', jellyfin_token: '', jellyfin_token_set: false },
-    plexSettings:     { plex_url: '', plex_token: '', plex_token_set: false },
+    discordSettings:     { discord_webhook_url: '', discord_webhook_url_set: false },
+    telegramSettings:    { telegram_bot_token: '', telegram_bot_token_set: false, telegram_chat_id: '' },
+    pushoverSettings:    { pushover_app_token: '', pushover_app_token_set: false, pushover_user_key: '' },
+    qbSettings:          { qb_url: '', qb_username: '', qb_password: '', qb_password_set: false },
+    sabnzbdSettings:     { sabnzbd_url: '', sabnzbd_api_key_set: false },
+    transmissionSettings:{ transmission_url: '', transmission_username: '', transmission_password_set: false },
+    delugeSettings:      { deluge_url: '', deluge_password_set: false },
+    embySettings:        { emby_url: '', emby_token: '', emby_token_set: false },
+    jellyfinSettings:    { jellyfin_url: '', jellyfin_token: '', jellyfin_token_set: false },
+    plexSettings:        { plex_url: '', plex_token: '', plex_token_set: false },
+    haSettings:          { ha_url: '', ha_token_set: false },
+    proxmoxSettings:     { proxmox_url: '', proxmox_username: '', proxmox_password_set: false, proxmox_node: 'pve' },
+    sonarrSettings:      { sonarr_url: '', sonarr_api_key_set: false },
+    radarrSettings:      { radarr_url: '', radarr_api_key_set: false },
+
     embyMsg: '', jellyfinMsg: '', plexMsg: '',
-    integrations: { host_command: false, docker: false, qb: false, emby: false, jellyfin: false, plex: false, ntfy: false },
-    categoryOpen: { media: false, torrents: false, notifications: false },
+    discordMsg: '', telegramMsg: '', pushoverMsg: '',
+    sabnzbdMsg: '', transmissionMsg: '', delugeMsg: '',
+    haMsg: '', proxmoxMsg: '', sonarrMsg: '', radarrMsg: '',
+
+    integrations: {
+      host_command: false, docker: false,
+      qb: false, sabnzbd: false, transmission: false, deluge: false,
+      emby: false, jellyfin: false, plex: false,
+      ntfy: false, discord: false, telegram: false, pushover: false,
+      homeassistant: false, proxmox: false, sonarr: false, radarr: false,
+    },
+    categoryOpen: { media: false, downloaders: false, notifications: false, homelab: false },
+    stats: {},
     rules: [], events: [], containers: [], discoveredWans: [],
-    newRule: { rule_type: 'host_command', name: '', container: '', trigger: 'failover', action: 'stop', command: '' },
+    newRule: { rule_type: 'host_command', name: '', container: '', trigger: 'failover', action: 'stop', command: '', delay_seconds: 0 },
     confirmModal: { open: false, label: '', confirm: () => {} },
     editModal:    { open: false, rule: {} },
 
@@ -87,11 +109,22 @@ window.app = function () {
 
       await this.loadSettings();
       await this.loadNotifySettings();
+      await this.loadDiscordSettings();
+      await this.loadTelegramSettings();
+      await this.loadPushoverSettings();
       await this.loadQbSettings();
+      await this.loadSabnzbdSettings();
+      await this.loadTransmissionSettings();
+      await this.loadDelugeSettings();
       await this.loadEmbySettings();
       await this.loadJellyfinSettings();
       await this.loadPlexSettings();
+      await this.loadHaSettings();
+      await this.loadProxmoxSettings();
+      await this.loadSonarrSettings();
+      await this.loadRadarrSettings();
       await this.loadIntegrations();
+      await this.loadStats();
       this._setDefaultRuleType();
 
       if (!this.settings.unifi_api_key_set && !fromPath) {
@@ -128,6 +161,7 @@ window.app = function () {
         this.events     = e.events;
         this.containers = c.containers;
         this.appConnected = true;
+        await this.loadStats();
       } catch { this.appConnected = false; }
     },
 
@@ -455,6 +489,228 @@ window.app = function () {
       setTimeout(() => this.plexMsg = '', 5000);
     },
 
+    // ---- Discord ----------------------------------------------------------
+    async loadDiscordSettings() {
+      this.discordSettings = await fetch('/api/discord-settings').then(r => r.json());
+    },
+    async saveDiscordSettings() {
+      const r = await fetch('/api/discord-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ discord_webhook_url: this.$refs.discordWebhook?.value || '' }) });
+      const d = await r.json().catch(() => ({}));
+      this.discordMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadDiscordSettings();
+      setTimeout(() => this.discordMsg = '', 3000);
+    },
+    async testDiscord() {
+      await this.saveDiscordSettings();
+      this.discordMsg = 'Sending…';
+      const d = await fetch('/api/test-discord', { method: 'POST' }).then(r => r.json());
+      this.discordMsg = d.ok ? '✓ Sent' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.discordMsg = '', 5000);
+    },
+
+    // ---- Telegram ---------------------------------------------------------
+    async loadTelegramSettings() {
+      this.telegramSettings = await fetch('/api/telegram-settings').then(r => r.json());
+    },
+    async saveTelegramSettings() {
+      const payload = { telegram_chat_id: this.telegramSettings.telegram_chat_id };
+      const token = this.$refs.telegramToken?.value;
+      if (token) payload.telegram_bot_token = token;
+      const r = await fetch('/api/telegram-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.telegramMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadTelegramSettings();
+      setTimeout(() => this.telegramMsg = '', 3000);
+    },
+    async testTelegram() {
+      await this.saveTelegramSettings();
+      this.telegramMsg = 'Sending…';
+      const d = await fetch('/api/test-telegram', { method: 'POST' }).then(r => r.json());
+      this.telegramMsg = d.ok ? '✓ Sent' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.telegramMsg = '', 5000);
+    },
+
+    // ---- Pushover ---------------------------------------------------------
+    async loadPushoverSettings() {
+      this.pushoverSettings = await fetch('/api/pushover-settings').then(r => r.json());
+    },
+    async savePushoverSettings() {
+      const payload = { pushover_user_key: this.pushoverSettings.pushover_user_key };
+      const token = this.$refs.pushoverToken?.value;
+      if (token) payload.pushover_app_token = token;
+      const r = await fetch('/api/pushover-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.pushoverMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadPushoverSettings();
+      setTimeout(() => this.pushoverMsg = '', 3000);
+    },
+    async testPushover() {
+      await this.savePushoverSettings();
+      this.pushoverMsg = 'Sending…';
+      const d = await fetch('/api/test-pushover', { method: 'POST' }).then(r => r.json());
+      this.pushoverMsg = d.ok ? '✓ Sent' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.pushoverMsg = '', 5000);
+    },
+
+    // ---- SABnzbd ----------------------------------------------------------
+    async loadSabnzbdSettings() {
+      this.sabnzbdSettings = await fetch('/api/sabnzbd-settings').then(r => r.json());
+    },
+    async saveSabnzbdSettings() {
+      const payload = { sabnzbd_url: this.sabnzbdSettings.sabnzbd_url };
+      const key = this.$refs.sabnzbdKey?.value;
+      if (key) payload.sabnzbd_api_key = key;
+      const r = await fetch('/api/sabnzbd-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.sabnzbdMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadSabnzbdSettings();
+      setTimeout(() => this.sabnzbdMsg = '', 3000);
+    },
+    async testSabnzbd() {
+      await this.saveSabnzbdSettings();
+      this.sabnzbdMsg = 'Testing…';
+      const d = await fetch('/api/test-sabnzbd', { method: 'POST' }).then(r => r.json());
+      this.sabnzbdMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.sabnzbdMsg = '', 5000);
+    },
+
+    // ---- Transmission -----------------------------------------------------
+    async loadTransmissionSettings() {
+      this.transmissionSettings = await fetch('/api/transmission-settings').then(r => r.json());
+    },
+    async saveTransmissionSettings() {
+      const payload = { transmission_url: this.transmissionSettings.transmission_url, transmission_username: this.transmissionSettings.transmission_username };
+      const pw = this.$refs.transmissionPw?.value;
+      if (pw) payload.transmission_password = pw;
+      const r = await fetch('/api/transmission-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.transmissionMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadTransmissionSettings();
+      setTimeout(() => this.transmissionMsg = '', 3000);
+    },
+    async testTransmission() {
+      await this.saveTransmissionSettings();
+      this.transmissionMsg = 'Testing…';
+      const d = await fetch('/api/test-transmission', { method: 'POST' }).then(r => r.json());
+      this.transmissionMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.transmissionMsg = '', 5000);
+    },
+
+    // ---- Deluge -----------------------------------------------------------
+    async loadDelugeSettings() {
+      this.delugeSettings = await fetch('/api/deluge-settings').then(r => r.json());
+    },
+    async saveDelugeSettings() {
+      const payload = { deluge_url: this.delugeSettings.deluge_url };
+      const pw = this.$refs.delugePw?.value;
+      if (pw) payload.deluge_password = pw;
+      const r = await fetch('/api/deluge-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.delugeMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadDelugeSettings();
+      setTimeout(() => this.delugeMsg = '', 3000);
+    },
+    async testDeluge() {
+      await this.saveDelugeSettings();
+      this.delugeMsg = 'Testing…';
+      const d = await fetch('/api/test-deluge', { method: 'POST' }).then(r => r.json());
+      this.delugeMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.delugeMsg = '', 5000);
+    },
+
+    // ---- Home Assistant ---------------------------------------------------
+    async loadHaSettings() {
+      this.haSettings = await fetch('/api/ha-settings').then(r => r.json());
+    },
+    async saveHaSettings() {
+      const payload = { ha_url: this.haSettings.ha_url };
+      const token = this.$refs.haToken?.value;
+      if (token) payload.ha_token = token;
+      const r = await fetch('/api/ha-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.haMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadHaSettings();
+      setTimeout(() => this.haMsg = '', 3000);
+    },
+    async testHa() {
+      await this.saveHaSettings();
+      this.haMsg = 'Testing…';
+      const d = await fetch('/api/test-ha', { method: 'POST' }).then(r => r.json());
+      this.haMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.haMsg = '', 5000);
+    },
+
+    // ---- Proxmox ----------------------------------------------------------
+    async loadProxmoxSettings() {
+      this.proxmoxSettings = await fetch('/api/proxmox-settings').then(r => r.json());
+    },
+    async saveProxmoxSettings() {
+      const payload = { proxmox_url: this.proxmoxSettings.proxmox_url, proxmox_username: this.proxmoxSettings.proxmox_username, proxmox_node: this.proxmoxSettings.proxmox_node };
+      const pw = this.$refs.proxmoxPw?.value;
+      if (pw) payload.proxmox_password = pw;
+      const r = await fetch('/api/proxmox-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.proxmoxMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadProxmoxSettings();
+      setTimeout(() => this.proxmoxMsg = '', 3000);
+    },
+    async testProxmox() {
+      await this.saveProxmoxSettings();
+      this.proxmoxMsg = 'Testing…';
+      const d = await fetch('/api/test-proxmox', { method: 'POST' }).then(r => r.json());
+      this.proxmoxMsg = d.ok ? '✓ ' + (d.error ? '' : 'Connected') : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.proxmoxMsg = '', 5000);
+    },
+
+    // ---- Sonarr -----------------------------------------------------------
+    async loadSonarrSettings() {
+      this.sonarrSettings = await fetch('/api/sonarr-settings').then(r => r.json());
+    },
+    async saveSonarrSettings() {
+      const payload = { sonarr_url: this.sonarrSettings.sonarr_url };
+      const key = this.$refs.sonarrKey?.value;
+      if (key) payload.sonarr_api_key = key;
+      const r = await fetch('/api/sonarr-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.sonarrMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadSonarrSettings();
+      setTimeout(() => this.sonarrMsg = '', 3000);
+    },
+    async testSonarr() {
+      await this.saveSonarrSettings();
+      this.sonarrMsg = 'Testing…';
+      const d = await fetch('/api/test-sonarr', { method: 'POST' }).then(r => r.json());
+      this.sonarrMsg = d.ok ? '✓ v' + (d.error || '') : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.sonarrMsg = '', 5000);
+    },
+
+    // ---- Radarr -----------------------------------------------------------
+    async loadRadarrSettings() {
+      this.radarrSettings = await fetch('/api/radarr-settings').then(r => r.json());
+    },
+    async saveRadarrSettings() {
+      const payload = { radarr_url: this.radarrSettings.radarr_url };
+      const key = this.$refs.radarrKey?.value;
+      if (key) payload.radarr_api_key = key;
+      const r = await fetch('/api/radarr-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.radarrMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadRadarrSettings();
+      setTimeout(() => this.radarrMsg = '', 3000);
+    },
+    async testRadarr() {
+      await this.saveRadarrSettings();
+      this.radarrMsg = 'Testing…';
+      const d = await fetch('/api/test-radarr', { method: 'POST' }).then(r => r.json());
+      this.radarrMsg = d.ok ? '✓ v' + (d.error || '') : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.radarrMsg = '', 5000);
+    },
+
+    // ---- Stats ------------------------------------------------------------
+    async loadStats() {
+      try { this.stats = await fetch('/api/stats').then(r => r.json()); } catch {}
+    },
+
     // ---- Integrations -----------------------------------------------------
     async loadIntegrations() {
       this.integrations = await fetch('/api/integrations').then(r => r.json());
@@ -462,12 +718,19 @@ window.app = function () {
 
     _setDefaultRuleType() {
       const order = [
-        ['host_command', 'host_command', ''],
-        ['docker',       'docker',       'stop'],
-        ['qbittorrent',  'qb',           'alt_speed_on'],
-        ['emby',         'emby',         'set_bitrate_limit'],
-        ['jellyfin',     'jellyfin',     'set_bitrate_limit'],
-        ['plex',         'plex',         'set_wan_bitrate'],
+        ['host_command',  'host_command',  ''],
+        ['docker',        'docker',        'stop'],
+        ['qbittorrent',   'qb',            'alt_speed_on'],
+        ['sabnzbd',       'sabnzbd',       'pause'],
+        ['transmission',  'transmission',  'pause_all'],
+        ['deluge',        'deluge',        'pause_all'],
+        ['emby',          'emby',          'set_bitrate_limit'],
+        ['jellyfin',      'jellyfin',      'set_bitrate_limit'],
+        ['plex',          'plex',          'set_wan_bitrate'],
+        ['homeassistant', 'homeassistant', 'call_webhook'],
+        ['proxmox',       'proxmox',       'stop_vm'],
+        ['sonarr',        'sonarr',        'disable_indexers'],
+        ['radarr',        'radarr',        'disable_indexers'],
       ];
       for (const [rtype, ikey, action] of order) {
         if (this.integrations[ikey]) {
@@ -476,7 +739,8 @@ window.app = function () {
           return;
         }
       }
-      this.newRule.rule_type = '';
+      this.newRule.rule_type = 'webhook';
+      this.newRule.action    = 'send';
     },
 
     async toggleIntegration(name) {
@@ -485,9 +749,10 @@ window.app = function () {
       if (d.ok) {
         this.integrations[name] = d.enabled;
         if (d.enabled) {
-          if (['emby', 'jellyfin', 'plex'].includes(name)) this.categoryOpen.media = true;
-          else if (name === 'qb')   this.categoryOpen.torrents      = true;
-          else if (name === 'ntfy') this.categoryOpen.notifications = true;
+          if (['emby', 'jellyfin', 'plex'].includes(name))                              this.categoryOpen.media = true;
+          else if (['qb', 'sabnzbd', 'transmission', 'deluge'].includes(name))          this.categoryOpen.downloaders = true;
+          else if (['ntfy', 'discord', 'telegram', 'pushover'].includes(name))          this.categoryOpen.notifications = true;
+          else if (['homeassistant', 'proxmox', 'sonarr', 'radarr'].includes(name))     this.categoryOpen.homelab = true;
         }
       }
     },

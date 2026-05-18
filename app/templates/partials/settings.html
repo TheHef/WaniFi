@@ -251,37 +251,55 @@
           </button>
         </div>
       </div>      <div class="rounded-xl border overflow-hidden transition"
-           :class="integrations.qb ? 'border-slate-700/80' : 'border-slate-800'">
-        <button @click="categoryOpen.torrents = !categoryOpen.torrents"
+           :class="(integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'border-slate-700/80' : 'border-slate-800'">
+        <button @click="categoryOpen.downloaders = !categoryOpen.downloaders"
                 class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/40 transition">
           <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
           </svg>
           <span class="text-sm font-semibold text-slate-300 flex-1 text-left">Downloaders</span>
-          <span x-show="integrations.qb"
-                class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 mr-1">1 active</span>
-          <svg class="w-4 h-4 text-slate-600 transition-transform duration-200" :class="categoryOpen.torrents ? 'rotate-180' : ''"
+          <span x-show="integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge"
+                class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 mr-1"
+                x-text="[integrations.qb, integrations.sabnzbd, integrations.transmission, integrations.deluge].filter(Boolean).length + ' active'"></span>
+          <svg class="w-4 h-4 text-slate-600 transition-transform duration-200" :class="categoryOpen.downloaders ? 'rotate-180' : ''"
                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
           </svg>
         </button>
-        <div x-show="categoryOpen.torrents" x-transition class="flex flex-wrap gap-2 px-4 pb-4 pt-2 border-t border-slate-800">
+        <div x-show="categoryOpen.downloaders" x-transition class="flex flex-wrap gap-2 px-4 pb-4 pt-2 border-t border-slate-800">
           <button @click="toggleIntegration('qb')"
                   :class="integrations.qb ? 'bg-[#65A5E9]/20 border-[#65A5E9]/50 text-[#65A5E9]' : 'bg-slate-800 border-slate-700 text-slate-500'"
                   class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
             <span class="w-2 h-2 rounded-full" :class="integrations.qb ? 'bg-[#65A5E9]' : 'bg-slate-600'"></span>qBittorrent
           </button>
+          <button @click="toggleIntegration('sabnzbd')"
+                  :class="integrations.sabnzbd ? 'bg-[#F5A623]/20 border-[#F5A623]/50 text-[#F5A623]' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.sabnzbd ? 'bg-[#F5A623]' : 'bg-slate-600'"></span>SABnzbd
+          </button>
+          <button @click="toggleIntegration('transmission')"
+                  :class="integrations.transmission ? 'bg-[#C33B2E]/20 border-[#C33B2E]/50 text-[#C33B2E]' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.transmission ? 'bg-[#C33B2E]' : 'bg-slate-600'"></span>Transmission
+          </button>
+          <button @click="toggleIntegration('deluge')"
+                  :class="integrations.deluge ? 'bg-[#88B04B]/20 border-[#88B04B]/50 text-[#88B04B]' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.deluge ? 'bg-[#88B04B]' : 'bg-slate-600'"></span>Deluge
+          </button>
         </div>
-      </div>      <div class="rounded-xl border overflow-hidden transition"
-           :class="integrations.ntfy ? 'border-slate-700/80' : 'border-slate-800'">
+      </div>
+      <div class="rounded-xl border overflow-hidden transition"
+           :class="(integrations.ntfy || integrations.discord || integrations.telegram || integrations.pushover) ? 'border-slate-700/80' : 'border-slate-800'">
         <button @click="categoryOpen.notifications = !categoryOpen.notifications"
                 class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/40 transition">
           <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
           </svg>
           <span class="text-sm font-semibold text-slate-300 flex-1 text-left">Notifications</span>
-          <span x-show="integrations.ntfy"
-                class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 mr-1">1 active</span>
+          <span x-show="integrations.ntfy || integrations.discord || integrations.telegram || integrations.pushover"
+                class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 mr-1"
+                x-text="[integrations.ntfy, integrations.discord, integrations.telegram, integrations.pushover].filter(Boolean).length + ' active'"></span>
           <svg class="w-4 h-4 text-slate-600 transition-transform duration-200" :class="categoryOpen.notifications ? 'rotate-180' : ''"
                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
@@ -292,6 +310,60 @@
                   :class="integrations.ntfy ? 'bg-[#29665A]/20 border-[#29665A]/50 text-[#29665A]' : 'bg-slate-800 border-slate-700 text-slate-500'"
                   class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
             <span class="w-2 h-2 rounded-full" :class="integrations.ntfy ? 'bg-[#29665A]' : 'bg-slate-600'"></span>ntfy
+          </button>
+          <button @click="toggleIntegration('discord')"
+                  :class="integrations.discord ? 'bg-[#5865F2]/20 border-[#5865F2]/50 text-[#5865F2]' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.discord ? 'bg-[#5865F2]' : 'bg-slate-600'"></span>Discord
+          </button>
+          <button @click="toggleIntegration('telegram')"
+                  :class="integrations.telegram ? 'bg-[#26A5E4]/20 border-[#26A5E4]/50 text-[#26A5E4]' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.telegram ? 'bg-[#26A5E4]' : 'bg-slate-600'"></span>Telegram
+          </button>
+          <button @click="toggleIntegration('pushover')"
+                  :class="integrations.pushover ? 'bg-[#F83600]/20 border-[#F83600]/50 text-[#F83600]' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.pushover ? 'bg-[#F83600]' : 'bg-slate-600'"></span>Pushover
+          </button>
+        </div>
+      </div>
+      <div class="rounded-xl border overflow-hidden transition"
+           :class="(integrations.homeassistant || integrations.proxmox || integrations.sonarr || integrations.radarr) ? 'border-slate-700/80' : 'border-slate-800'">
+        <button @click="categoryOpen.homelab = !categoryOpen.homelab"
+                class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/40 transition">
+          <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <span class="text-sm font-semibold text-slate-300 flex-1 text-left">Homelab</span>
+          <span x-show="integrations.homeassistant || integrations.proxmox || integrations.sonarr || integrations.radarr"
+                class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 mr-1"
+                x-text="[integrations.homeassistant, integrations.proxmox, integrations.sonarr, integrations.radarr].filter(Boolean).length + ' active'"></span>
+          <svg class="w-4 h-4 text-slate-600 transition-transform duration-200" :class="categoryOpen.homelab ? 'rotate-180' : ''"
+               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div x-show="categoryOpen.homelab" x-transition class="flex flex-wrap gap-2 px-4 pb-4 pt-2 border-t border-slate-800">
+          <button @click="toggleIntegration('homeassistant')"
+                  :class="integrations.homeassistant ? 'bg-[#18BCF2]/20 border-[#18BCF2]/50 text-[#18BCF2]' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.homeassistant ? 'bg-[#18BCF2]' : 'bg-slate-600'"></span>Home Assistant
+          </button>
+          <button @click="toggleIntegration('proxmox')"
+                  :class="integrations.proxmox ? 'bg-[#E57000]/20 border-[#E57000]/50 text-[#E57000]' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.proxmox ? 'bg-[#E57000]' : 'bg-slate-600'"></span>Proxmox
+          </button>
+          <button @click="toggleIntegration('sonarr')"
+                  :class="integrations.sonarr ? 'bg-[#35C5F4]/20 border-[#35C5F4]/50 text-[#35C5F4]' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.sonarr ? 'bg-[#35C5F4]' : 'bg-slate-600'"></span>Sonarr
+          </button>
+          <button @click="toggleIntegration('radarr')"
+                  :class="integrations.radarr ? 'bg-[#FFC230]/20 border-[#FFC230]/50 text-[#FFC230]' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.radarr ? 'bg-[#FFC230]' : 'bg-slate-600'"></span>Radarr
           </button>
         </div>
       </div>
@@ -407,7 +479,265 @@
               :class="qbMsg.startsWith('✓') ? 'text-emerald-400' : qbMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'"
               x-show="qbMsg" x-text="qbMsg"></span>
       </div>
-    </div>    <div x-show="integrations.ntfy" x-transition :class="(integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb) ? 'pt-6 border-t border-slate-800' : ''">
+    </div>    <div x-show="integrations.sabnzbd" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-[#F5A623] uppercase tracking-wider mb-4">SABnzbd</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Server URL</label>
+          <input x-model="sabnzbdSettings.sabnzbd_url" placeholder="http://192.168.1.10:8080"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#F5A623] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">API Key
+            <span x-show="sabnzbdSettings.sabnzbd_api_key_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="sabnzbdKey" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#F5A623] transition">
+          <p class="text-xs text-slate-600 mt-1">SABnzbd → Config → General → API Key</p>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveSabnzbdSettings()" class="bg-[#F5A623] hover:bg-[#F5A623]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testSabnzbd()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="sabnzbdMsg.startsWith('✓') ? 'text-emerald-400' : sabnzbdMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="sabnzbdMsg" x-text="sabnzbdMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.transmission" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-[#C33B2E] uppercase tracking-wider mb-4">Transmission</div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">RPC URL</label>
+          <input x-model="transmissionSettings.transmission_url" placeholder="http://192.168.1.10:9091"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#C33B2E] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Username</label>
+          <input x-model="transmissionSettings.transmission_username" placeholder="admin"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#C33B2E] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Password
+            <span x-show="transmissionSettings.transmission_password_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="transmissionPw" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#C33B2E] transition">
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveTransmissionSettings()" class="bg-[#C33B2E] hover:bg-[#C33B2E]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testTransmission()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="transmissionMsg.startsWith('✓') ? 'text-emerald-400' : transmissionMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="transmissionMsg" x-text="transmissionMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.deluge" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-[#88B04B] uppercase tracking-wider mb-4">Deluge</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Web UI URL</label>
+          <input x-model="delugeSettings.deluge_url" placeholder="http://192.168.1.10:8112"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#88B04B] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Password
+            <span x-show="delugeSettings.deluge_password_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="delugePw" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#88B04B] transition">
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveDelugeSettings()" class="bg-[#88B04B] hover:bg-[#88B04B]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testDeluge()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="delugeMsg.startsWith('✓') ? 'text-emerald-400' : delugeMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="delugeMsg" x-text="delugeMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.discord" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-[#5865F2] uppercase tracking-wider mb-4">Discord</div>
+      <div>
+        <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Webhook URL
+          <span x-show="discordSettings.discord_webhook_url_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+        </label>
+        <input type="password" x-ref="discordWebhook" placeholder="https://discord.com/api/webhooks/..."
+               autocomplete="new-password"
+               class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#5865F2] transition">
+        <p class="text-xs text-slate-600 mt-1">Discord Server → Edit Channel → Integrations → Webhooks</p>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveDiscordSettings()" class="bg-[#5865F2] hover:bg-[#5865F2]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testDiscord()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Send test</button>
+        <span class="text-sm font-medium" :class="discordMsg.startsWith('✓') ? 'text-emerald-400' : discordMsg === 'Sending…' ? 'text-slate-400' : 'text-red-400'" x-show="discordMsg" x-text="discordMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.telegram" x-transition class="mb-6" :class="(integrations.discord || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-[#26A5E4] uppercase tracking-wider mb-4">Telegram</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Bot Token
+            <span x-show="telegramSettings.telegram_bot_token_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="telegramToken" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#26A5E4] transition">
+          <p class="text-xs text-slate-600 mt-1">Create a bot via @BotFather</p>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Chat ID</label>
+          <input x-model="telegramSettings.telegram_chat_id" placeholder="-1001234567890"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#26A5E4] transition">
+          <p class="text-xs text-slate-600 mt-1">Your user or group chat ID</p>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveTelegramSettings()" class="bg-[#26A5E4] hover:bg-[#26A5E4]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testTelegram()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Send test</button>
+        <span class="text-sm font-medium" :class="telegramMsg.startsWith('✓') ? 'text-emerald-400' : telegramMsg === 'Sending…' ? 'text-slate-400' : 'text-red-400'" x-show="telegramMsg" x-text="telegramMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.pushover" x-transition class="mb-6" :class="(integrations.discord || integrations.telegram || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-[#F83600] uppercase tracking-wider mb-4">Pushover</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">App Token
+            <span x-show="pushoverSettings.pushover_app_token_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="pushoverToken" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#F83600] transition">
+          <p class="text-xs text-slate-600 mt-1">Create an app at pushover.net</p>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">User Key</label>
+          <input x-model="pushoverSettings.pushover_user_key" placeholder="user key from pushover.net"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#F83600] transition">
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="savePushoverSettings()" class="bg-[#F83600] hover:bg-[#F83600]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testPushover()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Send test</button>
+        <span class="text-sm font-medium" :class="pushoverMsg.startsWith('✓') ? 'text-emerald-400' : pushoverMsg === 'Sending…' ? 'text-slate-400' : 'text-red-400'" x-show="pushoverMsg" x-text="pushoverMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.homeassistant" x-transition class="mb-6" :class="(integrations.discord || integrations.telegram || integrations.pushover || integrations.ntfy || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-[#18BCF2] uppercase tracking-wider mb-4">Home Assistant</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
+          <input x-model="haSettings.ha_url" placeholder="http://homeassistant.local:8123"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#18BCF2] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Long-lived Token
+            <span x-show="haSettings.ha_token_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="haToken" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#18BCF2] transition">
+          <p class="text-xs text-slate-600 mt-1">HA → Profile → Long-lived access tokens</p>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveHaSettings()" class="bg-[#18BCF2] hover:bg-[#18BCF2]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testHa()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="haMsg.startsWith('✓') ? 'text-emerald-400' : haMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="haMsg" x-text="haMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.proxmox" x-transition class="mb-6" :class="(integrations.homeassistant || integrations.discord || integrations.telegram || integrations.pushover || integrations.ntfy || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-[#E57000] uppercase tracking-wider mb-4">Proxmox</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
+          <input x-model="proxmoxSettings.proxmox_url" placeholder="https://proxmox:8006"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#E57000] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Username</label>
+          <input x-model="proxmoxSettings.proxmox_username" placeholder="root@pam"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#E57000] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Password
+            <span x-show="proxmoxSettings.proxmox_password_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="proxmoxPw" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#E57000] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Default Node</label>
+          <input x-model="proxmoxSettings.proxmox_node" placeholder="pve"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#E57000] transition">
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveProxmoxSettings()" class="bg-[#E57000] hover:bg-[#E57000]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testProxmox()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="proxmoxMsg.startsWith('✓') ? 'text-emerald-400' : proxmoxMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="proxmoxMsg" x-text="proxmoxMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.sonarr" x-transition class="mb-6" :class="(integrations.proxmox || integrations.homeassistant || integrations.discord || integrations.telegram || integrations.pushover || integrations.ntfy || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-[#35C5F4] uppercase tracking-wider mb-4">Sonarr</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
+          <input x-model="sonarrSettings.sonarr_url" placeholder="http://192.168.1.10:8989"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#35C5F4] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">API Key
+            <span x-show="sonarrSettings.sonarr_api_key_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="sonarrKey" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#35C5F4] transition">
+          <p class="text-xs text-slate-600 mt-1">Sonarr → Settings → General → API Key</p>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveSonarrSettings()" class="bg-[#35C5F4] hover:bg-[#35C5F4]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testSonarr()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="sonarrMsg.startsWith('✓') ? 'text-emerald-400' : sonarrMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="sonarrMsg" x-text="sonarrMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.radarr" x-transition class="mb-6" :class="(integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.discord || integrations.telegram || integrations.pushover || integrations.ntfy || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-[#FFC230] uppercase tracking-wider mb-4">Radarr</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
+          <input x-model="radarrSettings.radarr_url" placeholder="http://192.168.1.10:7878"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#FFC230] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">API Key
+            <span x-show="radarrSettings.radarr_api_key_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="radarrKey" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#FFC230] transition">
+          <p class="text-xs text-slate-600 mt-1">Radarr → Settings → General → API Key</p>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveRadarrSettings()" class="bg-[#FFC230] hover:bg-[#FFC230]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testRadarr()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="radarrMsg.startsWith('✓') ? 'text-emerald-400' : radarrMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="radarrMsg" x-text="radarrMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.ntfy" x-transition :class="(integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.discord || integrations.telegram || integrations.pushover || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
       <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">ntfy Notifications</div>
       <div class="grid md:grid-cols-2 gap-4">
         <div>
