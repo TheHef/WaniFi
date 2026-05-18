@@ -25,6 +25,7 @@ window.app = function () {
     plexSettings:     { plex_url: '', plex_token: '', plex_token_set: false },
     embyMsg: '', jellyfinMsg: '', plexMsg: '',
     integrations: { host_command: false, docker: false, qb: false, emby: false, jellyfin: false, plex: false, ntfy: false },
+    categoryOpen: { media: false, torrents: false, notifications: false },
     rules: [], events: [], containers: [], discoveredWans: [],
     newRule: { rule_type: 'host_command', name: '', container: '', trigger: 'failover', action: 'stop', command: '' },
     confirmModal: { open: false, label: '', confirm: () => {} },
@@ -69,6 +70,7 @@ window.app = function () {
       this.$watch('tab', val => {
         if (_poppingState) return;
         history.pushState({ tab: val }, '', tabPaths[val] || '/overview');
+        window.scrollTo(0, 0);
         if (val === 'rules') this._setDefaultRuleType();
       });
 
@@ -78,6 +80,7 @@ window.app = function () {
           _poppingState = true;
           this.tab = t;
           _poppingState = false;
+          window.scrollTo(0, 0);
         }
       });
 
@@ -88,6 +91,9 @@ window.app = function () {
       await this.loadJellyfinSettings();
       await this.loadPlexSettings();
       await this.loadIntegrations();
+      this.categoryOpen.media         = !!(this.integrations.emby || this.integrations.jellyfin || this.integrations.plex);
+      this.categoryOpen.torrents      = !!this.integrations.qb;
+      this.categoryOpen.notifications = !!this.integrations.ntfy;
       this._setDefaultRuleType();
 
       // First run: redirect to settings if API key has never been saved
@@ -454,7 +460,14 @@ window.app = function () {
     async toggleIntegration(name) {
       const r = await fetch(`/api/integrations/${name}/toggle`, { method: 'POST' });
       const d = await r.json().catch(() => ({}));
-      if (d.ok) this.integrations[name] = d.enabled;
+      if (d.ok) {
+        this.integrations[name] = d.enabled;
+        if (d.enabled) {
+          if (['emby', 'jellyfin', 'plex'].includes(name)) this.categoryOpen.media = true;
+          else if (name === 'qb')   this.categoryOpen.torrents      = true;
+          else if (name === 'ntfy') this.categoryOpen.notifications = true;
+        }
+      }
     },
 
     // ---- Notifications ----------------------------------------------------
