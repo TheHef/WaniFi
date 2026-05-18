@@ -120,8 +120,8 @@ docker compose up -d
 ```
 
 Docker pulls the pre-built image from GitHub Container Registry
-(`ghcr.io/thehef/wanifi`) and starts it on port `8765`. Open
-`http://<docker-host>:8765` in a browser.
+(`ghcr.io/thehef/wanifi`) and starts it on port `4444`. Open
+`http://<docker-host>:4444` in a browser.
 
 ### compose.yaml
 
@@ -132,7 +132,7 @@ services:
     container_name: wanifi
     restart: unless-stopped
     ports:
-      - "8765:8000"
+      - "4444:8000"
     environment:
       TZ: "Europe/Copenhagen"
       PORT: "8000"

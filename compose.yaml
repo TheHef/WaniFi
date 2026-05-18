@@ -4,7 +4,7 @@ services:
     container_name: wanifi
     restart: unless-stopped
     ports:
-      - "8765:8000"
+      - "4444:8000"
     environment:
       TZ: "Europe/Copenhagen"
       PORT: "8000"
