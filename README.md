@@ -5,8 +5,8 @@
 Self-hosted dashboard for UniFi WAN failover monitoring with rule-based automation.
 
 When your UniFi gateway switches to a failover WAN, WaniFi can automatically
-stop/start Docker containers, throttle qBittorrent, or cap streaming bitrate
-on Plex, Emby, and Jellyfin. Handy for keeping 5G failover costs under control.
+stop/start Docker containers, throttle downloads, or cap streaming bitrate
+on media servers. Handy for keeping 5G failover costs under control.
 
 > **Heads up: this is a beta hobby project.**
 >
