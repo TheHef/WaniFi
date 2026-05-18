@@ -33,11 +33,23 @@ window.app = function () {
     proxmoxSettings:     { proxmox_url: '', proxmox_username: '', proxmox_password_set: false, proxmox_node: 'pve' },
     sonarrSettings:      { sonarr_url: '', sonarr_api_key_set: false },
     radarrSettings:      { radarr_url: '', radarr_api_key_set: false },
+    seerrSettings:       { seerr_url: '', seerr_api_key_set: false },
+    piholeSettings:      { pihole_url: '', pihole_token_set: false },
+    adguardSettings:     { adguard_url: '', adguard_username: '', adguard_password_set: false },
+    portainerSettings:   { portainer_url: '', portainer_token_set: false, portainer_env_id: '1' },
+    truenasSettings:     { truenas_url: '', truenas_api_key_set: false },
+    unraidSettings:      { unraid_url: '', unraid_api_key_set: false },
+    noderedSettings:     { nodered_url: '', nodered_username: '', nodered_password_set: false },
+    gotifySettings:      { gotify_url: '', gotify_token_set: false, gotify_on_failover: true, gotify_on_restored: true, gotify_on_error: false, gotify_on_high_latency: false },
+    nzbgetSettings:      { nzbget_url: '', nzbget_username: '', nzbget_password_set: false },
 
     embyMsg: '', jellyfinMsg: '', plexMsg: '',
     discordMsg: '', telegramMsg: '', pushoverMsg: '',
     sabnzbdMsg: '', transmissionMsg: '', delugeMsg: '',
     haMsg: '', proxmoxMsg: '', sonarrMsg: '', radarrMsg: '',
+    seerrMsg: '', piholeMsg: '', adguardMsg: '',
+    portainerMsg: '', truenasMsg: '', unraidMsg: '',
+    noderedMsg: '', gotifyMsg: '', nzbgetMsg: '',
 
     integrations: {
       host_command: false, docker: false, webhook: false,
@@ -45,8 +57,11 @@ window.app = function () {
       emby: false, jellyfin: false, plex: false,
       ntfy: false, discord: false, telegram: false, pushover: false,
       homeassistant: false, proxmox: false, sonarr: false, radarr: false,
+      seerr: false, pihole: false, adguard: false,
+      portainer: false, truenas: false, unraid: false,
+      nodered: false, nzbget: false, gotify: false,
     },
-    categoryOpen: { media: false, downloaders: false, notifications: false, homelab: false },
+    categoryOpen: { media: false, downloaders: false, notifications: false, homelab: false, network: false },
     stats: {},
     rules: [], events: [], containers: [], discoveredWans: [],
     newRule: { rule_type: 'host_command', name: '', container: '', trigger: 'failover', action: 'stop', command: '', delay_seconds: 0 },
@@ -124,6 +139,15 @@ window.app = function () {
       await this.loadProxmoxSettings();
       await this.loadSonarrSettings();
       await this.loadRadarrSettings();
+      await this.loadSeerrSettings();
+      await this.loadPiholeSettings();
+      await this.loadAdguardSettings();
+      await this.loadPortainerSettings();
+      await this.loadTruenasSettings();
+      await this.loadUnraidSettings();
+      await this.loadNoderedSettings();
+      await this.loadGotifySettings();
+      await this.loadNzbgetSettings();
       await this.loadIntegrations();
       await this.loadStats();
       this._setDefaultRuleType();
@@ -720,6 +744,205 @@ window.app = function () {
       setTimeout(() => this.radarrMsg = '', 5000);
     },
 
+    // ---- Seerr ------------------------------------------------------------
+    async loadSeerrSettings() {
+      this.seerrSettings = await fetch('/api/seerr-settings').then(r => r.json());
+    },
+    async saveSeerrSettings() {
+      const payload = { seerr_url: this.seerrSettings.seerr_url };
+      const key = this.$refs.seerrKey?.value;
+      if (key) payload.seerr_api_key = key;
+      const r = await fetch('/api/seerr-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.seerrMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadSeerrSettings();
+      setTimeout(() => this.seerrMsg = '', 3000);
+    },
+    async testSeerr() {
+      await this.saveSeerrSettings();
+      this.seerrMsg = 'Testing…';
+      const d = await fetch('/api/test-seerr', { method: 'POST' }).then(r => r.json());
+      this.seerrMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.seerrMsg = '', 5000);
+    },
+
+    // ---- Pi-hole ----------------------------------------------------------
+    async loadPiholeSettings() {
+      this.piholeSettings = await fetch('/api/pihole-settings').then(r => r.json());
+    },
+    async savePiholeSettings() {
+      const payload = { pihole_url: this.piholeSettings.pihole_url };
+      const token = this.$refs.piholeToken?.value;
+      if (token) payload.pihole_token = token;
+      const r = await fetch('/api/pihole-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.piholeMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadPiholeSettings();
+      setTimeout(() => this.piholeMsg = '', 3000);
+    },
+    async testPihole() {
+      await this.savePiholeSettings();
+      this.piholeMsg = 'Testing…';
+      const d = await fetch('/api/test-pihole', { method: 'POST' }).then(r => r.json());
+      this.piholeMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.piholeMsg = '', 5000);
+    },
+
+    // ---- AdGuard Home -----------------------------------------------------
+    async loadAdguardSettings() {
+      this.adguardSettings = await fetch('/api/adguard-settings').then(r => r.json());
+    },
+    async saveAdguardSettings() {
+      const payload = { adguard_url: this.adguardSettings.adguard_url, adguard_username: this.adguardSettings.adguard_username };
+      const pw = this.$refs.adguardPw?.value;
+      if (pw) payload.adguard_password = pw;
+      const r = await fetch('/api/adguard-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.adguardMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadAdguardSettings();
+      setTimeout(() => this.adguardMsg = '', 3000);
+    },
+    async testAdguard() {
+      await this.saveAdguardSettings();
+      this.adguardMsg = 'Testing…';
+      const d = await fetch('/api/test-adguard', { method: 'POST' }).then(r => r.json());
+      this.adguardMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.adguardMsg = '', 5000);
+    },
+
+    // ---- Portainer --------------------------------------------------------
+    async loadPortainerSettings() {
+      this.portainerSettings = await fetch('/api/portainer-settings').then(r => r.json());
+    },
+    async savePortainerSettings() {
+      const payload = { portainer_url: this.portainerSettings.portainer_url, portainer_env_id: this.portainerSettings.portainer_env_id };
+      const token = this.$refs.portainerToken?.value;
+      if (token) payload.portainer_token = token;
+      const r = await fetch('/api/portainer-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.portainerMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadPortainerSettings();
+      setTimeout(() => this.portainerMsg = '', 3000);
+    },
+    async testPortainer() {
+      await this.savePortainerSettings();
+      this.portainerMsg = 'Testing…';
+      const d = await fetch('/api/test-portainer', { method: 'POST' }).then(r => r.json());
+      this.portainerMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.portainerMsg = '', 5000);
+    },
+
+    // ---- TrueNAS ----------------------------------------------------------
+    async loadTruenasSettings() {
+      this.truenasSettings = await fetch('/api/truenas-settings').then(r => r.json());
+    },
+    async saveTruenasSettings() {
+      const payload = { truenas_url: this.truenasSettings.truenas_url };
+      const key = this.$refs.truenasKey?.value;
+      if (key) payload.truenas_api_key = key;
+      const r = await fetch('/api/truenas-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.truenasMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadTruenasSettings();
+      setTimeout(() => this.truenasMsg = '', 3000);
+    },
+    async testTruenas() {
+      await this.saveTruenasSettings();
+      this.truenasMsg = 'Testing…';
+      const d = await fetch('/api/test-truenas', { method: 'POST' }).then(r => r.json());
+      this.truenasMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.truenasMsg = '', 5000);
+    },
+
+    // ---- Unraid -----------------------------------------------------------
+    async loadUnraidSettings() {
+      this.unraidSettings = await fetch('/api/unraid-settings').then(r => r.json());
+    },
+    async saveUnraidSettings() {
+      const payload = { unraid_url: this.unraidSettings.unraid_url };
+      const key = this.$refs.unraidKey?.value;
+      if (key) payload.unraid_api_key = key;
+      const r = await fetch('/api/unraid-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.unraidMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadUnraidSettings();
+      setTimeout(() => this.unraidMsg = '', 3000);
+    },
+    async testUnraid() {
+      await this.saveUnraidSettings();
+      this.unraidMsg = 'Testing…';
+      const d = await fetch('/api/test-unraid', { method: 'POST' }).then(r => r.json());
+      this.unraidMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.unraidMsg = '', 5000);
+    },
+
+    // ---- Node-RED ---------------------------------------------------------
+    async loadNoderedSettings() {
+      this.noderedSettings = await fetch('/api/nodered-settings').then(r => r.json());
+    },
+    async saveNoderedSettings() {
+      const payload = { nodered_url: this.noderedSettings.nodered_url, nodered_username: this.noderedSettings.nodered_username };
+      const pw = this.$refs.noderedPw?.value;
+      if (pw) payload.nodered_password = pw;
+      const r = await fetch('/api/nodered-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.noderedMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadNoderedSettings();
+      setTimeout(() => this.noderedMsg = '', 3000);
+    },
+    async testNodered() {
+      await this.saveNoderedSettings();
+      this.noderedMsg = 'Testing…';
+      const d = await fetch('/api/test-nodered', { method: 'POST' }).then(r => r.json());
+      this.noderedMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.noderedMsg = '', 5000);
+    },
+
+    // ---- Gotify -----------------------------------------------------------
+    async loadGotifySettings() {
+      this.gotifySettings = await fetch('/api/gotify-settings').then(r => r.json());
+    },
+    async saveGotifySettings() {
+      const payload = { ...this.gotifySettings };
+      const token = this.$refs.gotifyToken?.value;
+      if (token) payload.gotify_token = token;
+      delete payload.gotify_token_set;
+      const r = await fetch('/api/gotify-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.gotifyMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadGotifySettings();
+      setTimeout(() => this.gotifyMsg = '', 3000);
+    },
+    async testGotify() {
+      await this.saveGotifySettings();
+      this.gotifyMsg = 'Sending…';
+      const d = await fetch('/api/test-gotify', { method: 'POST' }).then(r => r.json());
+      this.gotifyMsg = d.ok ? '✓ Sent' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.gotifyMsg = '', 5000);
+    },
+
+    // ---- NZBGet -----------------------------------------------------------
+    async loadNzbgetSettings() {
+      this.nzbgetSettings = await fetch('/api/nzbget-settings').then(r => r.json());
+    },
+    async saveNzbgetSettings() {
+      const payload = { nzbget_url: this.nzbgetSettings.nzbget_url, nzbget_username: this.nzbgetSettings.nzbget_username };
+      const pw = this.$refs.nzbgetPw?.value;
+      if (pw) payload.nzbget_password = pw;
+      const r = await fetch('/api/nzbget-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.nzbgetMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadNzbgetSettings();
+      setTimeout(() => this.nzbgetMsg = '', 3000);
+    },
+    async testNzbget() {
+      await this.saveNzbgetSettings();
+      this.nzbgetMsg = 'Testing…';
+      const d = await fetch('/api/test-nzbget', { method: 'POST' }).then(r => r.json());
+      this.nzbgetMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.nzbgetMsg = '', 5000);
+    },
+
     // ---- Stats ------------------------------------------------------------
     async loadStats() {
       try { this.stats = await fetch('/api/stats').then(r => r.json()); } catch {}
@@ -745,6 +968,14 @@ window.app = function () {
         ['proxmox',       'proxmox',       'stop_vm'],
         ['sonarr',        'sonarr',        'disable_indexers'],
         ['radarr',        'radarr',        'disable_indexers'],
+        ['seerr',         'seerr',         'sync_radarr'],
+        ['pihole',        'pihole',        'disable'],
+        ['adguard',       'adguard',       'disable_protection'],
+        ['portainer',     'portainer',     'stop_container'],
+        ['truenas',       'truenas',       'stop_service'],
+        ['unraid',        'unraid',        'stop_vm'],
+        ['nodered',       'nodered',       'trigger_flow'],
+        ['nzbget',        'nzbget',        'pause'],
         ['webhook',       'webhook',       'send'],
       ];
       for (const [rtype, ikey, action] of order) {
@@ -762,10 +993,11 @@ window.app = function () {
       if (d.ok) {
         this.integrations[name] = d.enabled;
         if (d.enabled) {
-          if (['emby', 'jellyfin', 'plex'].includes(name))                              this.categoryOpen.media = true;
-          else if (['qb', 'sabnzbd', 'transmission', 'deluge'].includes(name))          this.categoryOpen.downloaders = true;
-          else if (['ntfy', 'discord', 'telegram', 'pushover'].includes(name))          this.categoryOpen.notifications = true;
-          else if (['homeassistant', 'proxmox', 'sonarr', 'radarr'].includes(name))     this.categoryOpen.homelab = true;
+          if (['emby', 'jellyfin', 'plex', 'seerr'].includes(name))                                          this.categoryOpen.media = true;
+          else if (['qb', 'sabnzbd', 'transmission', 'deluge', 'nzbget'].includes(name))                    this.categoryOpen.downloaders = true;
+          else if (['ntfy', 'discord', 'telegram', 'pushover', 'gotify'].includes(name))                    this.categoryOpen.notifications = true;
+          else if (['homeassistant', 'proxmox', 'sonarr', 'radarr', 'portainer', 'truenas', 'unraid', 'nodered'].includes(name)) this.categoryOpen.homelab = true;
+          else if (['pihole', 'adguard'].includes(name))                                                     this.categoryOpen.network = true;
         }
       }
     },

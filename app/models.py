@@ -19,6 +19,14 @@ VALID_PROXMOX_ACTIONS      = ("stop_vm", "shutdown_vm", "suspend_vm", "resume_vm
 VALID_SONARR_ACTIONS       = ("disable_indexers", "enable_indexers", "disable_download_clients", "enable_download_clients", "search_missing", "refresh_all")
 VALID_RADARR_ACTIONS       = ("disable_indexers", "enable_indexers", "disable_download_clients", "enable_download_clients", "search_missing", "refresh_all")
 VALID_WEBHOOK_ACTIONS      = ("send",)
+VALID_SEERR_ACTIONS        = ("sync_radarr", "sync_sonarr")
+VALID_PIHOLE_ACTIONS       = ("enable", "disable")
+VALID_ADGUARD_ACTIONS      = ("enable_protection", "disable_protection")
+VALID_PORTAINER_ACTIONS    = ("start_container", "stop_container", "restart_container")
+VALID_TRUENAS_ACTIONS      = ("start_service", "stop_service", "restart_service")
+VALID_UNRAID_ACTIONS       = ("start_vm", "stop_vm", "pause_vm", "resume_vm")
+VALID_NODERED_ACTIONS      = ("trigger_flow",)
+VALID_NZBGET_ACTIONS       = ("pause", "resume", "set_speed_limit")
 
 
 class SetupIn(BaseModel):
@@ -131,3 +139,56 @@ class SonarrSettingsIn(BaseModel):
 class RadarrSettingsIn(BaseModel):
     radarr_url: str = ""
     radarr_api_key: Optional[str] = None
+
+
+class SeerrSettingsIn(BaseModel):
+    seerr_url: str = ""
+    seerr_api_key: Optional[str] = None
+
+
+class PiholeSettingsIn(BaseModel):
+    pihole_url: str = ""
+    pihole_token: Optional[str] = None
+
+
+class AdGuardSettingsIn(BaseModel):
+    adguard_url: str = ""
+    adguard_username: str = ""
+    adguard_password: Optional[str] = None
+
+
+class PortainerSettingsIn(BaseModel):
+    portainer_url: str = ""
+    portainer_token: Optional[str] = None
+    portainer_env_id: str = "1"
+
+
+class TrueNASSettingsIn(BaseModel):
+    truenas_url: str = ""
+    truenas_api_key: Optional[str] = None
+
+
+class UnraidSettingsIn(BaseModel):
+    unraid_url: str = ""
+    unraid_api_key: Optional[str] = None
+
+
+class NodeRedSettingsIn(BaseModel):
+    nodered_url: str = ""
+    nodered_username: str = ""
+    nodered_password: Optional[str] = None
+
+
+class GotifySettingsIn(BaseModel):
+    gotify_url: str = ""
+    gotify_token: Optional[str] = None
+    gotify_on_failover: bool = True
+    gotify_on_restored: bool = True
+    gotify_on_error: bool = False
+    gotify_on_high_latency: bool = False
+
+
+class NZBGetSettingsIn(BaseModel):
+    nzbget_url: str = ""
+    nzbget_username: str = ""
+    nzbget_password: Optional[str] = None

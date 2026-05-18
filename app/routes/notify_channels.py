@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 
 from ..auth import require_auth
 from ..db import get_setting, set_setting
-from ..models import DiscordSettingsIn, PushoverSettingsIn, TelegramSettingsIn
+from ..models import DiscordSettingsIn, GotifySettingsIn, PushoverSettingsIn, TelegramSettingsIn
 from ..notify import test_discord, test_pushover, test_telegram
 
 router = APIRouter()
@@ -80,4 +80,37 @@ async def save_pushover_settings(payload: PushoverSettingsIn, _: bool = Depends(
 @router.post("/api/test-pushover")
 async def test_pushover_endpoint(_: bool = Depends(require_auth)):
     ok, err = await test_pushover()
+    return {"ok": ok, "error": err if not ok else None}
+
+
+# ---- Gotify -----------------------------------------------------------------
+
+@router.get("/api/gotify-settings")
+async def get_gotify_settings(_: bool = Depends(require_auth)):
+    return {
+        "gotify_url":             get_setting("gotify_url", ""),
+        "gotify_token_set":       bool(get_setting("gotify_token")),
+        "gotify_on_failover":     get_setting("gotify_on_failover", "1") == "1",
+        "gotify_on_restored":     get_setting("gotify_on_restored", "1") == "1",
+        "gotify_on_error":        get_setting("gotify_on_error", "0") == "1",
+        "gotify_on_high_latency": get_setting("gotify_on_high_latency", "0") == "1",
+    }
+
+
+@router.post("/api/gotify-settings")
+async def save_gotify_settings(payload: GotifySettingsIn, _: bool = Depends(require_auth)):
+    set_setting("gotify_url", payload.gotify_url.strip())
+    if payload.gotify_token:
+        set_setting("gotify_token", payload.gotify_token.strip())
+    set_setting("gotify_on_failover",     "1" if payload.gotify_on_failover else "0")
+    set_setting("gotify_on_restored",     "1" if payload.gotify_on_restored else "0")
+    set_setting("gotify_on_error",        "1" if payload.gotify_on_error else "0")
+    set_setting("gotify_on_high_latency", "1" if payload.gotify_on_high_latency else "0")
+    return {"ok": True}
+
+
+@router.post("/api/test-gotify")
+async def test_gotify_endpoint(_: bool = Depends(require_auth)):
+    from ..gotify import send_gotify
+    ok, err = await send_gotify("WaniFi Test", "Gotify notifications are working.")
     return {"ok": ok, "error": err if not ok else None}

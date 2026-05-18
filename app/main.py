@@ -16,6 +16,8 @@ from .routes import backup as backup_routes
 from .routes import downloaders as downloader_routes
 from .routes import events as events_routes
 from .routes import homelab as homelab_routes
+from .routes import infra as infra_routes
+from .routes import network as network_routes
 from .routes import integrations as integrations_routes
 from .routes import manual as manual_routes
 from .routes import notify as notify_routes
@@ -88,6 +90,8 @@ app.include_router(jellyfin_routes.test_router)
 app.include_router(plex_routes.router)
 app.include_router(plex_routes.test_router)
 app.include_router(homelab_routes.router)
+app.include_router(infra_routes.router)
+app.include_router(network_routes.router)
 app.include_router(integrations_routes.router)
 app.include_router(stats_routes.router)
 app.include_router(backup_routes.router)

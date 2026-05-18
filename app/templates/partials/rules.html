@@ -85,6 +85,54 @@
               :class="newRule.rule_type === 'webhook' ? 'bg-slate-600/40 border-slate-500/50 text-slate-300' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
         Webhook
       </button>
+      <button x-show="integrations.seerr"
+              @click="newRule.rule_type = 'seerr'; newRule.action = 'sync_radarr'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'seerr' ? 'bg-orange-500/20 border-orange-500/50 text-orange-400' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        Seerr
+      </button>
+      <button x-show="integrations.pihole"
+              @click="newRule.rule_type = 'pihole'; newRule.action = 'disable'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'pihole' ? 'bg-red-500/20 border-red-500/50 text-red-400' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        Pi-hole
+      </button>
+      <button x-show="integrations.adguard"
+              @click="newRule.rule_type = 'adguard'; newRule.action = 'disable_protection'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'adguard' ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        AdGuard
+      </button>
+      <button x-show="integrations.portainer"
+              @click="newRule.rule_type = 'portainer'; newRule.action = 'stop_container'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'portainer' ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        Portainer
+      </button>
+      <button x-show="integrations.truenas"
+              @click="newRule.rule_type = 'truenas'; newRule.action = 'stop_service'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'truenas' ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-400' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        TrueNAS
+      </button>
+      <button x-show="integrations.unraid"
+              @click="newRule.rule_type = 'unraid'; newRule.action = 'stop_vm'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'unraid' ? 'bg-amber-500/20 border-amber-500/50 text-amber-400' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        Unraid
+      </button>
+      <button x-show="integrations.nodered"
+              @click="newRule.rule_type = 'nodered'; newRule.action = 'trigger_flow'; newRule.command = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'nodered' ? 'bg-rose-500/20 border-rose-500/50 text-rose-400' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        Node-RED
+      </button>
+      <button x-show="integrations.nzbget"
+              @click="newRule.rule_type = 'nzbget'; newRule.action = 'pause'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'nzbget' ? 'bg-slate-600/40 border-slate-500/50 text-slate-300' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        NZBGet
+      </button>
     </div>
 
     <!-- Docker -->
@@ -392,6 +440,155 @@
              class="md:col-span-3 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-500 transition">
       <button @click="addRule()" class="bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
     </div>
+
+    <!-- Seerr -->
+    <div x-show="newRule.rule_type === 'seerr'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-orange-500">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-orange-500">
+        <option value="sync_radarr">Sync Radarr</option>
+        <option value="sync_sonarr">Sync Sonarr</option>
+      </select>
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             class="md:col-span-2 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-orange-500 transition">
+      <button @click="addRule()" class="md:col-span-4 bg-orange-500 hover:bg-orange-400 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+
+    <!-- Pi-hole -->
+    <div x-show="newRule.rule_type === 'pihole'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-red-500">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-red-500">
+        <option value="disable">Disable filtering</option>
+        <option value="enable">Enable filtering</option>
+      </select>
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             class="md:col-span-2 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-red-500 transition">
+      <button @click="addRule()" class="md:col-span-4 bg-red-600 hover:bg-red-500 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+
+    <!-- AdGuard -->
+    <div x-show="newRule.rule_type === 'adguard'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-green-500">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-green-500">
+        <option value="disable_protection">Disable protection</option>
+        <option value="enable_protection">Enable protection</option>
+      </select>
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             class="md:col-span-2 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-green-500 transition">
+      <button @click="addRule()" class="md:col-span-4 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+
+    <!-- Portainer -->
+    <div x-show="newRule.rule_type === 'portainer'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
+        <option value="stop_container">Stop container</option>
+        <option value="start_container">Start container</option>
+        <option value="restart_container">Restart container</option>
+      </select>
+      <input x-model="newRule.container" type="text" placeholder="Container name"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition">
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition">
+      <button @click="addRule()" class="md:col-span-4 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+
+    <!-- TrueNAS -->
+    <div x-show="newRule.rule_type === 'truenas'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+        <option value="stop_service">Stop service</option>
+        <option value="start_service">Start service</option>
+        <option value="restart_service">Restart service</option>
+      </select>
+      <input x-model="newRule.container" type="text" placeholder="Service name (e.g. ssh)"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition">
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition">
+      <button @click="addRule()" class="md:col-span-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+
+    <!-- Unraid -->
+    <div x-show="newRule.rule_type === 'unraid'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+        <option value="stop_vm">Stop VM</option>
+        <option value="start_vm">Start VM</option>
+        <option value="pause_vm">Pause VM</option>
+        <option value="resume_vm">Resume VM</option>
+      </select>
+      <input x-model="newRule.container" type="text" placeholder="VM name"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition">
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition">
+      <button @click="addRule()" class="md:col-span-4 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+
+    <!-- Node-RED -->
+    <div x-show="newRule.rule_type === 'nodered'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-rose-500">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <input x-model="newRule.command" type="text" placeholder="Flow endpoint (e.g. /failover)"
+             class="md:col-span-2 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-rose-500 transition">
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-rose-500 transition">
+      <button @click="addRule()" class="md:col-span-4 bg-rose-700 hover:bg-rose-600 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+
+    <!-- NZBGet -->
+    <div x-show="newRule.rule_type === 'nzbget'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-slate-500">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-slate-500">
+        <option value="pause">Pause downloads</option>
+        <option value="resume">Resume downloads</option>
+        <option value="set_speed_limit">Set speed limit</option>
+      </select>
+      <input x-show="newRule.action === 'set_speed_limit'"
+             x-model="newRule.container" type="number" min="0" placeholder="KB/s (0 = unlimited)"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-500 transition">
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             :class="newRule.action === 'set_speed_limit' ? '' : 'md:col-span-2'"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-500 transition">
+      <button @click="addRule()" class="md:col-span-4 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
   </div>
 
   <div class="bg-slate-900 border border-slate-700/60 rounded-2xl overflow-hidden mb-4">
@@ -442,6 +639,14 @@
                       sonarr:       'background:rgba(53,197,244,.18);color:#35C5F4',
                       radarr:       'background:rgba(255,194,48,.18);color:#FFC230',
                       webhook:      'background:rgba(100,116,139,.18);color:#94a3b8',
+                      seerr:        'background:rgba(249,115,22,.18);color:#fb923c',
+                      pihole:       'background:rgba(239,68,68,.18);color:#f87171',
+                      adguard:      'background:rgba(34,197,94,.18);color:#4ade80',
+                      portainer:    'background:rgba(6,182,212,.18);color:#22d3ee',
+                      truenas:      'background:rgba(99,102,241,.18);color:#a5b4fc',
+                      unraid:       'background:rgba(245,158,11,.18);color:#fbbf24',
+                      nodered:      'background:rgba(244,63,94,.18);color:#fb7185',
+                      nzbget:       'background:rgba(100,116,139,.18);color:#94a3b8',
                     })[r.rule_type] || 'background:rgba(71,85,105,.5);color:#94a3b8'"
                     x-text="({
                       host_command:'HC', docker:'DC', qbittorrent:'qb',
@@ -449,6 +654,9 @@
                       emby:'Emby', jellyfin:'JF', plex:'Plex',
                       homeassistant:'HA', proxmox:'PVE',
                       sonarr:'Sonarr', radarr:'Radarr', webhook:'Hook',
+                      seerr:'Seerr', pihole:'Pi-hole', adguard:'AdG',
+                      portainer:'PTR', truenas:'TrueNAS', unraid:'Unraid',
+                      nodered:'NR', nzbget:'NZB',
                     })[r.rule_type] || r.rule_type">
               </span>
             </td>

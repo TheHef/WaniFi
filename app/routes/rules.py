@@ -19,6 +19,14 @@ from ..models import (
     VALID_SONARR_ACTIONS,
     VALID_RADARR_ACTIONS,
     VALID_WEBHOOK_ACTIONS,
+    VALID_SEERR_ACTIONS,
+    VALID_PIHOLE_ACTIONS,
+    VALID_ADGUARD_ACTIONS,
+    VALID_PORTAINER_ACTIONS,
+    VALID_TRUENAS_ACTIONS,
+    VALID_UNRAID_ACTIONS,
+    VALID_NODERED_ACTIONS,
+    VALID_NZBGET_ACTIONS,
 )
 from ..watcher import (
     execute_host_command,
@@ -34,6 +42,14 @@ from ..watcher import (
     run_sonarr_action,
     run_radarr_action,
     run_webhook_action,
+    run_seerr_action,
+    run_pihole_action,
+    run_adguard_action,
+    run_portainer_action,
+    run_truenas_action,
+    run_unraid_action,
+    run_nodered_action,
+    run_nzbget_action,
 )
 from ..docker_ops import container_action
 
@@ -90,6 +106,38 @@ def _validate(payload: RuleIn):
     elif t == "webhook":
         if not payload.command.strip():
             raise HTTPException(400, "URL required for webhook rules")
+    elif t == "seerr":
+        if payload.action not in VALID_SEERR_ACTIONS:
+            raise HTTPException(400, f"action must be one of {VALID_SEERR_ACTIONS}")
+    elif t == "pihole":
+        if payload.action not in VALID_PIHOLE_ACTIONS:
+            raise HTTPException(400, f"action must be one of {VALID_PIHOLE_ACTIONS}")
+    elif t == "adguard":
+        if payload.action not in VALID_ADGUARD_ACTIONS:
+            raise HTTPException(400, f"action must be one of {VALID_ADGUARD_ACTIONS}")
+    elif t == "portainer":
+        if payload.action not in VALID_PORTAINER_ACTIONS:
+            raise HTTPException(400, f"action must be one of {VALID_PORTAINER_ACTIONS}")
+        if not payload.container.strip():
+            raise HTTPException(400, "container name required for portainer rules")
+    elif t == "truenas":
+        if payload.action not in VALID_TRUENAS_ACTIONS:
+            raise HTTPException(400, f"action must be one of {VALID_TRUENAS_ACTIONS}")
+        if not payload.container.strip():
+            raise HTTPException(400, "service name required for truenas rules")
+    elif t == "unraid":
+        if payload.action not in VALID_UNRAID_ACTIONS:
+            raise HTTPException(400, f"action must be one of {VALID_UNRAID_ACTIONS}")
+        if not payload.container.strip():
+            raise HTTPException(400, "VM name required for unraid rules")
+    elif t == "nodered":
+        if payload.action not in VALID_NODERED_ACTIONS:
+            raise HTTPException(400, f"action must be one of {VALID_NODERED_ACTIONS}")
+        if not payload.command.strip():
+            raise HTTPException(400, "flow endpoint required for nodered rules")
+    elif t == "nzbget":
+        if payload.action not in VALID_NZBGET_ACTIONS:
+            raise HTTPException(400, f"action must be one of {VALID_NZBGET_ACTIONS}")
     else:
         raise HTTPException(400, f"Unknown rule_type: {t!r}")
 
@@ -110,9 +158,17 @@ def _default_name(payload: RuleIn) -> str:
         "plex": f"Plex: {payload.action}",
         "homeassistant": f"HA: {payload.action}",
         "proxmox": f"Proxmox: {payload.container} {payload.action}",
-        "sonarr": f"Sonarr: {payload.action}",
-        "radarr": f"Radarr: {payload.action}",
-        "webhook": payload.command.strip(),
+        "sonarr":    f"Sonarr: {payload.action}",
+        "radarr":    f"Radarr: {payload.action}",
+        "webhook":   payload.command.strip(),
+        "seerr":     f"Seerr: {payload.action}",
+        "pihole":    f"Pi-hole: {payload.action}",
+        "adguard":   f"AdGuard: {payload.action}",
+        "portainer": f"Portainer: {payload.container} {payload.action}",
+        "truenas":   f"TrueNAS: {payload.container} {payload.action}",
+        "unraid":    f"Unraid: {payload.container} {payload.action}",
+        "nodered":   f"Node-RED: {payload.command}",
+        "nzbget":    f"NZBGet: {payload.action}",
     }
     return labels.get(t) or payload.command.strip()
 
@@ -216,6 +272,22 @@ async def run_rule(rule_id: int, _: bool = Depends(require_auth)):
         ok, msg = await run_radarr_action(action)
     elif t == "webhook":
         ok, msg = await run_webhook_action(rule["command"], value or "POST")
+    elif t == "seerr":
+        ok, msg = await run_seerr_action(action)
+    elif t == "pihole":
+        ok, msg = await run_pihole_action(action)
+    elif t == "adguard":
+        ok, msg = await run_adguard_action(action)
+    elif t == "portainer":
+        ok, msg = await run_portainer_action(action, value)
+    elif t == "truenas":
+        ok, msg = await run_truenas_action(action, value)
+    elif t == "unraid":
+        ok, msg = await run_unraid_action(action, value)
+    elif t == "nodered":
+        ok, msg = await run_nodered_action(action, rule["command"])
+    elif t == "nzbget":
+        ok, msg = await run_nzbget_action(action, value)
     else:
         ok, msg = container_action(rule["container"], action)
 

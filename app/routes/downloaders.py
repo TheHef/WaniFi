@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 
 from ..auth import require_auth
 from ..db import get_setting, set_setting
-from ..models import DelugeSettingsIn, SabnzbdSettingsIn, TransmissionSettingsIn
+from ..models import DelugeSettingsIn, NZBGetSettingsIn, SabnzbdSettingsIn, TransmissionSettingsIn
 
 router = APIRouter()
 
@@ -105,6 +105,42 @@ async def test_deluge(_: bool = Depends(require_auth)):
     client = DelugeClient(url, pw or "")
     try:
         ok, msg = await client.login()
+        return {"ok": ok, "error": None if ok else msg}
+    finally:
+        await client.close()
+
+
+# ---- NZBGet -----------------------------------------------------------------
+
+@router.get("/api/nzbget-settings")
+async def get_nzbget_settings(_: bool = Depends(require_auth)):
+    return {
+        "nzbget_url":          get_setting("nzbget_url", ""),
+        "nzbget_username":     get_setting("nzbget_username", ""),
+        "nzbget_password_set": bool(get_setting("nzbget_password")),
+    }
+
+
+@router.post("/api/nzbget-settings")
+async def save_nzbget_settings(payload: NZBGetSettingsIn, _: bool = Depends(require_auth)):
+    set_setting("nzbget_url",      payload.nzbget_url.strip())
+    set_setting("nzbget_username", payload.nzbget_username.strip())
+    if payload.nzbget_password:
+        set_setting("nzbget_password", payload.nzbget_password)
+    return {"ok": True}
+
+
+@router.post("/api/test-nzbget")
+async def test_nzbget(_: bool = Depends(require_auth)):
+    from ..nzbget import NZBGetClient
+    url  = get_setting("nzbget_url", "")
+    user = get_setting("nzbget_username", "")
+    pw   = get_setting("nzbget_password", "")
+    if not url:
+        return {"ok": False, "error": "NZBGet not configured"}
+    client = NZBGetClient(url, user, pw or "")
+    try:
+        ok, msg = await client.get_version()
         return {"ok": ok, "error": None if ok else msg}
     finally:
         await client.close()

@@ -110,6 +110,21 @@ async def send_notification(
     if get_setting("integration_pushover", "0") == "1":
         await _send_pushover(title, message)
 
+    if get_setting("integration_gotify", "0") == "1":
+        gotify_url   = get_setting("gotify_url", "")
+        gotify_token = get_setting("gotify_token", "")
+        if gotify_url and gotify_token:
+            try:
+                async with httpx.AsyncClient(timeout=10.0, verify=False) as _gc:
+                    _gr = await _gc.post(
+                        f"{gotify_url.rstrip('/')}/message",
+                        headers={"X-Gotify-Key": gotify_token},
+                        json={"title": title, "message": message, "priority": 5},
+                    )
+                    _gr.raise_for_status()
+            except Exception as e:
+                log.warning("Gotify notification failed: %s", e)
+
     return (False, errors[0]) if errors else (True, "ok")
 
 

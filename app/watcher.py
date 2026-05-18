@@ -365,6 +365,159 @@ async def run_radarr_action(action: str) -> tuple[bool, str]:
         await client.close()
 
 
+async def run_seerr_action(action: str) -> tuple[bool, str]:
+    from .seerr import SeerrClient
+    url     = get_setting("seerr_url", "")
+    api_key = get_setting("seerr_api_key", "")
+    if not (url and api_key):
+        return False, "Seerr not configured"
+    client = SeerrClient(url, api_key)
+    try:
+        if action == "sync_radarr":
+            return await client.sync_radarr()
+        if action == "sync_sonarr":
+            return await client.sync_sonarr()
+        return False, f"Unknown Seerr action: {action}"
+    finally:
+        await client.close()
+
+
+async def run_pihole_action(action: str) -> tuple[bool, str]:
+    from .pihole import PiholeClient
+    url   = get_setting("pihole_url", "")
+    token = get_setting("pihole_token", "")
+    if not url:
+        return False, "Pi-hole not configured"
+    client = PiholeClient(url, token or "")
+    try:
+        if action == "enable":
+            return await client.enable()
+        if action == "disable":
+            return await client.disable()
+        return False, f"Unknown Pi-hole action: {action}"
+    finally:
+        await client.close()
+
+
+async def run_adguard_action(action: str) -> tuple[bool, str]:
+    from .adguard import AdGuardClient
+    url  = get_setting("adguard_url", "")
+    user = get_setting("adguard_username", "")
+    pw   = get_setting("adguard_password", "")
+    if not url:
+        return False, "AdGuard not configured"
+    client = AdGuardClient(url, user, pw or "")
+    try:
+        if action == "enable_protection":
+            return await client.set_protection(True)
+        if action == "disable_protection":
+            return await client.set_protection(False)
+        return False, f"Unknown AdGuard action: {action}"
+    finally:
+        await client.close()
+
+
+async def run_portainer_action(action: str, container_name: str = "") -> tuple[bool, str]:
+    from .portainer import PortainerClient
+    url    = get_setting("portainer_url", "")
+    token  = get_setting("portainer_token", "")
+    env_id = get_setting("portainer_env_id", "1")
+    if not (url and token):
+        return False, "Portainer not configured"
+    client = PortainerClient(url, token, env_id)
+    act_map = {
+        "start_container":   "start",
+        "stop_container":    "stop",
+        "restart_container": "restart",
+    }
+    docker_action = act_map.get(action)
+    if not docker_action:
+        return False, f"Unknown Portainer action: {action}"
+    try:
+        return await client.container_action(container_name, docker_action)
+    finally:
+        await client.close()
+
+
+async def run_truenas_action(action: str, service: str = "") -> tuple[bool, str]:
+    from .truenas import TrueNASClient
+    url     = get_setting("truenas_url", "")
+    api_key = get_setting("truenas_api_key", "")
+    if not (url and api_key):
+        return False, "TrueNAS not configured"
+    client = TrueNASClient(url, api_key)
+    act_map = {
+        "start_service":   "start",
+        "stop_service":    "stop",
+        "restart_service": "restart",
+    }
+    truenas_action = act_map.get(action)
+    if not truenas_action:
+        return False, f"Unknown TrueNAS action: {action}"
+    try:
+        return await client.service_action(service, truenas_action)
+    finally:
+        await client.close()
+
+
+async def run_unraid_action(action: str, vm_name: str = "") -> tuple[bool, str]:
+    from .unraid import UnraidClient
+    url     = get_setting("unraid_url", "")
+    api_key = get_setting("unraid_api_key", "")
+    if not (url and api_key):
+        return False, "Unraid not configured"
+    client = UnraidClient(url, api_key)
+    act_map = {
+        "start_vm":  "start",
+        "stop_vm":   "stop",
+        "pause_vm":  "pause",
+        "resume_vm": "resume",
+    }
+    vm_action = act_map.get(action)
+    if not vm_action:
+        return False, f"Unknown Unraid action: {action}"
+    try:
+        return await client.vm_action(vm_name, vm_action)
+    finally:
+        await client.close()
+
+
+async def run_nodered_action(action: str, endpoint: str = "") -> tuple[bool, str]:
+    from .nodered import NodeRedClient
+    url  = get_setting("nodered_url", "")
+    user = get_setting("nodered_username", "")
+    pw   = get_setting("nodered_password", "")
+    if not url:
+        return False, "Node-RED not configured"
+    client = NodeRedClient(url, user, pw or "")
+    try:
+        if action == "trigger_flow":
+            return await client.trigger_flow(endpoint)
+        return False, f"Unknown Node-RED action: {action}"
+    finally:
+        await client.close()
+
+
+async def run_nzbget_action(action: str, value: str = "") -> tuple[bool, str]:
+    from .nzbget import NZBGetClient
+    url  = get_setting("nzbget_url", "")
+    user = get_setting("nzbget_username", "")
+    pw   = get_setting("nzbget_password", "")
+    if not url:
+        return False, "NZBGet not configured"
+    client = NZBGetClient(url, user, pw or "")
+    try:
+        if action == "pause":
+            return await client.pause()
+        if action == "resume":
+            return await client.resume()
+        if action == "set_speed_limit":
+            return await client.set_speed_limit(int(value) if value else 0)
+        return False, f"Unknown NZBGet action: {action}"
+    finally:
+        await client.close()
+
+
 async def run_webhook_action(url: str, method: str = "POST") -> tuple[bool, str]:
     import httpx
     try:
@@ -400,6 +553,14 @@ async def fire_trigger(trigger: str):
             "proxmox":       "integration_proxmox",
             "sonarr":        "integration_sonarr",
             "radarr":        "integration_radarr",
+            "seerr":         "integration_seerr",
+            "pihole":        "integration_pihole",
+            "adguard":       "integration_adguard",
+            "portainer":     "integration_portainer",
+            "truenas":       "integration_truenas",
+            "unraid":        "integration_unraid",
+            "nodered":       "integration_nodered",
+            "nzbget":        "integration_nzbget",
         }.get(rtype)
         if integration_key and get_setting(integration_key, "0") != "1":
             await a_log_event("info", f"Rule '{rule['name']}' skipped (integration disabled)")
@@ -489,6 +650,30 @@ async def fire_trigger(trigger: str):
                 "info" if ok else "error",
                 f"Rule: webhook {method} {rule['command']} on {trigger} -> {msg}",
             )
+        elif rtype == "seerr":
+            ok, msg = await run_seerr_action(rule["action"])
+            await a_log_event("info" if ok else "error", f"Rule: Seerr {rule['action']} on {trigger} -> {msg}")
+        elif rtype == "pihole":
+            ok, msg = await run_pihole_action(rule["action"])
+            await a_log_event("info" if ok else "error", f"Rule: Pi-hole {rule['action']} on {trigger} -> {msg}")
+        elif rtype == "adguard":
+            ok, msg = await run_adguard_action(rule["action"])
+            await a_log_event("info" if ok else "error", f"Rule: AdGuard {rule['action']} on {trigger} -> {msg}")
+        elif rtype == "portainer":
+            ok, msg = await run_portainer_action(rule["action"], rule["container"])
+            await a_log_event("info" if ok else "error", f"Rule: Portainer {rule['action']} on {trigger} -> {msg}")
+        elif rtype == "truenas":
+            ok, msg = await run_truenas_action(rule["action"], rule["container"])
+            await a_log_event("info" if ok else "error", f"Rule: TrueNAS {rule['action']} on {trigger} -> {msg}")
+        elif rtype == "unraid":
+            ok, msg = await run_unraid_action(rule["action"], rule["container"])
+            await a_log_event("info" if ok else "error", f"Rule: Unraid {rule['action']} on {trigger} -> {msg}")
+        elif rtype == "nodered":
+            ok, msg = await run_nodered_action(rule["action"], rule["command"])
+            await a_log_event("info" if ok else "error", f"Rule: Node-RED {rule['action']} on {trigger} -> {msg}")
+        elif rtype == "nzbget":
+            ok, msg = await run_nzbget_action(rule["action"], rule["container"])
+            await a_log_event("info" if ok else "error", f"Rule: NZBGet {rule['action']} on {trigger} -> {msg}")
         else:
             ok, msg = container_action(rule["container"], rule["action"])
             await a_log_event(

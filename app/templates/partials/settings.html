@@ -236,16 +236,16 @@
         </button>
 
       </div>      <div class="rounded-xl border overflow-hidden transition"
-           :class="(integrations.homeassistant || integrations.proxmox || integrations.sonarr || integrations.radarr) ? 'border-slate-700/80' : 'border-slate-800'">
+           :class="(integrations.homeassistant || integrations.proxmox || integrations.sonarr || integrations.radarr || integrations.portainer || integrations.truenas || integrations.unraid || integrations.nodered) ? 'border-slate-700/80' : 'border-slate-800'">
         <button @click="categoryOpen.homelab = !categoryOpen.homelab"
                 class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/40 transition">
           <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
           </svg>
           <span class="text-sm font-semibold text-slate-300 flex-1 text-left">Homelab</span>
-          <span x-show="integrations.homeassistant || integrations.proxmox || integrations.sonarr || integrations.radarr"
+          <span x-show="integrations.homeassistant || integrations.proxmox || integrations.sonarr || integrations.radarr || integrations.portainer || integrations.truenas || integrations.unraid || integrations.nodered"
                 class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 mr-1"
-                x-text="[integrations.homeassistant, integrations.proxmox, integrations.sonarr, integrations.radarr].filter(Boolean).length + ' active'"></span>
+                x-text="[integrations.homeassistant, integrations.proxmox, integrations.sonarr, integrations.radarr, integrations.portainer, integrations.truenas, integrations.unraid, integrations.nodered].filter(Boolean).length + ' active'"></span>
           <svg class="w-4 h-4 text-slate-600 transition-transform duration-200" :class="categoryOpen.homelab ? 'rotate-180' : ''"
                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
@@ -272,18 +272,67 @@
                   class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
             <span class="w-2 h-2 rounded-full" :class="integrations.radarr ? 'bg-[#FFC230]' : 'bg-slate-600'"></span>Radarr
           </button>
+          <button @click="toggleIntegration('portainer')"
+                  :class="integrations.portainer ? 'bg-[#13BEF9]/20 border-[#13BEF9]/50 text-[#13BEF9]' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.portainer ? 'bg-[#13BEF9]' : 'bg-slate-600'"></span>Portainer
+          </button>
+          <button @click="toggleIntegration('truenas')"
+                  :class="integrations.truenas ? 'bg-[#2783C6]/20 border-[#2783C6]/50 text-[#2783C6]' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.truenas ? 'bg-[#2783C6]' : 'bg-slate-600'"></span>TrueNAS
+          </button>
+          <button @click="toggleIntegration('unraid')"
+                  :class="integrations.unraid ? 'bg-[#FF6600]/20 border-[#FF6600]/50 text-[#FF6600]' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.unraid ? 'bg-[#FF6600]' : 'bg-slate-600'"></span>Unraid
+          </button>
+          <button @click="toggleIntegration('nodered')"
+                  :class="integrations.nodered ? 'bg-[#8F0000]/20 border-[#8F0000]/50 text-[#C0392B]' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.nodered ? 'bg-[#C0392B]' : 'bg-slate-600'"></span>Node-RED
+          </button>
+        </div>
+      </div>
+      <div class="rounded-xl border overflow-hidden transition"
+           :class="(integrations.pihole || integrations.adguard) ? 'border-slate-700/80' : 'border-slate-800'">
+        <button @click="categoryOpen.network = !categoryOpen.network"
+                class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/40 transition">
+          <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4m0 0h18"/>
+          </svg>
+          <span class="text-sm font-semibold text-slate-300 flex-1 text-left">Network</span>
+          <span x-show="integrations.pihole || integrations.adguard"
+                class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 mr-1"
+                x-text="[integrations.pihole, integrations.adguard].filter(Boolean).length + ' active'"></span>
+          <svg class="w-4 h-4 text-slate-600 transition-transform duration-200" :class="categoryOpen.network ? 'rotate-180' : ''"
+               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div x-show="categoryOpen.network" x-transition class="flex flex-wrap gap-2 px-4 pb-4 pt-2 border-t border-slate-800">
+          <button @click="toggleIntegration('pihole')"
+                  :class="integrations.pihole ? 'bg-red-500/20 border-red-500/50 text-red-400' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.pihole ? 'bg-red-400' : 'bg-slate-600'"></span>Pi-hole
+          </button>
+          <button @click="toggleIntegration('adguard')"
+                  :class="integrations.adguard ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.adguard ? 'bg-emerald-400' : 'bg-slate-600'"></span>AdGuard Home
+          </button>
         </div>
       </div>      <div class="rounded-xl border overflow-hidden transition"
-           :class="(integrations.emby || integrations.jellyfin || integrations.plex) ? 'border-slate-700/80' : 'border-slate-800'">
+           :class="(integrations.emby || integrations.jellyfin || integrations.plex || integrations.seerr) ? 'border-slate-700/80' : 'border-slate-800'">
         <button @click="categoryOpen.media = !categoryOpen.media"
                 class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/40 transition">
           <svg class="w-4 h-4 text-slate-500 shrink-0" fill="currentColor" viewBox="0 0 24 24">
             <path d="M8 5v14l11-7z"/>
           </svg>
           <span class="text-sm font-semibold text-slate-300 flex-1 text-left">Media</span>
-          <span x-show="integrations.emby || integrations.jellyfin || integrations.plex"
+          <span x-show="integrations.emby || integrations.jellyfin || integrations.plex || integrations.seerr"
                 class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 mr-1"
-                x-text="[integrations.emby, integrations.jellyfin, integrations.plex].filter(Boolean).length + ' active'">
+                x-text="[integrations.emby, integrations.jellyfin, integrations.plex, integrations.seerr].filter(Boolean).length + ' active'">
           </span>
           <svg class="w-4 h-4 text-slate-600 transition-transform duration-200" :class="categoryOpen.media ? 'rotate-180' : ''"
                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -306,18 +355,23 @@
                   class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
             <span class="w-2 h-2 rounded-full" :class="integrations.plex ? 'bg-[#E5A00D]' : 'bg-slate-600'"></span>Plex
           </button>
+          <button @click="toggleIntegration('seerr')"
+                  :class="integrations.seerr ? 'bg-orange-500/20 border-orange-500/50 text-orange-400' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.seerr ? 'bg-orange-400' : 'bg-slate-600'"></span>Seerr
+          </button>
         </div>
       </div>      <div class="rounded-xl border overflow-hidden transition"
-           :class="(integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'border-slate-700/80' : 'border-slate-800'">
+           :class="(integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.nzbget) ? 'border-slate-700/80' : 'border-slate-800'">
         <button @click="categoryOpen.downloaders = !categoryOpen.downloaders"
                 class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/40 transition">
           <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
           </svg>
           <span class="text-sm font-semibold text-slate-300 flex-1 text-left">Downloaders</span>
-          <span x-show="integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge"
+          <span x-show="integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.nzbget"
                 class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 mr-1"
-                x-text="[integrations.qb, integrations.sabnzbd, integrations.transmission, integrations.deluge].filter(Boolean).length + ' active'"></span>
+                x-text="[integrations.qb, integrations.sabnzbd, integrations.transmission, integrations.deluge, integrations.nzbget].filter(Boolean).length + ' active'"></span>
           <svg class="w-4 h-4 text-slate-600 transition-transform duration-200" :class="categoryOpen.downloaders ? 'rotate-180' : ''"
                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
@@ -344,19 +398,24 @@
                   class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
             <span class="w-2 h-2 rounded-full" :class="integrations.deluge ? 'bg-[#88B04B]' : 'bg-slate-600'"></span>Deluge
           </button>
+          <button @click="toggleIntegration('nzbget')"
+                  :class="integrations.nzbget ? 'bg-slate-500/20 border-slate-500/50 text-slate-300' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.nzbget ? 'bg-slate-300' : 'bg-slate-600'"></span>NZBGet
+          </button>
         </div>
       </div>
       <div class="rounded-xl border overflow-hidden transition"
-           :class="(integrations.ntfy || integrations.discord || integrations.telegram || integrations.pushover) ? 'border-slate-700/80' : 'border-slate-800'">
+           :class="(integrations.ntfy || integrations.discord || integrations.telegram || integrations.pushover || integrations.gotify) ? 'border-slate-700/80' : 'border-slate-800'">
         <button @click="categoryOpen.notifications = !categoryOpen.notifications"
                 class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/40 transition">
           <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
           </svg>
           <span class="text-sm font-semibold text-slate-300 flex-1 text-left">Notifications</span>
-          <span x-show="integrations.ntfy || integrations.discord || integrations.telegram || integrations.pushover"
+          <span x-show="integrations.ntfy || integrations.discord || integrations.telegram || integrations.pushover || integrations.gotify"
                 class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 mr-1"
-                x-text="[integrations.ntfy, integrations.discord, integrations.telegram, integrations.pushover].filter(Boolean).length + ' active'"></span>
+                x-text="[integrations.ntfy, integrations.discord, integrations.telegram, integrations.pushover, integrations.gotify].filter(Boolean).length + ' active'"></span>
           <svg class="w-4 h-4 text-slate-600 transition-transform duration-200" :class="categoryOpen.notifications ? 'rotate-180' : ''"
                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
@@ -382,6 +441,11 @@
                   :class="integrations.pushover ? 'bg-[#F83600]/20 border-[#F83600]/50 text-[#F83600]' : 'bg-slate-800 border-slate-700 text-slate-500'"
                   class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
             <span class="w-2 h-2 rounded-full" :class="integrations.pushover ? 'bg-[#F83600]' : 'bg-slate-600'"></span>Pushover
+          </button>
+          <button @click="toggleIntegration('gotify')"
+                  :class="integrations.gotify ? 'bg-purple-500/20 border-purple-500/50 text-purple-400' : 'bg-slate-800 border-slate-700 text-slate-500'"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
+            <span class="w-2 h-2 rounded-full" :class="integrations.gotify ? 'bg-purple-400' : 'bg-slate-600'"></span>Gotify
           </button>
         </div>
       </div>
@@ -755,6 +819,229 @@
         <span class="text-sm font-medium" :class="radarrMsg.startsWith('✓') ? 'text-emerald-400' : radarrMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="radarrMsg" x-text="radarrMsg"></span>
       </div>
     </div>
+    <div x-show="integrations.seerr" x-transition class="mb-6" :class="(integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.portainer || integrations.truenas || integrations.unraid || integrations.nodered || integrations.pihole || integrations.adguard || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-4">Seerr</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Server URL</label>
+          <input x-model="seerrSettings.seerr_url" placeholder="http://192.168.1.10:5055"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-orange-500 transition">
+          <p class="text-xs text-slate-600 mt-1">Overseerr or Jellyseerr URL</p>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">API Key
+            <span x-show="seerrSettings.seerr_api_key_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="seerrKey" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-orange-500 transition">
+          <p class="text-xs text-slate-600 mt-1">Settings → General → API Key</p>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveSeerrSettings()" class="bg-orange-500 hover:bg-orange-500/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testSeerr()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="seerrMsg.startsWith('✓') ? 'text-emerald-400' : seerrMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="seerrMsg" x-text="seerrMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.pihole" x-transition class="mb-6" :class="(integrations.seerr || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.portainer || integrations.truenas || integrations.unraid || integrations.nodered || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-red-400 uppercase tracking-wider mb-4">Pi-hole</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
+          <input x-model="piholeSettings.pihole_url" placeholder="http://192.168.1.1"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-red-500 transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">API Token
+            <span x-show="piholeSettings.pihole_token_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="piholeToken" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-red-500 transition">
+          <p class="text-xs text-slate-600 mt-1">Pi-hole → Settings → API → Show API token</p>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="savePiholeSettings()" class="bg-red-500 hover:bg-red-500/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testPihole()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="piholeMsg.startsWith('✓') ? 'text-emerald-400' : piholeMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="piholeMsg" x-text="piholeMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.adguard" x-transition class="mb-6" :class="(integrations.pihole || integrations.seerr || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.portainer || integrations.truenas || integrations.unraid || integrations.nodered || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-4">AdGuard Home</div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
+          <input x-model="adguardSettings.adguard_url" placeholder="http://192.168.1.1:3000"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-emerald-500 transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Username</label>
+          <input x-model="adguardSettings.adguard_username" placeholder="admin"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-emerald-500 transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Password
+            <span x-show="adguardSettings.adguard_password_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="adguardPw" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-emerald-500 transition">
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveAdguardSettings()" class="bg-emerald-600 hover:bg-emerald-600/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testAdguard()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="adguardMsg.startsWith('✓') ? 'text-emerald-400' : adguardMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="adguardMsg" x-text="adguardMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.portainer" x-transition class="mb-6" :class="(integrations.adguard || integrations.pihole || integrations.seerr || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-[#13BEF9] uppercase tracking-wider mb-4">Portainer</div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
+          <input x-model="portainerSettings.portainer_url" placeholder="https://192.168.1.10:9443"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#13BEF9] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">API Token
+            <span x-show="portainerSettings.portainer_token_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="portainerToken" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#13BEF9] transition">
+          <p class="text-xs text-slate-600 mt-1">Account → Access Tokens → Add access token</p>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Environment ID</label>
+          <input x-model="portainerSettings.portainer_env_id" placeholder="1"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#13BEF9] transition">
+          <p class="text-xs text-slate-600 mt-1">Usually 1 for local environment</p>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="savePortainerSettings()" class="bg-[#13BEF9] hover:bg-[#13BEF9]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testPortainer()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="portainerMsg.startsWith('✓') ? 'text-emerald-400' : portainerMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="portainerMsg" x-text="portainerMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.truenas" x-transition class="mb-6" :class="(integrations.portainer || integrations.adguard || integrations.pihole || integrations.seerr || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-[#2783C6] uppercase tracking-wider mb-4">TrueNAS</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
+          <input x-model="truenasSettings.truenas_url" placeholder="http://192.168.1.10"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#2783C6] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">API Key
+            <span x-show="truenasSettings.truenas_api_key_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="truenasKey" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#2783C6] transition">
+          <p class="text-xs text-slate-600 mt-1">TrueNAS → Credentials → API Keys</p>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveTruenasSettings()" class="bg-[#2783C6] hover:bg-[#2783C6]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testTruenas()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="truenasMsg.startsWith('✓') ? 'text-emerald-400' : truenasMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="truenasMsg" x-text="truenasMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.unraid" x-transition class="mb-6" :class="(integrations.truenas || integrations.portainer || integrations.adguard || integrations.pihole || integrations.seerr || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-[#FF6600] uppercase tracking-wider mb-4">Unraid</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
+          <input x-model="unraidSettings.unraid_url" placeholder="http://tower.local"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#FF6600] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">API Key
+            <span x-show="unraidSettings.unraid_api_key_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="unraidKey" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#FF6600] transition">
+          <p class="text-xs text-slate-600 mt-1">Requires Unraid 6.12+ with API key enabled</p>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveUnraidSettings()" class="bg-[#FF6600] hover:bg-[#FF6600]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testUnraid()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="unraidMsg.startsWith('✓') ? 'text-emerald-400' : unraidMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="unraidMsg" x-text="unraidMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.nodered" x-transition class="mb-6" :class="(integrations.unraid || integrations.truenas || integrations.portainer || integrations.adguard || integrations.pihole || integrations.seerr || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-[#C0392B] uppercase tracking-wider mb-4">Node-RED</div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
+          <input x-model="noderedSettings.nodered_url" placeholder="http://192.168.1.10:1880"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#C0392B] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Username</label>
+          <input x-model="noderedSettings.nodered_username" placeholder="admin (if auth enabled)"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#C0392B] transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Password
+            <span x-show="noderedSettings.nodered_password_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="noderedPw" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#C0392B] transition">
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveNoderedSettings()" class="bg-[#C0392B] hover:bg-[#C0392B]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testNodered()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="noderedMsg.startsWith('✓') ? 'text-emerald-400' : noderedMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="noderedMsg" x-text="noderedMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.nzbget" x-transition class="mb-6" :class="(integrations.nodered || integrations.unraid || integrations.truenas || integrations.portainer || integrations.adguard || integrations.pihole || integrations.seerr || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <div class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-4">NZBGet</div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
+          <input x-model="nzbgetSettings.nzbget_url" placeholder="http://192.168.1.10:6789"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-slate-500 transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Username</label>
+          <input x-model="nzbgetSettings.nzbget_username" placeholder="nzbget"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-slate-500 transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Password
+            <span x-show="nzbgetSettings.nzbget_password_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="nzbgetPw" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-slate-500 transition">
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 flex-wrap items-center">
+        <button @click="saveNzbgetSettings()" class="bg-slate-600 hover:bg-slate-600/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testNzbget()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
+        <span class="text-sm font-medium" :class="nzbgetMsg.startsWith('✓') ? 'text-emerald-400' : nzbgetMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="nzbgetMsg" x-text="nzbgetMsg"></span>
+      </div>
+    </div>
     <div x-show="integrations.ntfy" x-transition :class="(integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.discord || integrations.telegram || integrations.pushover || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
       <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">ntfy Notifications</div>
       <div class="grid md:grid-cols-2 gap-4">
@@ -821,6 +1108,66 @@
         <span class="text-sm font-medium"
               :class="notifyMsg.startsWith('✓') ? 'text-emerald-400' : notifyMsg === 'Sending…' ? 'text-slate-400' : 'text-red-400'"
               x-show="notifyMsg" x-text="notifyMsg"></span>
+      </div>
+    </div>
+    <div x-show="integrations.gotify" x-transition class="pt-6 border-t border-slate-800 mt-6">
+      <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Gotify Notifications</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Server URL</label>
+          <input x-model="gotifySettings.gotify_url" placeholder="http://192.168.1.10:8080"
+                 autocomplete="off" spellcheck="false"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-purple-500 transition">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">App Token
+            <span x-show="gotifySettings.gotify_token_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
+          </label>
+          <input type="password" x-ref="gotifyToken" placeholder="••••••••••••••••"
+                 autocomplete="new-password"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-purple-500 transition">
+          <p class="text-xs text-slate-600 mt-1">Create an application in Gotify to get a token.</p>
+        </div>
+      </div>
+
+      <div class="mt-5 pt-5 border-t border-slate-800">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Triggers</div>
+        <div class="space-y-2">
+          <label class="flex items-start gap-4 p-4 bg-slate-800/60 rounded-xl cursor-pointer hover:bg-slate-800 transition">
+            <input type="checkbox" x-model="gotifySettings.gotify_on_failover" class="mt-0.5 accent-purple-500 w-4 h-4 shrink-0">
+            <div>
+              <div class="text-sm font-semibold text-amber-400">WAN Failover</div>
+              <div class="text-xs text-slate-500 mt-0.5">Primary WAN goes down — failover activates.</div>
+            </div>
+          </label>
+          <label class="flex items-start gap-4 p-4 bg-slate-800/60 rounded-xl cursor-pointer hover:bg-slate-800 transition">
+            <input type="checkbox" x-model="gotifySettings.gotify_on_restored" class="mt-0.5 accent-purple-500 w-4 h-4 shrink-0">
+            <div>
+              <div class="text-sm font-semibold text-emerald-400">WAN Restored</div>
+              <div class="text-xs text-slate-500 mt-0.5">Primary WAN comes back online.</div>
+            </div>
+          </label>
+          <label class="flex items-start gap-4 p-4 bg-slate-800/60 rounded-xl cursor-pointer hover:bg-slate-800 transition">
+            <input type="checkbox" x-model="gotifySettings.gotify_on_high_latency" class="mt-0.5 accent-purple-500 w-4 h-4 shrink-0">
+            <div>
+              <div class="text-sm font-semibold text-purple-400">High latency</div>
+              <div class="text-xs text-slate-500 mt-0.5">Latency exceeds your threshold.</div>
+            </div>
+          </label>
+          <label class="flex items-start gap-4 p-4 bg-slate-800/60 rounded-xl cursor-pointer hover:bg-slate-800 transition">
+            <input type="checkbox" x-model="gotifySettings.gotify_on_error" class="mt-0.5 accent-purple-500 w-4 h-4 shrink-0">
+            <div>
+              <div class="text-sm font-semibold text-red-400">Watcher Errors</div>
+              <div class="text-xs text-slate-500 mt-0.5">WaniFi can't reach the UniFi controller.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-5 flex-wrap items-center">
+        <button @click="saveGotifySettings()" class="bg-purple-700 hover:bg-purple-600 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="testGotify()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Send test notification</button>
+        <span class="text-sm font-medium" :class="gotifyMsg.startsWith('✓') ? 'text-emerald-400' : gotifyMsg === 'Sending…' ? 'text-slate-400' : 'text-red-400'" x-show="gotifyMsg" x-text="gotifyMsg"></span>
       </div>
     </div>
   </div>  <div class="bg-slate-900 border border-slate-700/60 rounded-2xl p-5">
