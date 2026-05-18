@@ -4,10 +4,14 @@ from typing import Optional
 import docker
 
 from .config import log
-
-VALID_ACTIONS = ("stop", "start", "restart", "pause", "unpause")
+from .models import VALID_ACTIONS  # single source of truth
 
 _client: Optional[docker.DockerClient] = None
+
+
+def _reset_client():
+    global _client
+    _client = None
 
 
 def get_client() -> docker.DockerClient:
@@ -22,6 +26,7 @@ def docker_ok() -> bool:
         get_client().ping()
         return True
     except Exception:
+        _reset_client()
         return False
 
 
@@ -38,6 +43,7 @@ def list_containers() -> list[dict]:
             for c in containers
         ]
     except Exception as e:
+        _reset_client()
         log.error("Docker list failed: %s", e)
         return []
 
@@ -50,6 +56,7 @@ def container_action(name: str, action: str) -> tuple[bool, str]:
         getattr(c, action)(**({"timeout": 5} if action in ("stop", "restart") else {}))
         return True, f"{action} OK"
     except docker.errors.NotFound:
-        return False, f"Container {name} not found"
+        return False, f"Container {name!r} not found"
     except Exception as e:
+        _reset_client()
         return False, str(e)

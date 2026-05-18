@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from ..auth import require_auth
-from ..db import db, log_event
+from ..db import db, invalidate_cache, log_event
 
 router = APIRouter(prefix="/api/backup")
 
@@ -133,7 +133,6 @@ async def import_backup(request: Request, _: bool = Depends(require_auth)):
                 )
                 counts["events"] += 1
 
-    from ..db import invalidate_cache
     invalidate_cache()
 
     log_event(

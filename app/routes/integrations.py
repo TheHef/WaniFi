@@ -1,5 +1,5 @@
 """Integration enable/disable toggles."""
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from ..auth import require_auth
 from ..db import get_setting, set_setting
@@ -17,7 +17,6 @@ async def get_integrations(_: bool = Depends(require_auth)):
 @router.post("/{name}/toggle")
 async def toggle_integration(name: str, _: bool = Depends(require_auth)):
     if name not in INTEGRATION_KEYS:
-        from fastapi import HTTPException
         raise HTTPException(400, f"Unknown integration: {name}")
     current = get_setting(f"integration_{name}", "0")
     new_val = "0" if current == "1" else "1"

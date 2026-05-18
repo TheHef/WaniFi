@@ -33,6 +33,26 @@ class PlexClient:
         except Exception as e:
             return False, str(e)
 
+    async def set_wan_bitrate(self, mbps: int) -> tuple[bool, str]:
+        """Set WAN streaming bitrate via /:/prefs (maxUploadBitrate in kbps, 0 = unlimited)."""
+        client = await self._get_client()
+        try:
+            kbps = mbps * 1000 if mbps > 0 else 0
+            r = await client.put(
+                f"{self.base}/:/prefs",
+                params={"maxUploadBitrate": kbps},
+                headers=self._headers(),
+            )
+            if r.status_code < 400:
+                label = f"{mbps} Mbps" if mbps else "unlimited"
+                return True, f"WAN bitrate set to {label}"
+            return False, f"HTTP {r.status_code}"
+        except Exception as e:
+            return False, str(e)
+
+    async def clear_wan_bitrate(self) -> tuple[bool, str]:
+        return await self.set_wan_bitrate(0)
+
     async def stop_all_streams(self) -> tuple[bool, str]:
         client = await self._get_client()
         try:

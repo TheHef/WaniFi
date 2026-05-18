@@ -3,7 +3,6 @@ import asyncio
 import sqlite3
 import time
 from contextlib import contextmanager
-from datetime import datetime, timezone
 from typing import Optional
 
 from .config import DB_PATH, EVENT_RING_LIMIT, METRICS_RETENTION_DAYS, log
@@ -22,6 +21,8 @@ def db():
 
 def init_db():
     with db() as conn:
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA synchronous=NORMAL")
         conn.executescript(
             """
             CREATE TABLE IF NOT EXISTS settings (
@@ -104,6 +105,11 @@ def _load_cache():
     for r in rows:
         _settings_cache[r["key"]] = r["value"]
     _cache_loaded = True
+
+
+def invalidate_cache():
+    global _cache_loaded
+    _cache_loaded = False
 
 
 def get_setting(key: str, default: Optional[str] = None) -> Optional[str]:
@@ -209,7 +215,3 @@ async def a_write_metric(info: dict):
 
 async def a_set_state(key: str, value: str):
     await asyncio.to_thread(set_state, key, value)
-
-
-def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
