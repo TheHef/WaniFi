@@ -88,7 +88,7 @@
       <button x-show="integrations.seerr"
               @click="newRule.rule_type = 'seerr'; newRule.action = 'sync_radarr'; newRule.container = ''"
               class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
-              :class="newRule.rule_type === 'seerr' ? 'bg-orange-500/20 border-orange-500/50 text-orange-400' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+              :class="newRule.rule_type === 'seerr' ? 'bg-[#4F65F5]/20 border-[#4F65F5]/50 text-[#C395FC]' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
         Seerr
       </button>
       <button x-show="integrations.pihole"
@@ -443,19 +443,19 @@
 
     <!-- Seerr -->
     <div x-show="newRule.rule_type === 'seerr'" class="grid md:grid-cols-4 gap-3">
-      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-orange-500">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#4F65F5]">
         <option value="failover">On failover</option>
         <option value="restored">On restored</option>
         <option value="down">On WAN down</option>
         <option value="high_latency">On high latency</option>
       </select>
-      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-orange-500">
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#4F65F5]">
         <option value="sync_radarr">Sync Radarr</option>
         <option value="sync_sonarr">Sync Sonarr</option>
       </select>
       <input x-model="newRule.name" type="text" placeholder="Name (optional)"
-             class="md:col-span-2 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-orange-500 transition">
-      <button @click="addRule()" class="md:col-span-4 bg-orange-500 hover:bg-orange-400 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+             class="md:col-span-2 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#4F65F5] transition">
+      <button @click="addRule()" class="md:col-span-4 bg-[#4F65F5] hover:bg-[#4F65F5]/80 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
     </div>
 
     <!-- Pi-hole -->
@@ -639,7 +639,7 @@
                       sonarr:       'background:rgba(53,197,244,.18);color:#35C5F4',
                       radarr:       'background:rgba(255,194,48,.18);color:#FFC230',
                       webhook:      'background:rgba(100,116,139,.18);color:#94a3b8',
-                      seerr:        'background:rgba(249,115,22,.18);color:#fb923c',
+                      seerr:        'background:rgba(79,101,245,.18);color:#C395FC',
                       pihole:       'background:rgba(239,68,68,.18);color:#f87171',
                       adguard:      'background:rgba(34,197,94,.18);color:#4ade80',
                       portainer:    'background:rgba(6,182,212,.18);color:#22d3ee',
