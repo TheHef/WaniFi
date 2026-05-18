@@ -148,6 +148,40 @@ async def _emby_action(action: str, value: str = "") -> tuple[bool, str]:
         await client.close()
 
 
+async def _jellyfin_action(action: str, value: str = "") -> tuple[bool, str]:
+    from .jellyfin import JellyfinClient
+    url   = get_setting("jellyfin_url", "")
+    token = get_setting("jellyfin_token", "")
+    if not (url and token):
+        return False, "Jellyfin not configured"
+    client = JellyfinClient(url, token)
+    try:
+        if action == "set_bitrate_limit":
+            return await client.set_bitrate_limit(int(value) if value else 0)
+        if action == "clear_bitrate_limit":
+            return await client.clear_bitrate_limit()
+        if action == "stop_all_sessions":
+            return await client.stop_all_sessions()
+        return False, f"Unknown Jellyfin action: {action}"
+    finally:
+        await client.close()
+
+
+async def _plex_action(action: str) -> tuple[bool, str]:
+    from .plex import PlexClient
+    url   = get_setting("plex_url", "")
+    token = get_setting("plex_token", "")
+    if not (url and token):
+        return False, "Plex not configured"
+    client = PlexClient(url, token)
+    try:
+        if action == "stop_all_streams":
+            return await client.stop_all_streams()
+        return False, f"Unknown Plex action: {action}"
+    finally:
+        await client.close()
+
+
 async def fire_trigger(trigger: str):
     from .db import db
     from .docker_ops import container_action
@@ -166,6 +200,8 @@ async def fire_trigger(trigger: str):
             "host_command": "integration_host_command",
             "qbittorrent":  "integration_qb",
             "emby":         "integration_emby",
+            "jellyfin":     "integration_jellyfin",
+            "plex":         "integration_plex",
         }.get(rtype)
         if integration_key and get_setting(integration_key, "1") != "1":
             await a_log_event("info", f"Rule '{rule['name']}' skipped (integration disabled)")
@@ -188,6 +224,18 @@ async def fire_trigger(trigger: str):
             await a_log_event(
                 "info" if ok else "error",
                 f"Rule: Emby {rule['action']} on {trigger} -> {msg}",
+            )
+        elif rtype == "jellyfin":
+            ok, msg = await _jellyfin_action(rule["action"], rule["container"])
+            await a_log_event(
+                "info" if ok else "error",
+                f"Rule: Jellyfin {rule['action']} on {trigger} -> {msg}",
+            )
+        elif rtype == "plex":
+            ok, msg = await _plex_action(rule["action"])
+            await a_log_event(
+                "info" if ok else "error",
+                f"Rule: Plex {rule['action']} on {trigger} -> {msg}",
             )
         else:
             ok, msg = container_action(rule["container"], rule["action"])

@@ -60,3 +60,13 @@ class QbSettingsIn(BaseModel):
 class EmbySettingsIn(BaseModel):
     emby_url: str = ""
     emby_token: Optional[str] = None
+
+
+class JellyfinSettingsIn(BaseModel):
+    jellyfin_url: str = ""
+    jellyfin_token: Optional[str] = None
+
+
+class PlexSettingsIn(BaseModel):
+    plex_url: str = ""
+    plex_token: Optional[str] = None

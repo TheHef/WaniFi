@@ -20,7 +20,10 @@ EXPORT_KEYS = (
     "ntfy_on_failover", "ntfy_on_restored", "ntfy_on_high_latency", "ntfy_on_error",
     "qb_url", "qb_username", "qb_password",
     "emby_url", "emby_token",
-    "integration_host_command", "integration_docker", "integration_qb", "integration_emby", "integration_ntfy",
+    "jellyfin_url", "jellyfin_token",
+    "plex_url", "plex_token",
+    "integration_host_command", "integration_docker", "integration_qb",
+    "integration_emby", "integration_jellyfin", "integration_plex", "integration_ntfy",
 )
 
 

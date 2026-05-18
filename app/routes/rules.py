@@ -5,8 +5,10 @@ from ..auth import require_auth
 from ..db import db, log_event
 from ..models import RuleIn, VALID_ACTIONS, VALID_TRIGGERS
 
-VALID_QB_ACTIONS   = ("alt_speed_on", "alt_speed_off", "set_dl_limit", "set_ul_limit", "pause_all", "resume_all")
-VALID_EMBY_ACTIONS = ("set_bitrate_limit", "clear_bitrate_limit", "stop_all_sessions")
+VALID_QB_ACTIONS       = ("alt_speed_on", "alt_speed_off", "set_dl_limit", "set_ul_limit", "pause_all", "resume_all")
+VALID_EMBY_ACTIONS     = ("set_bitrate_limit", "clear_bitrate_limit", "stop_all_sessions")
+VALID_JELLYFIN_ACTIONS = ("set_bitrate_limit", "clear_bitrate_limit", "stop_all_sessions")
+VALID_PLEX_ACTIONS     = ("stop_all_streams",)
 
 router = APIRouter(prefix="/api/rules")
 
@@ -28,8 +30,14 @@ def _validate(payload: RuleIn):
     elif payload.rule_type == "emby":
         if payload.action not in VALID_EMBY_ACTIONS:
             raise HTTPException(400, f"action must be one of {VALID_EMBY_ACTIONS}")
+    elif payload.rule_type == "jellyfin":
+        if payload.action not in VALID_JELLYFIN_ACTIONS:
+            raise HTTPException(400, f"action must be one of {VALID_JELLYFIN_ACTIONS}")
+    elif payload.rule_type == "plex":
+        if payload.action not in VALID_PLEX_ACTIONS:
+            raise HTTPException(400, f"action must be one of {VALID_PLEX_ACTIONS}")
     else:
-        raise HTTPException(400, "rule_type must be 'docker', 'host_command', 'qbittorrent', or 'emby'")
+        raise HTTPException(400, "rule_type must be 'docker', 'host_command', 'qbittorrent', 'emby', 'jellyfin', or 'plex'")
 
 
 def _default_name(payload: RuleIn) -> str:
@@ -42,6 +50,10 @@ def _default_name(payload: RuleIn) -> str:
         return f"qB: {payload.action}"
     if payload.rule_type == "emby":
         return f"Emby: {payload.action}"
+    if payload.rule_type == "jellyfin":
+        return f"Jellyfin: {payload.action}"
+    if payload.rule_type == "plex":
+        return f"Plex: {payload.action}"
     return payload.command.strip()
 
 
@@ -108,6 +120,12 @@ async def run_rule(rule_id: int, _: bool = Depends(require_auth)):
     elif rule["rule_type"] == "emby":
         from ..watcher import _emby_action
         ok, msg = await _emby_action(rule["action"], rule["container"])
+    elif rule["rule_type"] == "jellyfin":
+        from ..watcher import _jellyfin_action
+        ok, msg = await _jellyfin_action(rule["action"], rule["container"])
+    elif rule["rule_type"] == "plex":
+        from ..watcher import _plex_action
+        ok, msg = await _plex_action(rule["action"])
     else:
         from ..docker_ops import container_action
         ok, msg = container_action(rule["container"], rule["action"])

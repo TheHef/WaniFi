@@ -19,10 +19,12 @@ window.app = function () {
       ntfy_on_failover: true, ntfy_on_restored: true,
       ntfy_on_error: false, ntfy_on_high_latency: false,
     },
-    qbSettings:   { qb_url: '', qb_username: '', qb_password: '', qb_password_set: false },
-    embySettings: { emby_url: '', emby_token: '', emby_token_set: false },
-    embyMsg: '',
-    integrations: { host_command: false, docker: false, qb: false, emby: false, ntfy: false },
+    qbSettings:       { qb_url: '', qb_username: '', qb_password: '', qb_password_set: false },
+    embySettings:     { emby_url: '', emby_token: '', emby_token_set: false },
+    jellyfinSettings: { jellyfin_url: '', jellyfin_token: '', jellyfin_token_set: false },
+    plexSettings:     { plex_url: '', plex_token: '', plex_token_set: false },
+    embyMsg: '', jellyfinMsg: '', plexMsg: '',
+    integrations: { host_command: false, docker: false, qb: false, emby: false, jellyfin: false, plex: false, ntfy: false },
     rules: [], events: [], containers: [], discoveredWans: [],
     newRule: { rule_type: 'host_command', name: '', container: '', trigger: 'failover', action: 'stop', command: '' },
     confirmModal: { open: false, label: '', confirm: () => {} },
@@ -30,6 +32,7 @@ window.app = function () {
 
     manualContainer: '',
     manualMsg: '', settingsMsg: '', notifyMsg: '', qbMsg: '', importMsg: '', debugMsg: '',
+
     runMsg: null,
 
     eventsLimit: 20, eventsSearch: '', eventsLevel: '',
@@ -67,6 +70,8 @@ window.app = function () {
       await this.loadNotifySettings();
       await this.loadQbSettings();
       await this.loadEmbySettings();
+      await this.loadJellyfinSettings();
+      await this.loadPlexSettings();
       await this.loadIntegrations();
 
       // First run: redirect to settings if API key has never been saved
@@ -330,6 +335,82 @@ window.app = function () {
       setTimeout(() => this.embyMsg = '', 5000);
     },
 
+    // ---- Jellyfin ---------------------------------------------------------
+    async loadJellyfinSettings() {
+      const d = await fetch('/api/jellyfin-settings').then(r => r.json());
+      this.jellyfinSettings = { ...d, jellyfin_token: '' };
+    },
+
+    async saveJellyfinSettings() {
+      try {
+        const payload = { jellyfin_url: this.jellyfinSettings.jellyfin_url };
+        if (this.jellyfinSettings.jellyfin_token) payload.jellyfin_token = this.jellyfinSettings.jellyfin_token;
+        const r = await fetch('/api/jellyfin-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const d = await r.json().catch(() => ({}));
+        this.jellyfinMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ ' + (d.detail || d.error || 'Error');
+        await this.loadJellyfinSettings();
+        setTimeout(() => this.jellyfinMsg = '', 3000);
+      } catch (e) {
+        this.jellyfinMsg = '✗ ' + e.message;
+        setTimeout(() => this.jellyfinMsg = '', 4000);
+      }
+    },
+
+    async testJellyfin() {
+      await this.saveJellyfinSettings();
+      this.jellyfinMsg = 'Testing…';
+      try {
+        const r = await fetch('/api/test-jellyfin', { method: 'POST' });
+        const d = await r.json().catch(() => ({}));
+        this.jellyfinMsg = d.ok ? '✓ ' + (d.message || 'Connected') : '✗ ' + (d.error || 'Failed');
+      } catch (e) {
+        this.jellyfinMsg = '✗ ' + e.message;
+      }
+      setTimeout(() => this.jellyfinMsg = '', 5000);
+    },
+
+    // ---- Plex -------------------------------------------------------------
+    async loadPlexSettings() {
+      const d = await fetch('/api/plex-settings').then(r => r.json());
+      this.plexSettings = { ...d, plex_token: '' };
+    },
+
+    async savePlexSettings() {
+      try {
+        const payload = { plex_url: this.plexSettings.plex_url };
+        if (this.plexSettings.plex_token) payload.plex_token = this.plexSettings.plex_token;
+        const r = await fetch('/api/plex-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const d = await r.json().catch(() => ({}));
+        this.plexMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ ' + (d.detail || d.error || 'Error');
+        await this.loadPlexSettings();
+        setTimeout(() => this.plexMsg = '', 3000);
+      } catch (e) {
+        this.plexMsg = '✗ ' + e.message;
+        setTimeout(() => this.plexMsg = '', 4000);
+      }
+    },
+
+    async testPlex() {
+      await this.savePlexSettings();
+      this.plexMsg = 'Testing…';
+      try {
+        const r = await fetch('/api/test-plex', { method: 'POST' });
+        const d = await r.json().catch(() => ({}));
+        this.plexMsg = d.ok ? '✓ ' + (d.message || 'Connected') : '✗ ' + (d.error || 'Failed');
+      } catch (e) {
+        this.plexMsg = '✗ ' + e.message;
+      }
+      setTimeout(() => this.plexMsg = '', 5000);
+    },
+
     // ---- Integrations -----------------------------------------------------
     async loadIntegrations() {
       this.integrations = await fetch('/api/integrations').then(r => r.json());
@@ -405,6 +486,8 @@ window.app = function () {
                 await this.loadNotifySettings();
                 await this.loadQbSettings();
                 await this.loadEmbySettings();
+                await this.loadJellyfinSettings();
+                await this.loadPlexSettings();
                 await this.loadIntegrations();
                 await this.refreshLive();
               } else {
