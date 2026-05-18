@@ -34,41 +34,51 @@
       <div x-show="settings.unifi_host && (settings.unifi_api_key_set || settings.unifi_api_key)">
 
         <p class="text-xs text-slate-500 mb-3">Drag your WAN interfaces to the correct slots:</p>
-        <div class="grid md:grid-cols-[minmax(0,0.3fr)_48px_1fr] gap-0 items-start">
+        <div class="grid md:grid-cols-[minmax(0,0.35fr)_72px_1fr] gap-0 items-start">
 
           <!-- Left: discovered interfaces -->
           <div>
-            <div x-show="discoveredWans.length > 0" class="flex flex-col gap-2">
+            <div x-show="discoveredWans.length > 0" class="flex flex-col gap-3">
               <template x-for="w in discoveredWans" :key="w.subsystem">
                 <div draggable="true"
                      @dragstart="$event.dataTransfer.setData('wan', JSON.stringify(w))"
-                     class="bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5 cursor-grab active:cursor-grabbing select-none hover:border-slate-400 transition">
-                  <div class="flex items-center gap-1.5 mb-1">
-                    <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="w.active ? 'bg-emerald-400' : 'bg-slate-600'"></span>
-                    <span class="font-mono font-bold text-slate-200 text-xs truncate" x-text="w.subsystem"></span>
+                     class="bg-slate-800 border border-slate-600 rounded-xl px-3 py-3 cursor-grab active:cursor-grabbing select-none hover:border-slate-400 transition flex flex-col items-center gap-2 text-center">
+                  <img x-show="deviceIcon(w.device_model) || deviceIcon(w.device_name)"
+                       :src="deviceIcon(w.device_model) || deviceIcon(w.device_name)"
+                       class="w-16 h-16 object-contain" alt="device">
+                  <div class="w-16 h-16 flex items-center justify-center"
+                       x-show="!(deviceIcon(w.device_model) || deviceIcon(w.device_name))">
+                    <svg class="w-8 h-8 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="6" width="18" height="12" rx="2" stroke-width="1.5"/></svg>
                   </div>
-                  <div class="text-xs text-sky-400 truncate leading-tight" x-show="w.device_model || w.device_name"
-                       x-text="fmtModel(w.device_model) || fmtModel(w.device_name) || w.device_name"></div>
+                  <div>
+                    <div class="font-mono font-bold text-slate-200 text-xs" x-text="w.subsystem"></div>
+                    <div class="text-xs text-sky-400 leading-tight" x-show="w.device_model || w.device_name"
+                         x-text="fmtModel(w.device_model) || fmtModel(w.device_name) || w.device_name"></div>
+                    <div class="flex items-center justify-center gap-1 mt-1">
+                      <span class="w-1.5 h-1.5 rounded-full" :class="w.active ? 'bg-emerald-400' : 'bg-slate-600'"></span>
+                      <span class="text-xs" :class="w.active ? 'text-emerald-400' : 'text-slate-600'" x-text="w.active ? 'active' : 'standby'"></span>
+                    </div>
+                  </div>
                 </div>
               </template>
             </div>
             <div x-show="discoveredWans.length === 0"
-                 class="bg-slate-800/50 border border-dashed border-slate-700 rounded-xl p-3 text-center">
+                 class="bg-slate-800/50 border border-dashed border-slate-700 rounded-xl p-4 text-center">
               <div class="text-slate-500 text-xs">Test Connection first</div>
             </div>
           </div>
 
           <!-- Middle: drag hint arrow -->
-          <div class="hidden md:flex items-center justify-center pt-16 text-slate-700 pointer-events-none select-none">
-            <svg viewBox="0 0 48 80" class="w-10 h-20 opacity-40" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <!-- top fork to primary -->
-              <path d="M8 40 Q8 12 40 12"/>
-              <polyline points="34,7 40,12 34,17"/>
-              <!-- bottom fork to failover -->
-              <path d="M8 40 Q8 68 40 68"/>
-              <polyline points="34,63 40,68 34,73"/>
+          <div class="hidden md:flex items-center justify-center pt-12 text-slate-600 pointer-events-none select-none">
+            <svg viewBox="0 0 56 120" class="w-14 h-28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <!-- stem -->
-              <line x1="2" y1="40" x2="8" y2="40"/>
+              <line x1="10" y1="60" x2="22" y2="60"/>
+              <!-- top branch -->
+              <path d="M22 60 C22 60 22 24 42 24"/>
+              <polyline points="36,18 42,24 36,30"/>
+              <!-- bottom branch -->
+              <path d="M22 60 C22 60 22 96 42 96"/>
+              <polyline points="36,90 42,96 36,102"/>
             </svg>
           </div>
 
