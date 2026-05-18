@@ -15,12 +15,24 @@ from .db import (
     a_log_event,
     a_set_state,
     a_write_metric,
+    db,
     get_setting,
     get_state,
     purge_old_events,
 )
+from .docker_ops import container_action
 from .notify import send_notification
 from .unifi import UniFiClient
+
+_bg_tasks: set[asyncio.Task] = set()
+
+
+def _create_task(coro) -> asyncio.Task:
+    t = _create_task(coro)
+    _bg_tasks.add(t)
+    t.add_done_callback(_bg_tasks.discard)
+    t.add_done_callback(lambda task: log.warning("Background task failed: %s", task.exception()) if not task.cancelled() and task.exception() else None)
+    return t
 
 
 class WatcherState:
@@ -100,7 +112,7 @@ async def execute_host_command(command: str, timeout: int = 30) -> tuple[bool, s
         return False, str(e)
 
 
-async def _qb_action(action: str, value: str = "") -> tuple[bool, str]:
+async def run_qb_action(action: str, value: str = "") -> tuple[bool, str]:
     from .qbittorrent import QBittorrentClient
     url  = get_setting("qb_url", "")
     user = get_setting("qb_username", "")
@@ -129,7 +141,7 @@ async def _qb_action(action: str, value: str = "") -> tuple[bool, str]:
         await client.close()
 
 
-async def _emby_action(action: str, value: str = "") -> tuple[bool, str]:
+async def run_emby_action(action: str, value: str = "") -> tuple[bool, str]:
     from .emby import EmbyClient
     url   = get_setting("emby_url", "")
     token = get_setting("emby_token", "")
@@ -148,7 +160,7 @@ async def _emby_action(action: str, value: str = "") -> tuple[bool, str]:
         await client.close()
 
 
-async def _jellyfin_action(action: str, value: str = "") -> tuple[bool, str]:
+async def run_jellyfin_action(action: str, value: str = "") -> tuple[bool, str]:
     from .jellyfin import JellyfinClient
     url   = get_setting("jellyfin_url", "")
     token = get_setting("jellyfin_token", "")
@@ -167,7 +179,7 @@ async def _jellyfin_action(action: str, value: str = "") -> tuple[bool, str]:
         await client.close()
 
 
-async def _plex_action(action: str, value: str = "") -> tuple[bool, str]:
+async def run_plex_action(action: str, value: str = "") -> tuple[bool, str]:
     from .plex import PlexClient
     url   = get_setting("plex_url", "")
     token = get_setting("plex_token", "")
@@ -187,9 +199,6 @@ async def _plex_action(action: str, value: str = "") -> tuple[bool, str]:
 
 
 async def fire_trigger(trigger: str):
-    from .db import db
-    from .docker_ops import container_action
-
     with db() as conn:
         rules = conn.execute(
             "SELECT * FROM rules WHERE enabled=1 AND trigger=?", (trigger,)
@@ -218,25 +227,25 @@ async def fire_trigger(trigger: str):
                 f"Rule: host `{rule['command']}` on {trigger} -> {msg}",
             )
         elif rtype == "qbittorrent":
-            ok, msg = await _qb_action(rule["action"], rule["container"])
+            ok, msg = await run_qb_action(rule["action"], rule["container"])
             await a_log_event(
                 "info" if ok else "error",
                 f"Rule: qB {rule['action']} on {trigger} -> {msg}",
             )
         elif rtype == "emby":
-            ok, msg = await _emby_action(rule["action"], rule["container"])
+            ok, msg = await run_emby_action(rule["action"], rule["container"])
             await a_log_event(
                 "info" if ok else "error",
                 f"Rule: Emby {rule['action']} on {trigger} -> {msg}",
             )
         elif rtype == "jellyfin":
-            ok, msg = await _jellyfin_action(rule["action"], rule["container"])
+            ok, msg = await run_jellyfin_action(rule["action"], rule["container"])
             await a_log_event(
                 "info" if ok else "error",
                 f"Rule: Jellyfin {rule['action']} on {trigger} -> {msg}",
             )
         elif rtype == "plex":
-            ok, msg = await _plex_action(rule["action"], rule["container"])
+            ok, msg = await run_plex_action(rule["action"], rule["container"])
             await a_log_event(
                 "info" if ok else "error",
                 f"Rule: Plex {rule['action']} on {trigger} -> {msg}",
@@ -293,9 +302,9 @@ async def live_stats_loop():
                 if lat > threshold and (time.time() - state.latency_last_fired) > cooldown_s:
                     state.latency_last_fired = time.time()
                     await a_log_event("warn", f"High latency: {lat} ms (threshold {threshold} ms)")
-                    asyncio.create_task(fire_trigger("high_latency"))
+                    _create_task(fire_trigger("high_latency"))
                     if get_setting("ntfy_on_high_latency", "0") == "1":
-                        asyncio.create_task(send_notification(
+                        _create_task(send_notification(
                             "WaniFi high latency",
                             f"Latency {lat} ms exceeds threshold {threshold} ms",
                             priority="default", tags="warning",
@@ -357,14 +366,14 @@ async def watcher_loop():
                     await apply_rules(new_state)
                     if new_state == "failover" and get_setting("ntfy_on_failover", "1") == "1":
                         name = get_setting("failover_wan_name") or failover
-                        asyncio.create_task(send_notification(
+                        _create_task(send_notification(
                             "WAN Failover",
                             f"Primary WAN is down — switched to {name}",
                             priority="high", tags="warning,rotating_light",
                         ))
                     elif new_state == "primary" and get_setting("ntfy_on_restored", "1") == "1":
                         name = get_setting("primary_wan_name") or primary
-                        asyncio.create_task(send_notification(
+                        _create_task(send_notification(
                             "WAN Restored",
                             f"Primary WAN ({name}) is back online",
                             priority="default", tags="white_check_mark",
@@ -395,7 +404,7 @@ async def watcher_loop():
             state.last_error = str(e)
             await a_log_event("error", f"Watcher error: {e}")
             if get_setting("ntfy_on_error", "0") == "1":
-                asyncio.create_task(send_notification(
+                _create_task(send_notification(
                     "WaniFi Watcher Error", str(e), priority="low", tags="x",
                 ))
             if client:

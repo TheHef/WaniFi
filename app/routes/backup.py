@@ -23,7 +23,10 @@ SETTINGS_KEYS = (
     "ntfy_on_error", "ntfy_on_high_latency",
     "qb_url", "qb_username", "qb_password",
     "emby_url", "emby_token",
-    "integration_host_command", "integration_docker", "integration_qb", "integration_emby", "integration_ntfy",
+    "jellyfin_url", "jellyfin_token",
+    "plex_url", "plex_token",
+    "integration_host_command", "integration_docker", "integration_qb",
+    "integration_emby", "integration_jellyfin", "integration_plex", "integration_ntfy",
 )
 
 
@@ -130,9 +133,8 @@ async def import_backup(request: Request, _: bool = Depends(require_auth)):
                 )
                 counts["events"] += 1
 
-    # Refresh settings cache after bulk import
-    from ..db import _load_cache  # noqa: WPS437
-    _load_cache()
+    from ..db import invalidate_cache
+    invalidate_cache()
 
     log_event(
         "info",

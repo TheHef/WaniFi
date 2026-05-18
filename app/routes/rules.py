@@ -3,12 +3,23 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from ..auth import require_auth
 from ..db import db, log_event
-from ..models import RuleIn, VALID_ACTIONS, VALID_TRIGGERS
-
-VALID_QB_ACTIONS       = ("alt_speed_on", "alt_speed_off", "set_dl_limit", "set_ul_limit", "pause_all", "resume_all")
-VALID_EMBY_ACTIONS     = ("set_bitrate_limit", "clear_bitrate_limit", "stop_all_sessions")
-VALID_JELLYFIN_ACTIONS = ("set_bitrate_limit", "clear_bitrate_limit", "stop_all_sessions")
-VALID_PLEX_ACTIONS     = ("set_wan_bitrate", "clear_wan_bitrate", "stop_all_streams")
+from ..models import (
+    RuleIn,
+    VALID_ACTIONS,
+    VALID_TRIGGERS,
+    VALID_QB_ACTIONS,
+    VALID_EMBY_ACTIONS,
+    VALID_JELLYFIN_ACTIONS,
+    VALID_PLEX_ACTIONS,
+)
+from ..watcher import (
+    execute_host_command,
+    run_emby_action,
+    run_jellyfin_action,
+    run_plex_action,
+    run_qb_action,
+)
+from ..docker_ops import container_action
 
 router = APIRouter(prefix="/api/rules")
 
@@ -112,22 +123,16 @@ async def run_rule(rule_id: int, _: bool = Depends(require_auth)):
             raise HTTPException(404)
     rule = dict(row)
     if rule["rule_type"] == "host_command":
-        from ..watcher import execute_host_command
         ok, msg = await execute_host_command(rule["command"])
     elif rule["rule_type"] == "qbittorrent":
-        from ..watcher import _qb_action
-        ok, msg = await _qb_action(rule["action"], rule["container"])
+        ok, msg = await run_qb_action(rule["action"], rule["container"])
     elif rule["rule_type"] == "emby":
-        from ..watcher import _emby_action
-        ok, msg = await _emby_action(rule["action"], rule["container"])
+        ok, msg = await run_emby_action(rule["action"], rule["container"])
     elif rule["rule_type"] == "jellyfin":
-        from ..watcher import _jellyfin_action
-        ok, msg = await _jellyfin_action(rule["action"], rule["container"])
+        ok, msg = await run_jellyfin_action(rule["action"], rule["container"])
     elif rule["rule_type"] == "plex":
-        from ..watcher import _plex_action
-        ok, msg = await _plex_action(rule["action"], rule["container"])
+        ok, msg = await run_plex_action(rule["action"], rule["container"])
     else:
-        from ..docker_ops import container_action
         ok, msg = container_action(rule["container"], rule["action"])
     log_event("info" if ok else "error", f"Rule '{rule['name']}' run manually: {msg}")
     return {"ok": ok, "message": msg}

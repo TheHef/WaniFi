@@ -197,11 +197,21 @@ window.app = function () {
       if (this.newRule.rule_type === 'docker'       && !this.newRule.container) return;
       if (this.newRule.rule_type === 'host_command' && !this.newRule.command.trim()) return;
       if (this.newRule.rule_type === 'qbittorrent'  && !this.newRule.action) return;
-      await fetch('/api/rules', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(this.newRule),
-      });
+      try {
+        const r = await fetch('/api/rules', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.newRule),
+        });
+        if (!r.ok) {
+          const d = await r.json().catch(() => ({}));
+          console.error('addRule failed:', d.detail || d.error || r.status);
+          return;
+        }
+      } catch (e) {
+        console.error('addRule error:', e);
+        return;
+      }
       const keep_type = this.newRule.rule_type, keep_trigger = this.newRule.trigger;
       this.newRule = { rule_type: keep_type, name: '', container: '', trigger: keep_trigger, action: '', command: '' };
       this._setDefaultRuleType();
@@ -217,11 +227,21 @@ window.app = function () {
 
     async saveEditRule() {
       const r = this.editModal.rule;
-      await fetch('/api/rules/' + r.id, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(r),
-      });
+      try {
+        const resp = await fetch('/api/rules/' + r.id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(r),
+        });
+        if (!resp.ok) {
+          const d = await resp.json().catch(() => ({}));
+          console.error('saveEditRule failed:', d.detail || d.error || resp.status);
+          return;
+        }
+      } catch (e) {
+        console.error('saveEditRule error:', e);
+        return;
+      }
       this.editModal.open = false;
       await this.refreshLive();
     },
