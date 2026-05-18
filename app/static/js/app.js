@@ -33,7 +33,6 @@ window.app = function () {
     proxmoxSettings:     { proxmox_url: '', proxmox_username: '', proxmox_password_set: false, proxmox_node: 'pve' },
     sonarrSettings:      { sonarr_url: '', sonarr_api_key_set: false },
     radarrSettings:      { radarr_url: '', radarr_api_key_set: false },
-    seerrSettings:       { seerr_url: '', seerr_api_key_set: false },
     piholeSettings:      { pihole_url: '', pihole_token_set: false },
     adguardSettings:     { adguard_url: '', adguard_username: '', adguard_password_set: false },
     portainerSettings:   { portainer_url: '', portainer_token_set: false, portainer_env_id: '1' },
@@ -47,7 +46,7 @@ window.app = function () {
     discordMsg: '', telegramMsg: '', pushoverMsg: '',
     sabnzbdMsg: '', transmissionMsg: '', delugeMsg: '',
     haMsg: '', proxmoxMsg: '', sonarrMsg: '', radarrMsg: '',
-    seerrMsg: '', piholeMsg: '', adguardMsg: '',
+    piholeMsg: '', adguardMsg: '',
     portainerMsg: '', truenasMsg: '', unraidMsg: '',
     noderedMsg: '', gotifyMsg: '', nzbgetMsg: '',
 
@@ -57,7 +56,7 @@ window.app = function () {
       emby: false, jellyfin: false, plex: false,
       ntfy: false, discord: false, telegram: false, pushover: false,
       homeassistant: false, proxmox: false, sonarr: false, radarr: false,
-      seerr: false, pihole: false, adguard: false,
+      pihole: false, adguard: false,
       portainer: false, truenas: false, unraid: false,
       nodered: false, nzbget: false, gotify: false,
     },
@@ -139,7 +138,6 @@ window.app = function () {
       await this.loadProxmoxSettings();
       await this.loadSonarrSettings();
       await this.loadRadarrSettings();
-      await this.loadSeerrSettings();
       await this.loadPiholeSettings();
       await this.loadAdguardSettings();
       await this.loadPortainerSettings();
@@ -744,28 +742,6 @@ window.app = function () {
       setTimeout(() => this.radarrMsg = '', 5000);
     },
 
-    // ---- Seerr ------------------------------------------------------------
-    async loadSeerrSettings() {
-      this.seerrSettings = await fetch('/api/seerr-settings').then(r => r.json());
-    },
-    async saveSeerrSettings() {
-      const payload = { seerr_url: this.seerrSettings.seerr_url };
-      const key = this.$refs.seerrKey?.value;
-      if (key) payload.seerr_api_key = key;
-      const r = await fetch('/api/seerr-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      const d = await r.json().catch(() => ({}));
-      this.seerrMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
-      await this.loadSeerrSettings();
-      setTimeout(() => this.seerrMsg = '', 3000);
-    },
-    async testSeerr() {
-      await this.saveSeerrSettings();
-      this.seerrMsg = 'Testing…';
-      const d = await fetch('/api/test-seerr', { method: 'POST' }).then(r => r.json());
-      this.seerrMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
-      setTimeout(() => this.seerrMsg = '', 5000);
-    },
-
     // ---- Pi-hole ----------------------------------------------------------
     async loadPiholeSettings() {
       this.piholeSettings = await fetch('/api/pihole-settings').then(r => r.json());
@@ -968,7 +944,6 @@ window.app = function () {
         ['proxmox',       'proxmox',       'stop_vm'],
         ['sonarr',        'sonarr',        'disable_indexers'],
         ['radarr',        'radarr',        'disable_indexers'],
-        ['seerr',         'seerr',         'sync_radarr'],
         ['pihole',        'pihole',        'disable'],
         ['adguard',       'adguard',       'disable_protection'],
         ['portainer',     'portainer',     'stop_container'],
@@ -993,7 +968,7 @@ window.app = function () {
       if (d.ok) {
         this.integrations[name] = d.enabled;
         if (d.enabled) {
-          if (['emby', 'jellyfin', 'plex', 'seerr', 'sonarr', 'radarr'].includes(name))                      this.categoryOpen.media = true;
+          if (['emby', 'jellyfin', 'plex', 'sonarr', 'radarr'].includes(name))                      this.categoryOpen.media = true;
           else if (['qb', 'sabnzbd', 'transmission', 'deluge', 'nzbget'].includes(name))                    this.categoryOpen.downloaders = true;
           else if (['ntfy', 'discord', 'telegram', 'pushover', 'gotify'].includes(name))                    this.categoryOpen.notifications = true;
           else if (['homeassistant', 'proxmox', 'portainer', 'truenas', 'unraid', 'nodered'].includes(name)) this.categoryOpen.homelab = true;

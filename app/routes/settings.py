@@ -32,7 +32,6 @@ EXPORT_KEYS = (
     "proxmox_url", "proxmox_username", "proxmox_password", "proxmox_node",
     "sonarr_url", "sonarr_api_key",
     "radarr_url", "radarr_api_key",
-    "seerr_url", "seerr_api_key",
     "pihole_url", "pihole_token",
     "adguard_url", "adguard_username", "adguard_password",
     "portainer_url", "portainer_token", "portainer_env_id",
@@ -47,7 +46,7 @@ EXPORT_KEYS = (
     "integration_emby", "integration_jellyfin", "integration_plex",
     "integration_ntfy", "integration_discord", "integration_telegram", "integration_pushover",
     "integration_homeassistant", "integration_proxmox", "integration_sonarr", "integration_radarr",
-    "integration_seerr", "integration_pihole", "integration_adguard",
+    "integration_pihole", "integration_adguard",
     "integration_portainer", "integration_truenas", "integration_unraid",
     "integration_nodered", "integration_nzbget", "integration_gotify",
 )

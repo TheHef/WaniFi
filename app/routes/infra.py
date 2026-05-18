@@ -1,4 +1,4 @@
-"""Settings and test endpoints for Seerr, Portainer, TrueNAS, Unraid, and Node-RED."""
+"""Settings and test endpoints for Portainer, TrueNAS, Unraid, and Node-RED."""
 from fastapi import APIRouter, Depends
 
 from ..auth import require_auth
@@ -6,45 +6,11 @@ from ..db import get_setting, set_setting
 from ..models import (
     NodeRedSettingsIn,
     PortainerSettingsIn,
-    SeerrSettingsIn,
     TrueNASSettingsIn,
     UnraidSettingsIn,
 )
 
 router = APIRouter()
-
-
-# ---- Seerr ------------------------------------------------------------------
-
-@router.get("/api/seerr-settings")
-async def get_seerr_settings(_: bool = Depends(require_auth)):
-    return {
-        "seerr_url":         get_setting("seerr_url", ""),
-        "seerr_api_key_set": bool(get_setting("seerr_api_key")),
-    }
-
-
-@router.post("/api/seerr-settings")
-async def save_seerr_settings(payload: SeerrSettingsIn, _: bool = Depends(require_auth)):
-    set_setting("seerr_url", payload.seerr_url.strip())
-    if payload.seerr_api_key:
-        set_setting("seerr_api_key", payload.seerr_api_key.strip())
-    return {"ok": True}
-
-
-@router.post("/api/test-seerr")
-async def test_seerr(_: bool = Depends(require_auth)):
-    from ..seerr import SeerrClient
-    url     = get_setting("seerr_url", "")
-    api_key = get_setting("seerr_api_key", "")
-    if not (url and api_key):
-        return {"ok": False, "error": "Seerr not configured"}
-    client = SeerrClient(url, api_key)
-    try:
-        ok, msg = await client.get_status()
-        return {"ok": ok, "error": None if ok else msg}
-    finally:
-        await client.close()
 
 
 # ---- Portainer --------------------------------------------------------------

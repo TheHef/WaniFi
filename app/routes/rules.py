@@ -19,7 +19,6 @@ from ..models import (
     VALID_SONARR_ACTIONS,
     VALID_RADARR_ACTIONS,
     VALID_WEBHOOK_ACTIONS,
-    VALID_SEERR_ACTIONS,
     VALID_PIHOLE_ACTIONS,
     VALID_ADGUARD_ACTIONS,
     VALID_PORTAINER_ACTIONS,
@@ -42,7 +41,6 @@ from ..watcher import (
     run_sonarr_action,
     run_radarr_action,
     run_webhook_action,
-    run_seerr_action,
     run_pihole_action,
     run_adguard_action,
     run_portainer_action,
@@ -106,9 +104,6 @@ def _validate(payload: RuleIn):
     elif t == "webhook":
         if not payload.command.strip():
             raise HTTPException(400, "URL required for webhook rules")
-    elif t == "seerr":
-        if payload.action not in VALID_SEERR_ACTIONS:
-            raise HTTPException(400, f"action must be one of {VALID_SEERR_ACTIONS}")
     elif t == "pihole":
         if payload.action not in VALID_PIHOLE_ACTIONS:
             raise HTTPException(400, f"action must be one of {VALID_PIHOLE_ACTIONS}")
@@ -161,7 +156,6 @@ def _default_name(payload: RuleIn) -> str:
         "sonarr":    f"Sonarr: {payload.action}",
         "radarr":    f"Radarr: {payload.action}",
         "webhook":   payload.command.strip(),
-        "seerr":     f"Seerr: {payload.action}",
         "pihole":    f"Pi-hole: {payload.action}",
         "adguard":   f"AdGuard: {payload.action}",
         "portainer": f"Portainer: {payload.container} {payload.action}",
@@ -272,8 +266,6 @@ async def run_rule(rule_id: int, _: bool = Depends(require_auth)):
         ok, msg = await run_radarr_action(action)
     elif t == "webhook":
         ok, msg = await run_webhook_action(rule["command"], value or "POST")
-    elif t == "seerr":
-        ok, msg = await run_seerr_action(action)
     elif t == "pihole":
         ok, msg = await run_pihole_action(action)
     elif t == "adguard":

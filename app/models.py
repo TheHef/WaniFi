@@ -19,7 +19,6 @@ VALID_PROXMOX_ACTIONS      = ("stop_vm", "shutdown_vm", "suspend_vm", "resume_vm
 VALID_SONARR_ACTIONS       = ("disable_indexers", "enable_indexers", "disable_download_clients", "enable_download_clients", "search_missing", "refresh_all")
 VALID_RADARR_ACTIONS       = ("disable_indexers", "enable_indexers", "disable_download_clients", "enable_download_clients", "search_missing", "refresh_all")
 VALID_WEBHOOK_ACTIONS      = ("send",)
-VALID_SEERR_ACTIONS        = ("sync_radarr", "sync_sonarr")
 VALID_PIHOLE_ACTIONS       = ("enable", "disable")
 VALID_ADGUARD_ACTIONS      = ("enable_protection", "disable_protection")
 VALID_PORTAINER_ACTIONS    = ("start_container", "stop_container", "restart_container")
@@ -140,10 +139,6 @@ class RadarrSettingsIn(BaseModel):
     radarr_url: str = ""
     radarr_api_key: Optional[str] = None
 
-
-class SeerrSettingsIn(BaseModel):
-    seerr_url: str = ""
-    seerr_api_key: Optional[str] = None
 
 
 class PiholeSettingsIn(BaseModel):

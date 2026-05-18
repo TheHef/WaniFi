@@ -66,7 +66,6 @@ All integrations are opt-in and toggled on/off individually in **Settings**.
 | **Plex** | Set/clear remote bitrate limit, stop all streams |
 | **Sonarr** | Disable/enable indexers, disable/enable download clients, search missing, refresh all |
 | **Radarr** | Disable/enable indexers, disable/enable download clients, search missing, refresh all |
-| **Seerr** *(Overseerr / Jellyseerr)* | Trigger sync jobs (Sync Radarr, Sync Sonarr) |
 
 ### 🏠 Homelab
 

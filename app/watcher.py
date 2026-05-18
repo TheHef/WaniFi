@@ -385,22 +385,6 @@ async def run_radarr_action(action: str) -> tuple[bool, str]:
         await client.close()
 
 
-async def run_seerr_action(action: str) -> tuple[bool, str]:
-    from .seerr import SeerrClient
-    url     = get_setting("seerr_url", "")
-    api_key = get_setting("seerr_api_key", "")
-    if not (url and api_key):
-        return False, "Seerr not configured"
-    client = SeerrClient(url, api_key)
-    try:
-        if action == "sync_radarr":
-            return await client.sync_radarr()
-        if action == "sync_sonarr":
-            return await client.sync_sonarr()
-        return False, f"Unknown Seerr action: {action}"
-    finally:
-        await client.close()
-
 
 async def run_pihole_action(action: str) -> tuple[bool, str]:
     from .pihole import PiholeClient
@@ -577,7 +561,6 @@ async def fire_trigger(trigger: str):
             "proxmox":       "integration_proxmox",
             "sonarr":        "integration_sonarr",
             "radarr":        "integration_radarr",
-            "seerr":         "integration_seerr",
             "pihole":        "integration_pihole",
             "adguard":       "integration_adguard",
             "portainer":     "integration_portainer",
@@ -674,9 +657,6 @@ async def fire_trigger(trigger: str):
                 "info" if ok else "error",
                 f"Rule: webhook {method} {rule['command']} on {trigger} -> {msg}",
             )
-        elif rtype == "seerr":
-            ok, msg = await run_seerr_action(rule["action"])
-            await a_log_event("info" if ok else "error", f"Rule: Seerr {rule['action']} on {trigger} -> {msg}")
         elif rtype == "pihole":
             ok, msg = await run_pihole_action(rule["action"])
             await a_log_event("info" if ok else "error", f"Rule: Pi-hole {rule['action']} on {trigger} -> {msg}")

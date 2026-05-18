@@ -12,7 +12,7 @@ INTEGRATION_KEYS = (
     "emby", "jellyfin", "plex",
     "ntfy", "discord", "telegram", "pushover",
     "homeassistant", "proxmox", "sonarr", "radarr",
-    "seerr", "pihole", "adguard",
+    "pihole", "adguard",
     "portainer", "truenas", "unraid",
     "nodered", "nzbget", "gotify",
 )
