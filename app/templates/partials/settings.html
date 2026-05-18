@@ -198,9 +198,9 @@
     <!-- Integration toggles -->
     <div class="flex flex-wrap gap-2 mb-6">
       <button @click="toggleIntegration('host_command')"
-              :class="integrations.host_command ? 'bg-violet-500/20 border-violet-500/50 text-violet-300' : 'bg-slate-800 border-slate-700 text-slate-500'"
+              :class="integrations.host_command ? 'bg-red-500/20 border-red-500/50 text-red-300' : 'bg-slate-800 border-slate-700 text-slate-500'"
               class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
-        <span class="w-2 h-2 rounded-full transition" :class="integrations.host_command ? 'bg-violet-400' : 'bg-slate-600'"></span>
+        <span class="w-2 h-2 rounded-full transition" :class="integrations.host_command ? 'bg-red-400' : 'bg-slate-600'"></span>
         Host Command
       </button>
       <button @click="toggleIntegration('docker')"
@@ -234,9 +234,9 @@
         Plex
       </button>
       <button @click="toggleIntegration('ntfy')"
-              :class="integrations.ntfy ? 'bg-pink-500/20 border-pink-500/50 text-pink-300' : 'bg-slate-800 border-slate-700 text-slate-500'"
+              :class="integrations.ntfy ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300' : 'bg-slate-800 border-slate-700 text-slate-500'"
               class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
-        <span class="w-2 h-2 rounded-full transition" :class="integrations.ntfy ? 'bg-pink-400' : 'bg-slate-600'"></span>
+        <span class="w-2 h-2 rounded-full transition" :class="integrations.ntfy ? 'bg-emerald-400' : 'bg-slate-600'"></span>
         ntfy
       </button>
     </div>
@@ -372,13 +372,13 @@
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Server URL</label>
           <input x-model="notifySettings.ntfy_url" placeholder="https://ntfy.sh"
                  autocomplete="off" spellcheck="false"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-pink-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-emerald-500 transition">
         </div>
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Topic</label>
           <input x-model="notifySettings.ntfy_topic" placeholder="my-wanifi-alerts"
                  autocomplete="off" spellcheck="false"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-pink-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-emerald-500 transition">
         </div>
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Access Token
@@ -386,7 +386,7 @@
           </label>
           <input type="password" x-model="notifySettings.ntfy_token" placeholder="••••••••••••••••"
                  autocomplete="new-password"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-pink-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-emerald-500 transition">
           <p class="text-xs text-slate-600 mt-1">Only needed for private topics.</p>
         </div>
       </div>
@@ -395,28 +395,28 @@
         <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Triggers</div>
         <div class="space-y-2">
           <label class="flex items-start gap-4 p-4 bg-slate-800/60 rounded-xl cursor-pointer hover:bg-slate-800 transition">
-            <input type="checkbox" x-model="notifySettings.ntfy_on_failover" class="mt-0.5 accent-pink-500 w-4 h-4 shrink-0">
+            <input type="checkbox" x-model="notifySettings.ntfy_on_failover" class="mt-0.5 accent-emerald-500 w-4 h-4 shrink-0">
             <div>
               <div class="text-sm font-semibold text-amber-400">WAN Failover</div>
               <div class="text-xs text-slate-500 mt-0.5">Primary WAN goes down — failover activates. Priority: <span class="text-slate-400">high</span></div>
             </div>
           </label>
           <label class="flex items-start gap-4 p-4 bg-slate-800/60 rounded-xl cursor-pointer hover:bg-slate-800 transition">
-            <input type="checkbox" x-model="notifySettings.ntfy_on_restored" class="mt-0.5 accent-pink-500 w-4 h-4 shrink-0">
+            <input type="checkbox" x-model="notifySettings.ntfy_on_restored" class="mt-0.5 accent-emerald-500 w-4 h-4 shrink-0">
             <div>
               <div class="text-sm font-semibold text-emerald-400">WAN Restored</div>
               <div class="text-xs text-slate-500 mt-0.5">Primary WAN comes back online. Priority: <span class="text-slate-400">default</span></div>
             </div>
           </label>
           <label class="flex items-start gap-4 p-4 bg-slate-800/60 rounded-xl cursor-pointer hover:bg-slate-800 transition">
-            <input type="checkbox" x-model="notifySettings.ntfy_on_high_latency" class="mt-0.5 accent-pink-500 w-4 h-4 shrink-0">
+            <input type="checkbox" x-model="notifySettings.ntfy_on_high_latency" class="mt-0.5 accent-emerald-500 w-4 h-4 shrink-0">
             <div>
-              <div class="text-sm font-semibold text-violet-400">High latency</div>
+              <div class="text-sm font-semibold text-purple-400">High latency</div>
               <div class="text-xs text-slate-500 mt-0.5">Latency exceeds your threshold. Priority: <span class="text-slate-400">default</span></div>
             </div>
           </label>
           <label class="flex items-start gap-4 p-4 bg-slate-800/60 rounded-xl cursor-pointer hover:bg-slate-800 transition">
-            <input type="checkbox" x-model="notifySettings.ntfy_on_error" class="mt-0.5 accent-pink-500 w-4 h-4 shrink-0">
+            <input type="checkbox" x-model="notifySettings.ntfy_on_error" class="mt-0.5 accent-emerald-500 w-4 h-4 shrink-0">
             <div>
               <div class="text-sm font-semibold text-red-400">Watcher Errors</div>
               <div class="text-xs text-slate-500 mt-0.5">WaniFi can't reach the UniFi controller. Priority: <span class="text-slate-400">low</span></div>
@@ -426,7 +426,7 @@
       </div>
 
       <div class="flex gap-3 mt-5 flex-wrap items-center">
-        <button @click="saveNotifySettings()" class="bg-pink-500 hover:bg-pink-400 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="saveNotifySettings()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
         <button @click="testNotify()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Send test notification</button>
         <span class="text-sm font-medium"
               :class="notifyMsg.startsWith('✓') ? 'text-emerald-400' : notifyMsg === 'Sending…' ? 'text-slate-400' : 'text-red-400'"

@@ -7,7 +7,7 @@
       <button x-show="integrations.host_command"
               @click="newRule.rule_type = 'host_command'"
               class="px-4 py-1.5 rounded-lg text-xs font-semibold border transition"
-              :class="newRule.rule_type === 'host_command' ? 'bg-violet-500/20 border-violet-500/50 text-violet-300' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+              :class="newRule.rule_type === 'host_command' ? 'bg-red-500/20 border-red-500/50 text-red-300' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
         Host Command
       </button>
       <button x-show="integrations.docker"
@@ -70,17 +70,17 @@
 
     <!-- Host command form -->
     <div x-show="newRule.rule_type === 'host_command'" class="grid md:grid-cols-4 gap-3">
-      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-violet-500">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-red-500">
         <option value="failover">On failover</option>
         <option value="restored">On restored</option>
         <option value="down">On WAN down</option>
         <option value="high_latency">On high latency</option>
       </select>
       <input x-model="newRule.command" type="text" placeholder="e.g. systemctl restart myservice"
-             class="md:col-span-2 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition">
+             class="md:col-span-2 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-red-500 transition">
       <input x-model="newRule.name" type="text" :placeholder="newRule.command || 'Name (optional)'"
-             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition">
-      <button @click="addRule()" class="md:col-span-4 bg-violet-500 hover:bg-violet-400 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-red-500 transition">
+      <button @click="addRule()" class="md:col-span-4 bg-red-600 hover:bg-red-500 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
     </div>
 
     <!-- Emby form -->
@@ -195,7 +195,7 @@
           <tr class="border-t border-slate-800">
             <td class="pl-4 pr-3 py-3">
               <span class="inline-block px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap"
-                    :class="r.rule_type === 'host_command' ? 'bg-violet-500/20 text-violet-400' : r.rule_type === 'docker' ? 'bg-blue-500/20 text-blue-400' : r.rule_type === 'qbittorrent' ? 'bg-sky-500/20 text-sky-400' : r.rule_type === 'emby' ? 'bg-green-500/20 text-green-400' : r.rule_type === 'jellyfin' ? 'bg-purple-500/20 text-purple-400' : r.rule_type === 'plex' ? 'bg-orange-500/20 text-orange-400' : 'bg-slate-700 text-slate-400'"
+                    :class="r.rule_type === 'host_command' ? 'bg-red-500/20 text-red-400' : r.rule_type === 'docker' ? 'bg-blue-500/20 text-blue-400' : r.rule_type === 'qbittorrent' ? 'bg-sky-500/20 text-sky-400' : r.rule_type === 'emby' ? 'bg-green-500/20 text-green-400' : r.rule_type === 'jellyfin' ? 'bg-purple-500/20 text-purple-400' : r.rule_type === 'plex' ? 'bg-orange-500/20 text-orange-400' : 'bg-slate-700 text-slate-400'"
                     x-text="r.rule_type === 'host_command' ? 'HC' : r.rule_type === 'docker' ? 'DC' : r.rule_type === 'qbittorrent' ? 'qBit' : r.rule_type === 'emby' ? 'Emby' : r.rule_type === 'jellyfin' ? 'Jellyfin' : r.rule_type === 'plex' ? 'Plex' : r.rule_type">
               </span>
             </td>
