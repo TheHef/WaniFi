@@ -59,17 +59,13 @@ async def login_page(request: Request):
 @router.post("/login")
 async def login_submit(request: Request):
     if not is_setup_done():
-        return RedirectResponse("/setup", status_code=302)
+        return JSONResponse({"ok": False, "error": "Not set up"}, status_code=400)
     form = await request.form()
     password = form.get("password", "")
     if not verify_admin_password(password):
-        return _templates.TemplateResponse(
-            "login.html",
-            {"request": request, "error": "Invalid password"},
-            status_code=401,
-        )
+        return JSONResponse({"ok": False, "error": "Invalid password"}, status_code=401)
     token = create_session()
-    resp = RedirectResponse("/", status_code=302)
+    resp = JSONResponse({"ok": True})
     _set_cookie(resp, token, request)
     return resp
 
