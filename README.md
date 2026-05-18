@@ -5,8 +5,8 @@
 Self-hosted dashboard for UniFi WAN failover monitoring with rule-based automation.
 
 When your UniFi gateway switches to a failover WAN, WaniFi can automatically
-stop/start Docker containers or run host commands. Handy for things like
-pausing qBittorrent on 5G failover so you don't burn through mobile data.
+stop/start Docker containers, throttle qBittorrent, or cap streaming bitrate
+on Plex, Emby, and Jellyfin. Handy for keeping 5G failover costs under control.
 
 > **Heads up: this is a beta hobby project.**
 >
@@ -28,16 +28,18 @@ pausing qBittorrent on 5G failover so you don't burn through mobile data.
 - 🔐 Single-user login (bcrypt; first-run setup wizard)
 - 💾 SQLite, no other services required
 
-## Integrations
+## Tools
 
-All integrations are opt-in and can be toggled on/off individually in Settings → Tools.
+All tools are opt-in and can be toggled on/off individually in Settings → Tools.
 
-| Integration | Actions |
+| Tool | Actions |
 |---|---|
 | **Host Command** | Runs arbitrary shell commands on the Docker host via `nsenter` (requires `privileged: true` + `pid: host`) |
 | **Docker** | Stop, start, restart, pause, unpause containers via the mounted Docker socket |
 | **qBittorrent** | Enable/disable alt speed, set download/upload limit, pause/resume all torrents |
 | **Emby** | Set bitrate limit, clear bitrate limit, stop all sessions |
+| **Jellyfin** | Set bitrate limit, clear bitrate limit, stop all sessions |
+| **Plex** | Limit remote stream bitrate, clear remote bitrate limit, stop all streams |
 | **ntfy** | Push notifications on failover, restore, high latency, and watcher errors |
 
 ## Quick start
@@ -102,20 +104,22 @@ In the WaniFi UI go to **Settings**:
 
 ![Settings](docs/screenshots/settings.png)
 
-### 3. Enable integrations
+### 3. Enable tools
 
-Go to **Settings → Tools** and toggle on the integrations you want to use. Each integration exposes its own config section (URL, credentials) once enabled.
+Go to **Settings → Tools** and toggle on the tools you want to use. Each tool exposes its own config section (URL, credentials) once enabled.
 
 ### 4. Add rules
 
-Each rule pairs a **trigger** with an **action**. Triggers fire on `failover`, `restored`, `down`, or `high_latency`. Actions depend on which integrations you have enabled:
+Each rule pairs a **trigger** with an **action**. Triggers fire on `failover`, `restored`, `down`, or `high_latency`. Actions depend on which tools you have enabled:
 
-| Integration | Available actions |
+| Tool | Available actions |
 |---|---|
 | **Docker** | Stop, start, restart, pause, unpause a named container |
+| **Host Command** | Run any shell command as root on the Docker host |
 | **qBittorrent** | Enable/disable alt speed, set download/upload limit, pause/resume all torrents |
 | **Emby** | Set bitrate limit, clear bitrate limit, stop all sessions |
-| **Host Command** | Run any shell command as root on the Docker host |
+| **Jellyfin** | Set bitrate limit, clear bitrate limit, stop all sessions |
+| **Plex** | Limit remote stream bitrate, clear remote bitrate limit, stop all streams |
 
 Example setup for a 5G failover scenario:
 
@@ -123,8 +127,8 @@ Example setup for a 5G failover scenario:
 |---|---|---|
 | Slow QB | On failover | qBittorrent: enable alt speed |
 | Normal QB | On restored | qBittorrent: disable alt speed |
-| Limit Streams | On failover | Emby: set 2 Mbps bitrate limit |
-| Unlimit Streams | On restored | Emby: clear bitrate limit |
+| Limit Streams | On failover | Plex: limit remote bitrate 4 Mbps |
+| Unlimit Streams | On restored | Plex: clear remote bitrate limit |
 
 ![Rules](docs/screenshots/rules.png)
 
@@ -156,7 +160,7 @@ WaniFi runs with `privileged: true`, `pid: host`, and a mounted Docker socket. A
 
 - **Keep it on your LAN.** No rate limiting, no MFA, no IP allowlisting. Use a VPN (WireGuard, Tailscale) if you need remote access. Do not port-forward `8765` or stick it behind a public reverse proxy.
 - **One password, no MFA.** The login is a single bcrypt password. If that is not enough for your threat model, add a layer in front (e.g. Authelia).
-- **Backup `data/wanifi.db`.** This file holds your UniFi API key, integration credentials, and the password hash — it is the only secret store.
+- **Backup `data/wanifi.db`.** This file holds your UniFi API key, tool credentials, and the password hash — it is the only secret store.
 
 ## Support
 
