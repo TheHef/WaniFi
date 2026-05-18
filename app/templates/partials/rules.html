@@ -1,44 +1,94 @@
 <section x-show="tab === 'rules'">  <div class="bg-slate-900 border border-slate-700/60 rounded-2xl p-5 mb-4">
     <h2 class="text-base font-semibold text-slate-200 mb-4">Add rule</h2>
 
-    <div class="flex gap-2 mb-4">
+    <div class="flex flex-wrap gap-2 mb-4">
       <button x-show="integrations.host_command"
-              @click="newRule.rule_type = 'host_command'"
-              class="px-4 py-1.5 rounded-lg text-xs font-semibold border transition"
+              @click="newRule.rule_type = 'host_command'; newRule.action = ''; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
               :class="newRule.rule_type === 'host_command' ? 'bg-red-500/20 border-red-500/50 text-red-300' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
         Host Command
       </button>
       <button x-show="integrations.docker"
-              @click="newRule.rule_type = 'docker'"
-              class="px-4 py-1.5 rounded-lg text-xs font-semibold border transition"
+              @click="newRule.rule_type = 'docker'; newRule.action = 'stop'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
               :class="newRule.rule_type === 'docker' ? 'bg-[#248CEF]/20 border-[#248CEF]/50 text-[#248CEF]' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
-        Docker Container
+        Docker
       </button>
       <button x-show="integrations.qb"
               @click="newRule.rule_type = 'qbittorrent'; newRule.action = 'alt_speed_on'; newRule.container = ''"
-              class="px-4 py-1.5 rounded-lg text-xs font-semibold border transition"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
               :class="newRule.rule_type === 'qbittorrent' ? 'bg-[#65A5E9]/20 border-[#65A5E9]/50 text-[#65A5E9]' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
         qBittorrent
       </button>
+      <button x-show="integrations.sabnzbd"
+              @click="newRule.rule_type = 'sabnzbd'; newRule.action = 'pause'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'sabnzbd' ? 'bg-[#F5A623]/20 border-[#F5A623]/50 text-[#F5A623]' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        SABnzbd
+      </button>
+      <button x-show="integrations.transmission"
+              @click="newRule.rule_type = 'transmission'; newRule.action = 'pause_all'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'transmission' ? 'bg-[#C33B2E]/20 border-[#C33B2E]/50 text-[#C33B2E]' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        Transmission
+      </button>
+      <button x-show="integrations.deluge"
+              @click="newRule.rule_type = 'deluge'; newRule.action = 'pause_all'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'deluge' ? 'bg-[#88B04B]/20 border-[#88B04B]/50 text-[#88B04B]' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        Deluge
+      </button>
       <button x-show="integrations.emby"
               @click="newRule.rule_type = 'emby'; newRule.action = 'set_bitrate_limit'; newRule.container = ''"
-              class="px-4 py-1.5 rounded-lg text-xs font-semibold border transition"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
               :class="newRule.rule_type === 'emby' ? 'bg-[#52B54B]/20 border-[#52B54B]/50 text-[#52B54B]' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
         Emby
       </button>
       <button x-show="integrations.jellyfin"
               @click="newRule.rule_type = 'jellyfin'; newRule.action = 'set_bitrate_limit'; newRule.container = ''"
-              class="px-4 py-1.5 rounded-lg text-xs font-semibold border transition"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
               :class="newRule.rule_type === 'jellyfin' ? 'bg-[#AA5CC3]/20 border-[#AA5CC3]/50 text-[#AA5CC3]' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
         Jellyfin
       </button>
       <button x-show="integrations.plex"
               @click="newRule.rule_type = 'plex'; newRule.action = 'set_wan_bitrate'; newRule.container = ''"
-              class="px-4 py-1.5 rounded-lg text-xs font-semibold border transition"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
               :class="newRule.rule_type === 'plex' ? 'bg-[#E5A00D]/20 border-[#E5A00D]/50 text-[#E5A00D]' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
         Plex
       </button>
-    </div>    <div x-show="newRule.rule_type === 'docker'" class="grid md:grid-cols-4 gap-3">
+      <button x-show="integrations.homeassistant"
+              @click="newRule.rule_type = 'homeassistant'; newRule.action = 'call_webhook'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'homeassistant' ? 'bg-[#18BCF2]/20 border-[#18BCF2]/50 text-[#18BCF2]' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        Home Assistant
+      </button>
+      <button x-show="integrations.proxmox"
+              @click="newRule.rule_type = 'proxmox'; newRule.action = 'stop_vm'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'proxmox' ? 'bg-[#E57000]/20 border-[#E57000]/50 text-[#E57000]' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        Proxmox
+      </button>
+      <button x-show="integrations.sonarr"
+              @click="newRule.rule_type = 'sonarr'; newRule.action = 'disable_indexers'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'sonarr' ? 'bg-[#35C5F4]/20 border-[#35C5F4]/50 text-[#35C5F4]' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        Sonarr
+      </button>
+      <button x-show="integrations.radarr"
+              @click="newRule.rule_type = 'radarr'; newRule.action = 'disable_indexers'; newRule.container = ''"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'radarr' ? 'bg-[#FFC230]/20 border-[#FFC230]/50 text-[#FFC230]' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        Radarr
+      </button>
+      <button @click="newRule.rule_type = 'webhook'; newRule.action = 'send'; newRule.container = 'POST'"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+              :class="newRule.rule_type === 'webhook' ? 'bg-slate-600/40 border-slate-500/50 text-slate-300' : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'">
+        Webhook
+      </button>
+    </div>
+
+    <!-- Docker -->
+    <div x-show="newRule.rule_type === 'docker'" class="grid md:grid-cols-4 gap-3">
       <select x-model="newRule.container" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#248CEF]">
         <option value="">— select container —</option>
         <template x-for="c in containers" :key="c.name">
@@ -52,16 +102,19 @@
         <option value="high_latency">On high latency</option>
       </select>
       <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#248CEF]">
-        <option value="stop">Stop container</option>
-        <option value="start">Start container</option>
-        <option value="restart">Restart container</option>
-        <option value="pause">Pause container</option>
-        <option value="unpause">Unpause container</option>
+        <option value="stop">Stop</option>
+        <option value="start">Start</option>
+        <option value="restart">Restart</option>
+        <option value="pause">Pause</option>
+        <option value="unpause">Unpause</option>
       </select>
       <input x-model="newRule.name" type="text" :placeholder="newRule.container || 'Name (optional)'"
              class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#248CEF] transition">
       <button @click="addRule()" class="md:col-span-4 bg-[#248CEF] hover:bg-[#248CEF]/80 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
-    </div>    <div x-show="newRule.rule_type === 'host_command'" class="grid md:grid-cols-4 gap-3">
+    </div>
+
+    <!-- Host Command -->
+    <div x-show="newRule.rule_type === 'host_command'" class="grid md:grid-cols-4 gap-3">
       <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-red-500">
         <option value="failover">On failover</option>
         <option value="restored">On restored</option>
@@ -73,7 +126,101 @@
       <input x-model="newRule.name" type="text" :placeholder="newRule.command || 'Name (optional)'"
              class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-red-500 transition">
       <button @click="addRule()" class="md:col-span-4 bg-red-600 hover:bg-red-500 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
-    </div>    <div x-show="newRule.rule_type === 'emby'" class="grid md:grid-cols-4 gap-3">
+    </div>
+
+    <!-- qBittorrent -->
+    <div x-show="newRule.rule_type === 'qbittorrent'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#65A5E9]">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#65A5E9]">
+        <option value="alt_speed_on">Enable alt speed</option>
+        <option value="alt_speed_off">Disable alt speed</option>
+        <option value="set_dl_limit">Set download limit</option>
+        <option value="set_ul_limit">Set upload limit</option>
+        <option value="pause_all">Pause all</option>
+        <option value="resume_all">Resume all</option>
+      </select>
+      <input x-show="newRule.action === 'set_dl_limit' || newRule.action === 'set_ul_limit'"
+             x-model="newRule.container" type="number" min="0" placeholder="KB/s (0 = unlimited)"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#65A5E9] transition">
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             :class="(newRule.action === 'set_dl_limit' || newRule.action === 'set_ul_limit') ? '' : 'md:col-span-2'"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#65A5E9] transition">
+      <button @click="addRule()" class="md:col-span-4 bg-[#65A5E9] hover:bg-[#65A5E9]/80 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+
+    <!-- SABnzbd -->
+    <div x-show="newRule.rule_type === 'sabnzbd'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#F5A623]">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#F5A623]">
+        <option value="pause">Pause downloads</option>
+        <option value="resume">Resume downloads</option>
+        <option value="set_speed_limit">Set speed limit</option>
+      </select>
+      <input x-show="newRule.action === 'set_speed_limit'"
+             x-model="newRule.container" type="number" min="0" max="100" placeholder="% (e.g. 50)"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#F5A623] transition">
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             :class="newRule.action === 'set_speed_limit' ? '' : 'md:col-span-2'"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#F5A623] transition">
+      <button @click="addRule()" class="md:col-span-4 bg-[#F5A623] hover:bg-[#F5A623]/80 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+
+    <!-- Transmission -->
+    <div x-show="newRule.rule_type === 'transmission'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#C33B2E]">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#C33B2E]">
+        <option value="pause_all">Pause all</option>
+        <option value="resume_all">Resume all</option>
+        <option value="set_speed_limit">Set download limit</option>
+      </select>
+      <input x-show="newRule.action === 'set_speed_limit'"
+             x-model="newRule.container" type="number" min="0" placeholder="KB/s (0 = unlimited)"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#C33B2E] transition">
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             :class="newRule.action === 'set_speed_limit' ? '' : 'md:col-span-2'"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#C33B2E] transition">
+      <button @click="addRule()" class="md:col-span-4 bg-[#C33B2E] hover:bg-[#C33B2E]/80 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+
+    <!-- Deluge -->
+    <div x-show="newRule.rule_type === 'deluge'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#88B04B]">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#88B04B]">
+        <option value="pause_all">Pause all</option>
+        <option value="resume_all">Resume all</option>
+        <option value="set_speed_limit">Set download limit</option>
+      </select>
+      <input x-show="newRule.action === 'set_speed_limit'"
+             x-model="newRule.container" type="number" min="-1" placeholder="KB/s (-1 = unlimited)"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#88B04B] transition">
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             :class="newRule.action === 'set_speed_limit' ? '' : 'md:col-span-2'"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#88B04B] transition">
+      <button @click="addRule()" class="md:col-span-4 bg-[#88B04B] hover:bg-[#88B04B]/80 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+
+    <!-- Emby -->
+    <div x-show="newRule.rule_type === 'emby'" class="grid md:grid-cols-4 gap-3">
       <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#52B54B]">
         <option value="failover">On failover</option>
         <option value="restored">On restored</option>
@@ -92,7 +239,10 @@
              :class="newRule.action === 'set_bitrate_limit' ? '' : 'md:col-span-2'"
              class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#52B54B] transition">
       <button @click="addRule()" class="md:col-span-4 bg-[#52B54B] hover:bg-[#52B54B]/80 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
-    </div>    <div x-show="newRule.rule_type === 'jellyfin'" class="grid md:grid-cols-4 gap-3">
+    </div>
+
+    <!-- Jellyfin -->
+    <div x-show="newRule.rule_type === 'jellyfin'" class="grid md:grid-cols-4 gap-3">
       <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#AA5CC3]">
         <option value="failover">On failover</option>
         <option value="restored">On restored</option>
@@ -111,7 +261,10 @@
              :class="newRule.action === 'set_bitrate_limit' ? '' : 'md:col-span-2'"
              class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#AA5CC3] transition">
       <button @click="addRule()" class="md:col-span-4 bg-[#AA5CC3] hover:bg-[#AA5CC3]/80 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
-    </div>    <div x-show="newRule.rule_type === 'plex'" class="grid md:grid-cols-4 gap-3">
+    </div>
+
+    <!-- Plex -->
+    <div x-show="newRule.rule_type === 'plex'" class="grid md:grid-cols-4 gap-3">
       <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#E5A00D]">
         <option value="failover">On failover</option>
         <option value="restored">On restored</option>
@@ -119,41 +272,117 @@
         <option value="high_latency">On high latency</option>
       </select>
       <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#E5A00D]">
-        <option value="set_wan_bitrate">Set bitrate limit</option>
-        <option value="clear_wan_bitrate">Clear bitrate limit</option>
+        <option value="set_wan_bitrate">Set WAN bitrate</option>
+        <option value="clear_wan_bitrate">Clear WAN bitrate</option>
         <option value="stop_all_streams">Stop all streams</option>
       </select>
       <input x-show="newRule.action === 'set_wan_bitrate'"
-             x-model="newRule.container" type="number" min="1" placeholder="Mbps (e.g. 2)"
+             x-model="newRule.container" type="number" min="1" placeholder="Mbps (e.g. 4)"
              class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#E5A00D] transition">
       <input x-model="newRule.name" type="text" placeholder="Name (optional)"
              :class="newRule.action === 'set_wan_bitrate' ? '' : 'md:col-span-2'"
              class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#E5A00D] transition">
       <button @click="addRule()" class="md:col-span-4 bg-[#E5A00D] hover:bg-[#E5A00D]/80 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
-    </div>    <div x-show="newRule.rule_type === 'qbittorrent'" class="grid md:grid-cols-4 gap-3">
-      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#65A5E9]">
+    </div>
+
+    <!-- Home Assistant -->
+    <div x-show="newRule.rule_type === 'homeassistant'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#18BCF2]">
         <option value="failover">On failover</option>
         <option value="restored">On restored</option>
         <option value="down">On WAN down</option>
         <option value="high_latency">On high latency</option>
       </select>
-      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#65A5E9]">
-        <option value="alt_speed_on">Enable alt speed</option>
-        <option value="alt_speed_off">Disable alt speed</option>
-        <option value="set_dl_limit">Set download limit</option>
-        <option value="set_ul_limit">Set upload limit</option>
-        <option value="pause_all">Pause all torrents</option>
-        <option value="resume_all">Resume all torrents</option>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#18BCF2]">
+        <option value="call_webhook">Call webhook</option>
+        <option value="turn_on">Turn on entity</option>
+        <option value="turn_off">Turn off entity</option>
       </select>
-      <input x-show="newRule.action === 'set_dl_limit' || newRule.action === 'set_ul_limit'"
-             x-model="newRule.container" type="number" min="0" placeholder="Speed KB/s (0 = unlimited)"
-             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#65A5E9] transition">
+      <input x-model="newRule.container" type="text"
+             :placeholder="newRule.action === 'call_webhook' ? 'Webhook ID' : 'entity_id (e.g. switch.nas)'"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#18BCF2] transition">
       <input x-model="newRule.name" type="text" placeholder="Name (optional)"
-             :class="(newRule.action === 'set_dl_limit' || newRule.action === 'set_ul_limit') ? '' : 'md:col-span-2'"
-             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#65A5E9] transition">
-      <button @click="addRule()" class="md:col-span-4 bg-[#65A5E9] hover:bg-[#65A5E9]/80 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#18BCF2] transition">
+      <button @click="addRule()" class="md:col-span-4 bg-[#18BCF2] hover:bg-[#18BCF2]/80 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
     </div>
-  </div>  <div class="bg-slate-900 border border-slate-700/60 rounded-2xl overflow-hidden mb-4">
+
+    <!-- Proxmox -->
+    <div x-show="newRule.rule_type === 'proxmox'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#E57000]">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#E57000]">
+        <option value="stop_vm">Stop VM</option>
+        <option value="shutdown_vm">Shutdown VM</option>
+        <option value="suspend_vm">Suspend VM</option>
+        <option value="resume_vm">Resume VM</option>
+        <option value="start_vm">Start VM</option>
+      </select>
+      <input x-model="newRule.container" type="text" placeholder="node/vmid (e.g. pve/100)"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#E57000] transition">
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#E57000] transition">
+      <button @click="addRule()" class="md:col-span-4 bg-[#E57000] hover:bg-[#E57000]/80 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+
+    <!-- Sonarr -->
+    <div x-show="newRule.rule_type === 'sonarr'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#35C5F4]">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#35C5F4]">
+        <option value="disable_indexers">Disable indexers</option>
+        <option value="enable_indexers">Enable indexers</option>
+      </select>
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             class="md:col-span-2 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#35C5F4] transition">
+      <button @click="addRule()" class="md:col-span-4 bg-[#35C5F4] hover:bg-[#35C5F4]/80 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+
+    <!-- Radarr -->
+    <div x-show="newRule.rule_type === 'radarr'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#FFC230]">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.action" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#FFC230]">
+        <option value="disable_indexers">Disable indexers</option>
+        <option value="enable_indexers">Enable indexers</option>
+      </select>
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             class="md:col-span-2 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#FFC230] transition">
+      <button @click="addRule()" class="md:col-span-4 bg-[#FFC230] hover:bg-[#FFC230]/80 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+
+    <!-- Webhook -->
+    <div x-show="newRule.rule_type === 'webhook'" class="grid md:grid-cols-4 gap-3">
+      <select x-model="newRule.trigger" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-slate-500">
+        <option value="failover">On failover</option>
+        <option value="restored">On restored</option>
+        <option value="down">On WAN down</option>
+        <option value="high_latency">On high latency</option>
+      </select>
+      <select x-model="newRule.container" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-slate-500">
+        <option value="POST">POST</option>
+        <option value="GET">GET</option>
+      </select>
+      <input x-model="newRule.command" type="text" placeholder="https://example.com/webhook"
+             class="md:col-span-2 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-500 transition">
+      <input x-model="newRule.name" type="text" placeholder="Name (optional)"
+             class="md:col-span-3 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-500 transition">
+      <button @click="addRule()" class="bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-xl px-4 py-2 text-sm transition">Add rule</button>
+    </div>
+  </div>
+
+  <div class="bg-slate-900 border border-slate-700/60 rounded-2xl overflow-hidden mb-4">
     <table class="w-full text-sm">
       <thead class="text-xs font-semibold text-slate-500 uppercase tracking-wider bg-slate-950/50">
         <tr>
@@ -172,21 +401,41 @@
           <tr class="border-t border-slate-800">
             <td class="pl-4 pr-3 py-3">
               <span class="inline-block px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap"
-                    :style="({'host_command':'background:rgba(239,68,68,.18);color:#f87171','docker':'background:rgba(36,140,239,.18);color:#248CEF','qbittorrent':'background:rgba(101,165,233,.18);color:#65A5E9','emby':'background:rgba(82,181,75,.18);color:#52B54B','jellyfin':'background:rgba(170,92,195,.18);color:#AA5CC3','plex':'background:rgba(229,160,13,.18);color:#E5A00D'})[r.rule_type] || 'background:rgba(71,85,105,.5);color:#94a3b8'"
-                    x-text="r.rule_type === 'host_command' ? 'HC' : r.rule_type === 'docker' ? 'DC' : r.rule_type === 'qbittorrent' ? 'qb' : r.rule_type === 'emby' ? 'Emby' : r.rule_type === 'jellyfin' ? 'Jellyfin' : r.rule_type === 'plex' ? 'Plex' : r.rule_type">
+                    :style="({
+                      host_command: 'background:rgba(239,68,68,.18);color:#f87171',
+                      docker:       'background:rgba(36,140,239,.18);color:#248CEF',
+                      qbittorrent:  'background:rgba(101,165,233,.18);color:#65A5E9',
+                      sabnzbd:      'background:rgba(245,166,35,.18);color:#F5A623',
+                      transmission: 'background:rgba(195,59,46,.18);color:#C33B2E',
+                      deluge:       'background:rgba(136,176,75,.18);color:#88B04B',
+                      emby:         'background:rgba(82,181,75,.18);color:#52B54B',
+                      jellyfin:     'background:rgba(170,92,195,.18);color:#AA5CC3',
+                      plex:         'background:rgba(229,160,13,.18);color:#E5A00D',
+                      homeassistant:'background:rgba(24,188,242,.18);color:#18BCF2',
+                      proxmox:      'background:rgba(229,112,0,.18);color:#E57000',
+                      sonarr:       'background:rgba(53,197,244,.18);color:#35C5F4',
+                      radarr:       'background:rgba(255,194,48,.18);color:#FFC230',
+                      webhook:      'background:rgba(100,116,139,.18);color:#94a3b8',
+                    })[r.rule_type] || 'background:rgba(71,85,105,.5);color:#94a3b8'"
+                    x-text="({
+                      host_command:'HC', docker:'DC', qbittorrent:'qB',
+                      sabnzbd:'SAB', transmission:'TR', deluge:'DL',
+                      emby:'Emby', jellyfin:'JF', plex:'Plex',
+                      homeassistant:'HA', proxmox:'PVE',
+                      sonarr:'Sonarr', radarr:'Radarr', webhook:'Hook',
+                    })[r.rule_type] || r.rule_type">
               </span>
             </td>
             <td class="pl-4 pr-5 py-3 border-l border-slate-800">
               <div class="text-sm font-medium text-slate-100"
-                   x-text="r.name || (r.rule_type === 'host_command' ? r.command : r.rule_type === 'qbittorrent' ? ('qB: ' + r.action) : r.rule_type === 'emby' ? ('Emby: ' + r.action) : r.rule_type === 'jellyfin' ? ('Jellyfin: ' + r.action) : r.rule_type === 'plex' ? ('Plex: ' + r.action) : r.container)"></div>
+                   x-text="r.name || r.rule_type"></div>
               <div class="text-xs text-slate-500 font-mono mt-0.5"
-                   x-show="r.name"
-                   x-text="r.rule_type === 'host_command' ? r.command : r.rule_type === 'qbittorrent' ? r.action : r.rule_type === 'emby' ? r.action : r.rule_type === 'jellyfin' ? r.action : r.rule_type === 'plex' ? r.action : r.container"></div>
+                   x-text="r.rule_type === 'host_command' ? r.command : r.rule_type === 'webhook' ? r.command : r.container || r.action"></div>
             </td>
             <td class="px-4 py-3 text-slate-400 text-sm border-l border-slate-800"
                 x-text="({failover:'→ On failover', restored:'→ On restored', down:'→ On WAN down', high_latency:'→ On high latency'})[r.trigger] || ('→ ' + r.trigger)"></td>
             <td class="px-4 py-3 text-slate-400 text-sm border-l border-slate-800"
-                x-text="r.rule_type === 'host_command' ? 'run' : r.rule_type === 'qbittorrent' ? ({alt_speed_on:'turtle on', alt_speed_off:'turtle off', set_dl_limit:'dl limit', set_ul_limit:'ul limit', pause_all:'pause all', resume_all:'resume all'})[r.action] || r.action : r.rule_type === 'emby' ? ({set_bitrate_limit: r.container ? r.container+' Mbps limit' : 'set limit', clear_bitrate_limit:'unlimited', stop_all_sessions:'stop sessions'})[r.action] || r.action : r.rule_type === 'jellyfin' ? ({set_bitrate_limit: r.container ? r.container+' Mbps limit' : 'set limit', clear_bitrate_limit:'unlimited', stop_all_sessions:'stop sessions'})[r.action] || r.action : r.rule_type === 'plex' ? ({set_wan_bitrate: r.container ? r.container+' Mbps WAN limit' : 'set WAN limit', clear_wan_bitrate:'unlimited WAN', stop_all_streams:'stop streams'})[r.action] || r.action : r.action"></td>
+                x-text="r.action + (r.container && r.rule_type !== 'docker' && r.rule_type !== 'homeassistant' && r.rule_type !== 'proxmox' && r.rule_type !== 'webhook' ? ' · ' + r.container : '')"></td>
             <td class="px-4 py-3 border-l border-slate-800 text-center">
               <button @click="toggleRule(r.id)"
                       class="relative w-8 h-[18px] rounded-full transition-colors duration-200 focus:outline-none shrink-0"
@@ -208,11 +457,14 @@
                       :class="runMsg && runMsg.id === r.id
                         ? (runMsg.ok ? 'text-emerald-400 bg-emerald-500/15' : 'text-red-400 bg-red-500/15')
                         : 'text-slate-600 hover:text-emerald-400 hover:bg-emerald-500/10'"
-                      class="w-7 h-7 inline-flex items-center justify-center rounded-lg transition-all duration-300">                <svg x-show="!runMsg || runMsg.id !== r.id" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                      class="w-7 h-7 inline-flex items-center justify-center rounded-lg transition-all duration-300">
+                <svg x-show="!runMsg || runMsg.id !== r.id" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
-                </svg>                <svg x-show="runMsg && runMsg.id === r.id && runMsg.ok" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                </svg>
+                <svg x-show="runMsg && runMsg.id === r.id && runMsg.ok" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                </svg>                <svg x-show="runMsg && runMsg.id === r.id && !runMsg.ok" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                </svg>
+                <svg x-show="runMsg && runMsg.id === r.id && !runMsg.ok" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                 </svg>
               </button>
@@ -234,7 +486,7 @@
           </tr>
         </template>
         <tr x-show="rules.length === 0">
-          <td colspan="7" class="px-5 py-8 text-center text-slate-600">No rules yet</td>
+          <td colspan="8" class="px-5 py-8 text-center text-slate-600">No rules yet</td>
         </tr>
       </tbody>
     </table>
