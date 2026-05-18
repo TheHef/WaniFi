@@ -204,39 +204,39 @@
         Host Command
       </button>
       <button @click="toggleIntegration('docker')"
-              :class="integrations.docker ? 'bg-blue-500/20 border-blue-500/50 text-blue-300' : 'bg-slate-800 border-slate-700 text-slate-500'"
+              :class="integrations.docker ? 'bg-[#248CEF]/20 border-[#248CEF]/50 text-[#248CEF]' : 'bg-slate-800 border-slate-700 text-slate-500'"
               class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
-        <span class="w-2 h-2 rounded-full transition" :class="integrations.docker ? 'bg-blue-400' : 'bg-slate-600'"></span>
+        <span class="w-2 h-2 rounded-full transition" :class="integrations.docker ? 'bg-[#248CEF]' : 'bg-slate-600'"></span>
         Docker
       </button>
       <button @click="toggleIntegration('qb')"
-              :class="integrations.qb ? 'bg-sky-500/20 border-sky-500/50 text-sky-300' : 'bg-slate-800 border-slate-700 text-slate-500'"
+              :class="integrations.qb ? 'bg-[#65A5E9]/20 border-[#65A5E9]/50 text-[#65A5E9]' : 'bg-slate-800 border-slate-700 text-slate-500'"
               class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
-        <span class="w-2 h-2 rounded-full transition" :class="integrations.qb ? 'bg-sky-400' : 'bg-slate-600'"></span>
+        <span class="w-2 h-2 rounded-full transition" :class="integrations.qb ? 'bg-[#65A5E9]' : 'bg-slate-600'"></span>
         qBittorrent
       </button>
       <button @click="toggleIntegration('emby')"
-              :class="integrations.emby ? 'bg-green-500/20 border-green-500/50 text-green-300' : 'bg-slate-800 border-slate-700 text-slate-500'"
+              :class="integrations.emby ? 'bg-[#52B54B]/20 border-[#52B54B]/50 text-[#52B54B]' : 'bg-slate-800 border-slate-700 text-slate-500'"
               class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
-        <span class="w-2 h-2 rounded-full transition" :class="integrations.emby ? 'bg-green-400' : 'bg-slate-600'"></span>
+        <span class="w-2 h-2 rounded-full transition" :class="integrations.emby ? 'bg-[#52B54B]' : 'bg-slate-600'"></span>
         Emby
       </button>
       <button @click="toggleIntegration('jellyfin')"
-              :class="integrations.jellyfin ? 'bg-purple-500/20 border-purple-500/50 text-purple-300' : 'bg-slate-800 border-slate-700 text-slate-500'"
+              :class="integrations.jellyfin ? 'bg-[#AA5CC3]/20 border-[#AA5CC3]/50 text-[#AA5CC3]' : 'bg-slate-800 border-slate-700 text-slate-500'"
               class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
-        <span class="w-2 h-2 rounded-full transition" :class="integrations.jellyfin ? 'bg-purple-400' : 'bg-slate-600'"></span>
+        <span class="w-2 h-2 rounded-full transition" :class="integrations.jellyfin ? 'bg-[#AA5CC3]' : 'bg-slate-600'"></span>
         Jellyfin
       </button>
       <button @click="toggleIntegration('plex')"
-              :class="integrations.plex ? 'bg-orange-500/20 border-orange-500/50 text-orange-300' : 'bg-slate-800 border-slate-700 text-slate-500'"
+              :class="integrations.plex ? 'bg-[#E5A00D]/20 border-[#E5A00D]/50 text-[#E5A00D]' : 'bg-slate-800 border-slate-700 text-slate-500'"
               class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
-        <span class="w-2 h-2 rounded-full transition" :class="integrations.plex ? 'bg-orange-400' : 'bg-slate-600'"></span>
+        <span class="w-2 h-2 rounded-full transition" :class="integrations.plex ? 'bg-[#E5A00D]' : 'bg-slate-600'"></span>
         Plex
       </button>
       <button @click="toggleIntegration('ntfy')"
-              :class="integrations.ntfy ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300' : 'bg-slate-800 border-slate-700 text-slate-500'"
+              :class="integrations.ntfy ? 'bg-[#29665A]/20 border-[#29665A]/50 text-[#29665A]' : 'bg-slate-800 border-slate-700 text-slate-500'"
               class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition">
-        <span class="w-2 h-2 rounded-full transition" :class="integrations.ntfy ? 'bg-emerald-400' : 'bg-slate-600'"></span>
+        <span class="w-2 h-2 rounded-full transition" :class="integrations.ntfy ? 'bg-[#29665A]' : 'bg-slate-600'"></span>
         ntfy
       </button>
     </div>
@@ -251,13 +251,13 @@
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">WebUI URL</label>
           <input x-model="qbSettings.qb_url" placeholder="http://192.168.1.10:8080"
                  autocomplete="off" spellcheck="false"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-sky-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#65A5E9] transition">
         </div>
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Username</label>
           <input x-model="qbSettings.qb_username" placeholder="admin"
                  autocomplete="off" spellcheck="false"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-sky-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#65A5E9] transition">
         </div>
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Password
@@ -265,11 +265,11 @@
           </label>
           <input type="password" x-model="qbSettings.qb_password" placeholder="••••••••••••••••"
                  autocomplete="new-password"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-sky-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#65A5E9] transition">
         </div>
       </div>
       <div class="flex gap-3 mt-4 flex-wrap items-center">
-        <button @click="saveQbSettings()" class="bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="saveQbSettings()" class="bg-[#65A5E9] hover:bg-[#65A5E9]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
         <button @click="testQb()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium"
               :class="qbMsg.startsWith('✓') ? 'text-emerald-400' : qbMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'"
@@ -285,7 +285,7 @@
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Server URL</label>
           <input x-model="embySettings.emby_url" placeholder="http://192.168.1.10:8096"
                  autocomplete="off" spellcheck="false"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-green-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#52B54B] transition">
         </div>
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">API Token
@@ -293,12 +293,12 @@
           </label>
           <input type="password" x-model="embySettings.emby_token" placeholder="••••••••••••••••"
                  autocomplete="new-password"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-green-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#52B54B] transition">
           <p class="text-xs text-slate-600 mt-1">Emby Dashboard → API Keys → New API Key</p>
         </div>
       </div>
       <div class="flex gap-3 mt-4 flex-wrap items-center">
-        <button @click="saveEmbySettings()" class="bg-green-600 hover:bg-green-500 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="saveEmbySettings()" class="bg-[#52B54B] hover:bg-[#52B54B]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
         <button @click="testEmby()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium"
               :class="embyMsg.startsWith('✓') ? 'text-emerald-400' : embyMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'"
@@ -314,7 +314,7 @@
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Server URL</label>
           <input x-model="jellyfinSettings.jellyfin_url" placeholder="http://192.168.1.10:8096"
                  autocomplete="off" spellcheck="false"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-purple-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#AA5CC3] transition">
         </div>
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">API Token
@@ -322,12 +322,12 @@
           </label>
           <input type="password" x-model="jellyfinSettings.jellyfin_token" placeholder="••••••••••••••••"
                  autocomplete="new-password"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-purple-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#AA5CC3] transition">
           <p class="text-xs text-slate-600 mt-1">Jellyfin Dashboard → Administration → API Keys</p>
         </div>
       </div>
       <div class="flex gap-3 mt-4 flex-wrap items-center">
-        <button @click="saveJellyfinSettings()" class="bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="saveJellyfinSettings()" class="bg-[#AA5CC3] hover:bg-[#AA5CC3]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
         <button @click="testJellyfin()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium"
               :class="jellyfinMsg.startsWith('✓') ? 'text-emerald-400' : jellyfinMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'"
@@ -343,7 +343,7 @@
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Server URL</label>
           <input x-model="plexSettings.plex_url" placeholder="http://192.168.1.10:32400"
                  autocomplete="off" spellcheck="false"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-orange-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#E5A00D] transition">
         </div>
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Plex Token
@@ -351,12 +351,12 @@
           </label>
           <input type="password" x-model="plexSettings.plex_token" placeholder="••••••••••••••••"
                  autocomplete="new-password"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-orange-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#E5A00D] transition">
           <p class="text-xs text-slate-600 mt-1">Plex Web → Settings → Account → Get Plex Token</p>
         </div>
       </div>
       <div class="flex gap-3 mt-4 flex-wrap items-center">
-        <button @click="savePlexSettings()" class="bg-orange-500 hover:bg-orange-400 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="savePlexSettings()" class="bg-[#E5A00D] hover:bg-[#E5A00D]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
         <button @click="testPlex()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium"
               :class="plexMsg.startsWith('✓') ? 'text-emerald-400' : plexMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'"
@@ -372,13 +372,13 @@
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Server URL</label>
           <input x-model="notifySettings.ntfy_url" placeholder="https://ntfy.sh"
                  autocomplete="off" spellcheck="false"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-emerald-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#29665A] transition">
         </div>
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Topic</label>
           <input x-model="notifySettings.ntfy_topic" placeholder="my-wanifi-alerts"
                  autocomplete="off" spellcheck="false"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-emerald-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#29665A] transition">
         </div>
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Access Token
@@ -386,7 +386,7 @@
           </label>
           <input type="password" x-model="notifySettings.ntfy_token" placeholder="••••••••••••••••"
                  autocomplete="new-password"
-                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-emerald-500 transition">
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mt-1.5 text-slate-200 focus:outline-none focus:border-[#29665A] transition">
           <p class="text-xs text-slate-600 mt-1">Only needed for private topics.</p>
         </div>
       </div>
@@ -426,7 +426,7 @@
       </div>
 
       <div class="flex gap-3 mt-5 flex-wrap items-center">
-        <button @click="saveNotifySettings()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
+        <button @click="saveNotifySettings()" class="bg-[#29665A] hover:bg-[#29665A]/80 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">Save</button>
         <button @click="testNotify()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Send test notification</button>
         <span class="text-sm font-medium"
               :class="notifyMsg.startsWith('✓') ? 'text-emerald-400' : notifyMsg === 'Sending…' ? 'text-slate-400' : 'text-red-400'"
