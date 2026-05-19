@@ -7,9 +7,15 @@ from typing import Optional
 
 from .db import db
 
+_running = False
+
 
 async def run_speedtest() -> tuple[bool, str]:
     """Run speedtest-cli, save to DB, return human-readable result."""
+    global _running
+    if _running:
+        return False, "Speedtest already running"
+    _running = True
     loop = asyncio.get_event_loop()
     try:
         result = await loop.run_in_executor(
@@ -37,7 +43,6 @@ async def run_speedtest() -> tuple[bool, str]:
                 "INSERT INTO speedtest_results (ts, download_mbps, upload_mbps, ping_ms, server, isp) VALUES (?,?,?,?,?,?)",
                 (int(time.time()), dl, ul, ping, server, isp),
             )
-            # Keep last 100 results
             conn.execute(
                 "DELETE FROM speedtest_results WHERE id NOT IN (SELECT id FROM speedtest_results ORDER BY ts DESC LIMIT 100)"
             )
@@ -57,6 +62,8 @@ async def run_speedtest() -> tuple[bool, str]:
         return False, f"Could not parse speedtest output: {e}"
     except Exception as e:
         return False, str(e)
+    finally:
+        _running = False
 
 
 def get_last_speedtest() -> Optional[dict]:

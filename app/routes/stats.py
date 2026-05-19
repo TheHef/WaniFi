@@ -37,27 +37,18 @@ async def get_stats(_: bool = Depends(require_auth)):
     }
 
 
-_speedtest_running = False
-
-
 @router.post("/api/run-speedtest")
 async def run_speedtest_now(_: bool = Depends(require_auth)):
-    global _speedtest_running
-    if _speedtest_running:
-        return {"ok": False, "error": "Speedtest already running"}
-    _speedtest_running = True
-    try:
-        from ..speedtest_runner import run_speedtest, get_last_speedtest
-        ok, msg = await run_speedtest()
-        result = get_last_speedtest() if ok else None
-        return {"ok": ok, "msg": msg, "result": result}
-    finally:
-        _speedtest_running = False
+    from ..speedtest_runner import run_speedtest, get_last_speedtest
+    ok, msg = await run_speedtest()
+    result = get_last_speedtest() if ok else None
+    return {"ok": ok, "msg": msg, "result": result}
 
 
 @router.get("/api/speedtest-running")
 async def speedtest_running_status(_: bool = Depends(require_auth)):
-    return {"running": _speedtest_running}
+    from ..speedtest_runner import _running
+    return {"running": _running}
 
 
 def _classify(message: str) -> str:

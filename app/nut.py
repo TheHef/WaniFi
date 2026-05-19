@@ -28,11 +28,13 @@ class NutClient:
         responses: list[str] = []
         try:
             if self.username:
-                await self._cmd(reader, writer, f"USERNAME {self.username}")
+                resp = await self._cmd(reader, writer, f"USERNAME {self.username}")
+                if resp.startswith("ERR"):
+                    raise ValueError(f"NUT auth failed (username): {resp}")
             if self.password:
                 resp = await self._cmd(reader, writer, f"PASSWORD {self.password}")
                 if resp.startswith("ERR"):
-                    raise ValueError(f"NUT auth failed: {resp}")
+                    raise ValueError(f"NUT auth failed (password): {resp}")
             for cmd in commands:
                 resp = await self._cmd(reader, writer, cmd)
                 responses.append(resp)
