@@ -283,39 +283,55 @@ async def save_speedtest_settings(payload: SpeedtestSettingsIn, _: bool = Depend
 
 
 @router.get("/api/speedtest-servers")
-async def list_speedtest_servers(wan_ip: str = "", _: bool = Depends(require_auth)):
+async def list_speedtest_servers(_: bool = Depends(require_auth)):
     import math
     import urllib.request
     import xml.etree.ElementTree as ET
+    from ..unifi import UniFiClient
     loop = asyncio.get_running_loop()
     try:
-        # Step 1: geolocate the primary WAN IP
+        # Step 1: get primary WAN IP directly from UniFi
+        host    = get_setting("unifi_host", "")
+        api_key = get_setting("unifi_api_key", "")
+        site    = get_setting("unifi_site", "default")
+        primary = get_setting("primary_wan", "wan")
+        wan_ip  = ""
+        if host and api_key:
+            try:
+                client = UniFiClient(host, api_key, site)
+                wans   = await client.get_gateway_health()
+                for w in wans:
+                    if w.get("subsystem", "").lower() == primary.lower() and w.get("wan_ip"):
+                        wan_ip = w["wan_ip"]
+                        break
+            except Exception:
+                pass
+
+        # Step 2: geolocate that IP (falls back to container egress IP if wan_ip is empty)
         geo_url = f"http://ip-api.com/json/{wan_ip}?fields=status,lat,lon,city,country" if wan_ip else "http://ip-api.com/json/?fields=status,lat,lon,city,country"
         geo_raw = await loop.run_in_executor(
             None, lambda: urllib.request.urlopen(geo_url, timeout=10).read().decode()
         )
         geo = json.loads(geo_raw)
         if geo.get("status") == "fail" or geo.get("lat") is None:
-            return {"ok": False, "servers": [], "error": f"ip-api.com could not geolocate {wan_ip}: {geo}"}
+            return {"ok": False, "servers": [], "error": f"Could not geolocate IP {wan_ip}: {geo}"}
         lat, lon = float(geo["lat"]), float(geo["lon"])
 
-        # Step 2: fetch full server list from speedtest.net XML (stable, no bot-check)
-        xml_urls = [
+        # Step 3: fetch speedtest.net server list XML
+        for xml_url in [
             "https://www.speedtest.net/speedtest-servers-static.php",
             "https://c.speedtest.net/speedtest-servers-static.php",
-        ]
-        xml_raw = None
-        for url in xml_urls:
+        ]:
             try:
-                req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                req = urllib.request.Request(xml_url, headers={"User-Agent": "Mozilla/5.0"})
                 xml_raw = await loop.run_in_executor(
                     None, lambda r=req: urllib.request.urlopen(r, timeout=20).read().decode()
                 )
                 break
             except Exception:
-                continue
+                xml_raw = None
         if not xml_raw:
-            return {"ok": False, "servers": [], "error": "Could not fetch speedtest server list"}
+            return {"ok": False, "servers": [], "error": "Could not fetch speedtest server list from speedtest.net"}
 
         def _dist(slat, slon):
             R = 6371
@@ -324,22 +340,27 @@ async def list_speedtest_servers(wan_ip: str = "", _: bool = Depends(require_aut
             a = math.sin(dlat/2)**2 + math.cos(math.radians(lat)) * math.cos(math.radians(slat)) * math.sin(dlon/2)**2
             return round(R * 2 * math.asin(math.sqrt(a)), 2)
 
-        # Step 3: parse XML and sort by distance from WAN IP location
+        # Step 4: parse XML, calculate distance from primary WAN location, return top 100
         root = ET.fromstring(xml_raw)
         servers = []
         for s in root.iter("Server"):
             try:
-                slat, slon = float(s.get("lat", 0)), float(s.get("lon", 0))
+                slat    = float(s.get("lat", 0))
+                slon    = float(s.get("lon", 0))
                 sponsor = s.get("sponsor", "")
                 name    = s.get("name", "")
                 country = s.get("country", "")
                 sid     = s.get("id", "")
-                label   = f"{sponsor} ({name}, {country})" if name else f"{sponsor} ({country})"
+                label   = f"{sponsor} ({name}, {country})"
                 servers.append({"id": sid, "label": label, "distance": _dist(slat, slon)})
             except (ValueError, TypeError):
                 continue
 
         servers.sort(key=lambda s: s["distance"])
-        return {"ok": True, "servers": servers[:100], "geo": {"city": geo.get("city"), "country": geo.get("country")}}
+        return {
+            "ok": True,
+            "servers": servers[:100],
+            "geo": {"wan_ip": wan_ip, "city": geo.get("city"), "country": geo.get("country")},
+        }
     except Exception as e:
         return {"ok": False, "servers": [], "error": str(e)}
