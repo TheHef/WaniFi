@@ -30,8 +30,10 @@ async def run_speedtest() -> tuple[bool, str]:
     try:
         server_id = get_setting("speedtest_server_id", "").strip()
 
-        # Ookla CLI flags: --accept-license/--accept-gdpr suppress interactive prompts
-        cmd = ["speedtest", "--format=json", "--accept-license", "--accept-gdpr"]
+        # Use full path to Ookla binary — pip also installs a 'speedtest' in /usr/local/bin
+        # which would shadow Ookla's /usr/bin/speedtest if called by name only
+        ookla = "/usr/bin/speedtest"
+        cmd = [ookla, "--format=json", "--accept-license", "--accept-gdpr"]
         if server_id:
             cmd += ["--server-id", server_id]
 
@@ -42,7 +44,7 @@ async def run_speedtest() -> tuple[bool, str]:
         # If configured server failed, retry with auto-select
         used_fallback = False
         if result.returncode != 0 and server_id:
-            fallback_cmd = ["speedtest", "--format=json", "--accept-license", "--accept-gdpr"]
+            fallback_cmd = [ookla, "--format=json", "--accept-license", "--accept-gdpr"]
             result = await loop.run_in_executor(
                 None, lambda c=fallback_cmd: subprocess.run(c, capture_output=True, text=True, timeout=120)
             )
@@ -91,7 +93,7 @@ async def run_speedtest() -> tuple[bool, str]:
         return True, msg
 
     except FileNotFoundError:
-        return False, "Ookla speedtest not found — rebuild the Docker image"
+        return False, f"Ookla speedtest binary not found at /usr/bin/speedtest — rebuild the Docker image"
     except subprocess.TimeoutExpired:
         return False, "Speedtest timed out after 120 s"
     except (json.JSONDecodeError, KeyError) as e:
