@@ -123,22 +123,11 @@
                 </button>
               </div>
               <template x-if="stats.last_speedtest">
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs text-slate-600">↓ Download</span>
-                    <span class="text-xs font-mono text-emerald-400" x-text="(stats.last_speedtest.download_mbps || '—') + ' Mbps'"></span>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs text-slate-600">↑ Upload</span>
-                    <span class="text-xs font-mono text-sky-400" x-text="(stats.last_speedtest.upload_mbps || '—') + ' Mbps'"></span>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs text-slate-600">Ping</span>
-                    <span class="text-xs font-mono text-slate-400" x-text="(stats.last_speedtest.ping_ms || '—') + ' ms'"></span>
-                  </div>
-                  <div class="flex items-center justify-between" x-show="stats.last_speedtest.isp">
-                    <span class="text-xs text-slate-600">Via</span>
-                    <span class="text-xs text-slate-500 truncate max-w-[120px]" x-text="stats.last_speedtest.isp"></span>
+                <div>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-mono text-emerald-400" x-text="'↓ ' + (stats.last_speedtest.download_mbps || '—') + ' Mbps'"></span>
+                    <span class="text-xs font-mono text-sky-400" x-text="'↑ ' + (stats.last_speedtest.upload_mbps || '—') + ' Mbps'"></span>
+                    <span class="text-xs font-mono text-slate-500" x-text="(stats.last_speedtest.ping_ms || '—') + ' ms'"></span>
                   </div>
                   <div class="text-right mt-0.5">
                     <span class="text-[10px] text-slate-600"
