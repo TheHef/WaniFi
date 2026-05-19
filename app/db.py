@@ -57,6 +57,16 @@ def init_db():
                 latency_ms REAL,
                 active_wan TEXT
             );
+            CREATE TABLE IF NOT EXISTS speedtest_results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ts INTEGER NOT NULL,
+                download_mbps REAL,
+                upload_mbps REAL,
+                ping_ms REAL,
+                server TEXT,
+                isp TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_speedtest_ts ON speedtest_results(ts);
             """
         )
         cols = {r[1] for r in conn.execute("PRAGMA table_info(rules)").fetchall()}

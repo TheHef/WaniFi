@@ -1,4 +1,6 @@
-"""Failover statistics endpoint."""
+"""Failover statistics and speedtest endpoints."""
+import asyncio
+
 from fastapi import APIRouter, Depends
 
 from ..auth import require_auth
@@ -25,12 +27,37 @@ async def get_stats(_: bool = Depends(require_auth)):
     restored_events = [e for e in events if e["type"] == "restored"]
     last_restored  = restored_events[0]["ts"] if restored_events else None
 
+    from ..speedtest_runner import get_last_speedtest
     return {
-        "total_failovers": len(failovers),
-        "last_failover":   last_failover,
-        "last_restored":   last_restored,
-        "recent_events":   events[:10],
+        "total_failovers":  len(failovers),
+        "last_failover":    last_failover,
+        "last_restored":    last_restored,
+        "recent_events":    events[:10],
+        "last_speedtest":   get_last_speedtest(),
     }
+
+
+_speedtest_running = False
+
+
+@router.post("/api/run-speedtest")
+async def run_speedtest_now(_: bool = Depends(require_auth)):
+    global _speedtest_running
+    if _speedtest_running:
+        return {"ok": False, "error": "Speedtest already running"}
+    _speedtest_running = True
+    try:
+        from ..speedtest_runner import run_speedtest, get_last_speedtest
+        ok, msg = await run_speedtest()
+        result = get_last_speedtest() if ok else None
+        return {"ok": ok, "msg": msg, "result": result}
+    finally:
+        _speedtest_running = False
+
+
+@router.get("/api/speedtest-running")
+async def speedtest_running_status(_: bool = Depends(require_auth)):
+    return {"running": _speedtest_running}
 
 
 def _classify(message: str) -> str:

@@ -53,6 +53,7 @@ window.app = function () {
     portainerMsg: '', truenasMsg: '', unraidMsg: '',
     noderedMsg: '', gotifyMsg: '', nzbgetMsg: '',
     npmMsg: '', cloudflareMsg: '', nutMsg: '',
+    speedtestRunning: false,
 
     integrations: {
       host_command: false, docker: false, webhook: false,
@@ -991,6 +992,16 @@ window.app = function () {
     // ---- Stats ------------------------------------------------------------
     async loadStats() {
       try { this.stats = await fetch('/api/stats').then(r => r.json()); } catch {}
+    },
+
+    async runSpeedtest() {
+      if (this.speedtestRunning) return;
+      this.speedtestRunning = true;
+      try {
+        const d = await fetch('/api/run-speedtest', { method: 'POST' }).then(r => r.json());
+        if (d.result) this.stats = { ...this.stats, last_speedtest: d.result };
+      } catch {}
+      this.speedtestRunning = false;
     },
 
     // ---- Integrations -----------------------------------------------------

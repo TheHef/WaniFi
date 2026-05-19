@@ -108,6 +108,49 @@
               <span class="text-xs text-slate-500 uppercase tracking-wider">Status</span>
               <span class="text-xs text-slate-600">No events yet</span>
             </div>
+
+            <!-- Speedtest result -->
+            <div x-show="integrations.speedtest" class="pt-2 mt-1 border-t border-slate-800">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs text-slate-500 uppercase tracking-wider">Last speedtest</span>
+                <button @click="runSpeedtest()"
+                        :disabled="speedtestRunning"
+                        class="text-[10px] font-semibold px-2 py-0.5 rounded-md border transition"
+                        :class="speedtestRunning
+                          ? 'border-slate-700 text-slate-600 cursor-not-allowed'
+                          : 'border-slate-600 text-slate-400 hover:border-emerald-500 hover:text-emerald-400'">
+                  <span x-text="speedtestRunning ? 'Running…' : 'Run now'"></span>
+                </button>
+              </div>
+              <template x-if="stats.last_speedtest">
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-slate-600">↓ Download</span>
+                    <span class="text-xs font-mono text-emerald-400" x-text="(stats.last_speedtest.download_mbps || '—') + ' Mbps'"></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-slate-600">↑ Upload</span>
+                    <span class="text-xs font-mono text-sky-400" x-text="(stats.last_speedtest.upload_mbps || '—') + ' Mbps'"></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-slate-600">Ping</span>
+                    <span class="text-xs font-mono text-slate-400" x-text="(stats.last_speedtest.ping_ms || '—') + ' ms'"></span>
+                  </div>
+                  <div class="flex items-center justify-between" x-show="stats.last_speedtest.isp">
+                    <span class="text-xs text-slate-600">Via</span>
+                    <span class="text-xs text-slate-500 truncate max-w-[120px]" x-text="stats.last_speedtest.isp"></span>
+                  </div>
+                  <div class="text-right mt-0.5">
+                    <span class="text-[10px] text-slate-600"
+                          x-text="stats.last_speedtest.ts ? new Date(stats.last_speedtest.ts * 1000).toLocaleString() : ''"></span>
+                  </div>
+                </div>
+              </template>
+              <template x-if="!stats.last_speedtest">
+                <span class="text-xs text-slate-600">No results yet</span>
+              </template>
+            </div>
+
           </div>
         </div>
       </template>

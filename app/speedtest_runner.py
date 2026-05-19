@@ -1,11 +1,15 @@
-"""Speedtest integration — runs speedtest-cli in a thread pool."""
+"""Speedtest integration — runs speedtest-cli in a thread pool and persists results."""
 import asyncio
-import subprocess
 import json
+import subprocess
+import time
+from typing import Optional
+
+from .db import db
 
 
 async def run_speedtest() -> tuple[bool, str]:
-    """Run speedtest-cli and return a human-readable result string."""
+    """Run speedtest-cli, save to DB, return human-readable result."""
     loop = asyncio.get_event_loop()
     try:
         result = await loop.run_in_executor(
@@ -22,22 +26,52 @@ async def run_speedtest() -> tuple[bool, str]:
             return False, stderr
 
         data = json.loads(result.stdout)
-        dl   = round(data.get("download", 0) / 1_000_000, 1)
-        ul   = round(data.get("upload", 0) / 1_000_000, 1)
-        ping = round(data.get("ping", 0), 1)
-        isp  = data.get("client", {}).get("isp", "")
+        dl     = round(data.get("download", 0) / 1_000_000, 1)
+        ul     = round(data.get("upload", 0) / 1_000_000, 1)
+        ping   = round(data.get("ping", 0), 1)
+        isp    = data.get("client", {}).get("isp", "")
         server = data.get("server", {}).get("name", "")
+
+        with db() as conn:
+            conn.execute(
+                "INSERT INTO speedtest_results (ts, download_mbps, upload_mbps, ping_ms, server, isp) VALUES (?,?,?,?,?,?)",
+                (int(time.time()), dl, ul, ping, server, isp),
+            )
+            # Keep last 100 results
+            conn.execute(
+                "DELETE FROM speedtest_results WHERE id NOT IN (SELECT id FROM speedtest_results ORDER BY ts DESC LIMIT 100)"
+            )
+
         msg = f"↓ {dl} Mbps  ↑ {ul} Mbps  ping {ping} ms"
         if isp:
             msg += f"  via {isp}"
         if server:
             msg += f" ({server})"
         return True, msg
+
     except FileNotFoundError:
-        return False, "speedtest-cli not found — add 'speedtest-cli' to requirements.txt and rebuild"
+        return False, "speedtest-cli not found — rebuild the image to install it"
     except subprocess.TimeoutExpired:
         return False, "Speedtest timed out after 120 s"
     except json.JSONDecodeError as e:
         return False, f"Could not parse speedtest output: {e}"
     except Exception as e:
         return False, str(e)
+
+
+def get_last_speedtest() -> Optional[dict]:
+    """Return the most recent speedtest result or None."""
+    with db() as conn:
+        row = conn.execute(
+            "SELECT ts, download_mbps, upload_mbps, ping_ms, server, isp FROM speedtest_results ORDER BY ts DESC LIMIT 1"
+        ).fetchone()
+    if not row:
+        return None
+    return {
+        "ts":            row["ts"],
+        "download_mbps": row["download_mbps"],
+        "upload_mbps":   row["upload_mbps"],
+        "ping_ms":       row["ping_ms"],
+        "server":        row["server"],
+        "isp":           row["isp"],
+    }
