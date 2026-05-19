@@ -202,6 +202,12 @@
       </div>
 
       <div class="flex items-end justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-2">
+          <div class="text-sm font-medium mr-1" :class="settingsMsg.startsWith('✓') ? 'text-blue-400' : 'text-red-400'" x-show="settingsMsg" x-text="settingsMsg"></div>
+          <button @click="debugDump()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-500 rounded-xl px-4 py-2.5 text-sm transition">Debug</button>
+          <button @click="testUnifi()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2.5 text-sm transition">Test Connection</button>
+          <button @click="saveSettings()" class="bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl px-5 py-2.5 text-sm transition">Save</button>
+        </div>
         <div class="flex items-end gap-2">
           <div>
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Keep events <span class="normal-case font-normal text-slate-600">(days)</span></label>
@@ -215,12 +221,6 @@
             </svg>
             Clear all events
           </button>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="text-sm font-medium mr-1" :class="settingsMsg.startsWith('✓') ? 'text-blue-400' : 'text-red-400'" x-show="settingsMsg" x-text="settingsMsg"></div>
-          <button @click="debugDump()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-500 rounded-xl px-4 py-2.5 text-sm transition">Debug</button>
-          <button @click="testUnifi()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2.5 text-sm transition">Test Connection</button>
-          <button @click="saveSettings()" class="bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl px-5 py-2.5 text-sm transition">Save</button>
         </div>
       </div>
 
