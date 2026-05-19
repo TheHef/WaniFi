@@ -36,7 +36,8 @@ async def api_status(_: bool = Depends(require_auth)):
 
 @router.get("/api/live")
 async def api_live(_: bool = Depends(require_auth)):
-    return state.live_gw_info
+    from ..speedtest_runner import _running as speedtest_running
+    return {**state.live_gw_info, "speedtest_running": speedtest_running}
 
 
 @router.get("/api/metrics")
