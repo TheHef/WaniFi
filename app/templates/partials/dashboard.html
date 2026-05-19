@@ -51,9 +51,10 @@
     </div>
 
     <!-- ── Box 2: WAN Connections ─────────────────────────────────── -->
-    <div class="bg-slate-900 border border-slate-700/60 rounded-2xl overflow-hidden flex flex-col">
-      <div class="h-0.5 w-full bg-slate-800"></div>
-      <div class="p-5 flex-1 flex flex-col">
+    <div class="relative bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-700/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="absolute inset-0 bg-gradient-to-br from-blue-500/3 to-transparent pointer-events-none z-0 rounded-2xl"></div>
+      <div class="h-0.5 w-full bg-slate-800 relative z-10"></div>
+      <div class="relative z-10 p-5 flex-1 flex flex-col">
         <div class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">WAN Connections</div>
         <div class="space-y-2 flex-1">
           <!-- Primary -->
@@ -114,9 +115,11 @@
     </div>
 
     <!-- ── Box 3: System ─────────────────────────────────────────── -->
-    <div class="bg-slate-900 border border-slate-700/60 rounded-2xl overflow-hidden flex flex-col">
-      <div class="h-0.5 w-full" :class="status.last_error ? 'bg-red-500/60' : 'bg-emerald-500/40'"></div>
-      <div class="p-5 flex-1 flex flex-col">
+    <div class="relative bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-700/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="absolute inset-0 pointer-events-none z-0 rounded-2xl transition-all duration-700"
+           :class="status.last_error ? 'bg-gradient-to-br from-red-500/4 to-transparent' : 'bg-gradient-to-br from-emerald-500/3 to-transparent'"></div>
+      <div class="h-0.5 w-full relative z-10" :class="status.last_error ? 'bg-red-500/60' : 'bg-emerald-500/40'"></div>
+      <div class="relative z-10 p-5 flex-1 flex flex-col">
         <div class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">System</div>
 
         <template x-if="status.last_error">
