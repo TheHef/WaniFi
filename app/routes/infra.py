@@ -288,7 +288,6 @@ async def save_speedtest_settings(payload: SpeedtestSettingsIn, _: bool = Depend
 async def list_speedtest_servers(_: bool = Depends(require_auth)):
     import math
     import urllib.request
-    import speedtest as st_lib
     from ..unifi import UniFiClient
     loop = asyncio.get_running_loop()
     try:
@@ -326,28 +325,35 @@ async def list_speedtest_servers(_: bool = Depends(require_auth)):
             a = math.sin(dlat/2)**2 + math.cos(math.radians(lat)) * math.cos(math.radians(float(slat))) * math.sin(dlon/2)**2
             return round(R * 2 * math.asin(math.sqrt(a)), 2)
 
-        # Step 3: fetch full server list via speedtest module (has lat/lon per server)
+        # Step 3: fetch server list directly from Speedtest.net JS API
         def _get_servers():
-            s = st_lib.Speedtest()
-            return s.get_servers()  # {distance: [server_dict, ...]}
+            req = urllib.request.Request(
+                "https://c.speedtest.net/api/js/servers?engine=js&https_functional=true&limit=500",
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                    "Accept": "application/json, text/plain, */*",
+                    "Referer": "https://www.speedtest.net/",
+                }
+            )
+            with urllib.request.urlopen(req, timeout=15) as r:
+                return json.loads(r.read().decode())
 
         raw = await loop.run_in_executor(None, _get_servers)
 
-        # Step 4: flatten, recalculate distance from primary WAN coords, sort
+        # Step 4: recalculate distance from primary WAN coords, sort
         servers = []
-        for bucket in raw.values():
-            for s in bucket:
-                try:
-                    sid     = str(s.get("id", ""))
-                    sponsor = s.get("sponsor", "")
-                    name    = s.get("name", "")
-                    country = s.get("country", "")
-                    slat    = s.get("lat", lat)
-                    slon    = s.get("lon", lon)
-                    label   = f"{sponsor} ({name}, {country})"
-                    servers.append({"id": sid, "label": label, "distance": _haversine(slat, slon)})
-                except (ValueError, TypeError):
-                    continue
+        for s in raw:
+            try:
+                sid     = str(s.get("id", ""))
+                sponsor = s.get("sponsor", "")
+                name    = s.get("name", "")
+                country = s.get("country", "")
+                slat    = s.get("lat", lat)
+                slon    = s.get("lon", lon)
+                label   = f"{sponsor} ({name}, {country})"
+                servers.append({"id": sid, "label": label, "distance": _haversine(slat, slon)})
+            except (ValueError, TypeError):
+                continue
 
         servers.sort(key=lambda s: s["distance"])
         return {
