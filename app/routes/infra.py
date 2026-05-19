@@ -1,4 +1,4 @@
-"""Settings and test endpoints for Portainer, TrueNAS, Unraid, Node-RED, NPM, Cloudflare, NUT."""
+"""Settings and test endpoints for Portainer, TrueNAS, Unraid, Node-RED, NPM, Cloudflare, NUT, Speedtest."""
 from fastapi import APIRouter, Depends
 
 from ..auth import require_auth
@@ -9,6 +9,7 @@ from ..models import (
     NpmSettingsIn,
     NutSettingsIn,
     PortainerSettingsIn,
+    SpeedtestSettingsIn,
     TrueNASSettingsIn,
     UnraidSettingsIn,
 )
@@ -260,3 +261,18 @@ async def test_nut(_: bool = Depends(require_auth)):
     client = NutClient(host, port, ups_name, username, password or "")
     ok, msg = await client.test()
     return {"ok": ok, "error": None if ok else msg}
+
+
+# ---- Speedtest --------------------------------------------------------------
+
+@router.get("/api/speedtest-settings")
+async def get_speedtest_settings(_: bool = Depends(require_auth)):
+    return {
+        "speedtest_server_id": get_setting("speedtest_server_id", ""),
+    }
+
+
+@router.post("/api/speedtest-settings")
+async def save_speedtest_settings(payload: SpeedtestSettingsIn, _: bool = Depends(require_auth)):
+    set_setting("speedtest_server_id", payload.speedtest_server_id.strip())
+    return {"ok": True}

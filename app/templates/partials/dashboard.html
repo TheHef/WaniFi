@@ -195,8 +195,10 @@
                       <div class="text-xs font-mono font-semibold text-slate-400" x-text="(stats.last_speedtest.ping_ms || '—') + 'ms'"></div>
                     </div>
                   </div>
-                  <div class="text-right mt-1">
-                    <span class="text-[10px] text-slate-700"
+                  <div class="flex items-center justify-between mt-1">
+                    <span class="text-[10px] text-slate-600 truncate"
+                          x-text="stats.last_speedtest.server || ''"></span>
+                    <span class="text-[10px] text-slate-700 shrink-0 ml-2"
                           x-text="stats.last_speedtest.ts ? new Date(stats.last_speedtest.ts * 1000).toLocaleString() : ''"></span>
                   </div>
                 </div>

@@ -211,3 +211,7 @@ class NutSettingsIn(BaseModel):
     nut_ups_name: str = "ups"
     nut_username: str = ""
     nut_password: Optional[str] = None
+
+
+class SpeedtestSettingsIn(BaseModel):
+    speedtest_server_id: str = ""

@@ -5,7 +5,7 @@ import subprocess
 import time
 from typing import Optional
 
-from .db import db
+from .db import db, get_setting
 
 _running = False
 
@@ -18,10 +18,14 @@ async def run_speedtest() -> tuple[bool, str]:
     _running = True
     loop = asyncio.get_event_loop()
     try:
+        cmd = ["speedtest-cli", "--json", "--secure"]
+        server_id = get_setting("speedtest_server_id", "").strip()
+        if server_id:
+            cmd += ["--server", server_id]
         result = await loop.run_in_executor(
             None,
             lambda: subprocess.run(
-                ["speedtest-cli", "--json", "--secure"],
+                cmd,
                 capture_output=True,
                 text=True,
                 timeout=120,

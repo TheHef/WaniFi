@@ -44,6 +44,7 @@ window.app = function () {
     npmSettings:         { npm_url: '', npm_username: '', npm_password_set: false },
     cloudflareSettings:  { cloudflare_api_token_set: false, cloudflare_zone_id: '' },
     nutSettings:         { nut_host: '', nut_port: 3493, nut_ups_name: 'ups', nut_username: '', nut_password_set: false },
+    speedtestSettings:   { speedtest_server_id: '' },
 
     embyMsg: '', jellyfinMsg: '', plexMsg: '',
     discordMsg: '', telegramMsg: '', pushoverMsg: '',
@@ -52,7 +53,7 @@ window.app = function () {
     piholeMsg: '', adguardMsg: '',
     portainerMsg: '', truenasMsg: '', unraidMsg: '',
     noderedMsg: '', gotifyMsg: '', nzbgetMsg: '',
-    npmMsg: '', cloudflareMsg: '', nutMsg: '',
+    npmMsg: '', cloudflareMsg: '', nutMsg: '', speedtestMsg: '',
     speedtestRunning: false,
 
     integrations: {
@@ -155,6 +156,7 @@ window.app = function () {
       await this.loadNpmSettings();
       await this.loadCloudflareSettings();
       await this.loadNutSettings();
+      await this.loadSpeedtestSettings();
       await this.loadIntegrations();
       await this.loadStats();
       this._setDefaultRuleType();
@@ -987,6 +989,17 @@ window.app = function () {
       const d = await fetch('/api/test-nut', { method: 'POST' }).then(r => r.json());
       this.nutMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
       setTimeout(() => this.nutMsg = '', 5000);
+    },
+
+    // ---- Speedtest ----------------------------------------------------------
+    async loadSpeedtestSettings() {
+      this.speedtestSettings = await fetch('/api/speedtest-settings').then(r => r.json());
+    },
+    async saveSpeedtestSettings() {
+      const r = await fetch('/api/speedtest-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ speedtest_server_id: this.speedtestSettings.speedtest_server_id }) });
+      const d = await r.json().catch(() => ({}));
+      this.speedtestMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ ' + (d.detail || d.error || 'Error');
+      setTimeout(() => this.speedtestMsg = '', 3000);
     },
 
     // ---- Stats ------------------------------------------------------------
