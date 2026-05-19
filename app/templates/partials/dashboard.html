@@ -280,11 +280,11 @@
         <div class="flex items-center gap-3 shrink-0" x-show="(liveStats||{}).active_wan_rx_mbps != null">
           <span class="flex items-center gap-1 font-mono text-sm font-bold text-emerald-400">
             <span class="text-slate-600 text-xs">&#8595;</span>
-            <span x-text="fmtSpeed(status.active_wan === 'primary' ? (liveStats||{}).active_wan_rx_mbps : 0)"></span>
+            <span x-text="(liveStats||{}).speedtest_running ? '—' : fmtSpeed(status.active_wan === 'primary' ? (liveStats||{}).active_wan_rx_mbps : 0)"></span>
           </span>
           <span class="flex items-center gap-1 font-mono text-sm font-bold text-sky-400">
             <span class="text-slate-600 text-xs">&#8593;</span>
-            <span x-text="fmtSpeed(status.active_wan === 'primary' ? (liveStats||{}).active_wan_tx_mbps : 0)"></span>
+            <span x-text="(liveStats||{}).speedtest_running ? '—' : fmtSpeed(status.active_wan === 'primary' ? (liveStats||{}).active_wan_tx_mbps : 0)"></span>
           </span>
           <span x-show="(liveStats||{}).speedtest_running"
                 class="flex items-center gap-1 text-xs font-semibold text-emerald-400">
@@ -393,12 +393,12 @@
           <span class="flex items-center gap-1 font-mono text-sm font-bold"
                 :class="status.active_wan === 'failover' ? 'text-emerald-400' : 'text-slate-600'">
             <span class="text-slate-600 text-xs">&#8595;</span>
-            <span x-text="status.active_wan === 'failover' ? fmtSpeed((liveStats||{}).active_wan_rx_mbps) : '0 Mbps'"></span>
+            <span x-text="(liveStats||{}).speedtest_running ? '—' : (status.active_wan === 'failover' ? fmtSpeed((liveStats||{}).active_wan_rx_mbps) : '0 Mbps')"></span>
           </span>
           <span class="flex items-center gap-1 font-mono text-sm font-bold"
                 :class="status.active_wan === 'failover' ? 'text-sky-400' : 'text-slate-600'">
             <span class="text-slate-600 text-xs">&#8593;</span>
-            <span x-text="status.active_wan === 'failover' ? fmtSpeed((liveStats||{}).active_wan_tx_mbps) : '0 Mbps'"></span>
+            <span x-text="(liveStats||{}).speedtest_running ? '—' : (status.active_wan === 'failover' ? fmtSpeed((liveStats||{}).active_wan_tx_mbps) : '0 Mbps')"></span>
           </span>
           <span x-show="(liveStats||{}).speedtest_running"
                 class="flex items-center gap-1 text-xs font-semibold text-emerald-400">
