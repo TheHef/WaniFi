@@ -47,6 +47,16 @@ When your UniFi gateway switches to a failover WAN, WaniFi can automatically thr
 
 All integrations are opt-in and toggled on/off individually in **Settings**.
 
+### ⚙️ APIs
+
+These three are top-level toggles and appear outside any category group.
+
+| Integration | Actions |
+|---|---|
+| **Docker** | Stop · start · restart · pause · unpause containers via the Docker socket |
+| **Host Command** | Run arbitrary shell commands on the Docker host via `nsenter` |
+| **Webhook** | Send HTTP GET or POST to any URL |
+
 ### 📥 Downloads
 
 | Integration | Actions |
@@ -77,25 +87,18 @@ All integrations are opt-in and toggled on/off individually in **Settings**.
 | **TrueNAS** | Start · stop · restart service |
 | **Unraid** | Start · stop · pause · resume VM |
 | **Node-RED** | Trigger any HTTP-in flow endpoint |
+| **Nginx Proxy Manager** | Enable/disable any proxy host by domain name or numeric ID |
+| **Cloudflare** | Enable/disable Under Attack mode · purge cache · enable/disable development mode |
+| **NUT / UPS** | Get status · beeper enable/disable · shutdown.return · shutdown.stayoff · load.off |
 
 ### 🌐 Network
 
 | Integration | Actions |
 |---|---|
+| **UniFi** | Kick all clients · disable/enable WLAN · block/unblock client by MAC *(always on)* |
+| **Speedtest** | Run a speedtest and log the result *(always on)* |
 | **Pi-hole** | Enable/disable DNS filtering (v5 and v6 API) |
 | **AdGuard Home** | Enable/disable DNS filtering |
-| **UniFi** | Kick all clients · disable/enable WLAN · block/unblock client by MAC |
-
-### 🔧 Infrastructure
-
-| Integration | Actions |
-|---|---|
-| **Docker** | Stop · start · restart · pause · unpause containers via the Docker socket |
-| **Host Command** | Run arbitrary shell commands on the Docker host via `nsenter` |
-| **Nginx Proxy Manager** | Enable/disable any proxy host by domain name or numeric ID |
-| **Cloudflare** | Enable/disable Under Attack mode · purge cache · enable/disable development mode |
-| **NUT / UPS** | Get status · beeper enable/disable · shutdown.return · shutdown.stayoff · load.off |
-| **Speedtest** | Run a speedtest and log the result |
 
 ### 🔔 Notifications
 
