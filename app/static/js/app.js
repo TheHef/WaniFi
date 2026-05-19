@@ -45,6 +45,7 @@ window.app = function () {
     cloudflareSettings:  { cloudflare_api_token_set: false, cloudflare_zone_id: '' },
     nutSettings:         { nut_host: '', nut_port: 3493, nut_ups_name: 'ups', nut_username: '', nut_password_set: false },
     speedtestSettings:   { speedtest_server_id: '' },
+    speedtestServers: [], speedtestServerSearch: '', speedtestServerOpen: false, speedtestServersLoading: false,
 
     embyMsg: '', jellyfinMsg: '', plexMsg: '',
     discordMsg: '', telegramMsg: '', pushoverMsg: '',
@@ -1000,6 +1001,23 @@ window.app = function () {
       const d = await r.json().catch(() => ({}));
       this.speedtestMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ ' + (d.detail || d.error || 'Error');
       setTimeout(() => this.speedtestMsg = '', 3000);
+    },
+    async fetchSpeedtestServers() {
+      this.speedtestServersLoading = true;
+      this.speedtestServerOpen = true;
+      this.speedtestServerSearch = '';
+      const d = await fetch('/api/speedtest-servers').then(r => r.json());
+      this.speedtestServers = d.servers || [];
+      this.speedtestServersLoading = false;
+    },
+    speedtestServerFiltered() {
+      const q = this.speedtestServerSearch.toLowerCase();
+      return q ? this.speedtestServers.filter(s => s.label.toLowerCase().includes(q) || s.id.includes(q)) : this.speedtestServers;
+    },
+    selectSpeedtestServer(server) {
+      this.speedtestSettings.speedtest_server_id = server.id;
+      this.speedtestServerOpen = false;
+      this.speedtestServerSearch = '';
     },
 
     // ---- Stats ------------------------------------------------------------

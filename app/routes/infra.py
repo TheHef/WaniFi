@@ -276,3 +276,24 @@ async def get_speedtest_settings(_: bool = Depends(require_auth)):
 async def save_speedtest_settings(payload: SpeedtestSettingsIn, _: bool = Depends(require_auth)):
     set_setting("speedtest_server_id", payload.speedtest_server_id.strip())
     return {"ok": True}
+
+
+@router.get("/api/speedtest-servers")
+async def list_speedtest_servers(_: bool = Depends(require_auth)):
+    import asyncio
+    import re
+    import subprocess as sp
+    loop = asyncio.get_event_loop()
+    try:
+        result = await loop.run_in_executor(
+            None,
+            lambda: sp.run(["speedtest-cli", "--list"], capture_output=True, text=True, timeout=30),
+        )
+        servers = []
+        for line in result.stdout.splitlines():
+            m = re.match(r'^\s*(\d+)\)\s+(.+)', line)
+            if m:
+                servers.append({"id": m.group(1), "label": m.group(2).strip()})
+        return {"ok": True, "servers": servers}
+    except Exception as e:
+        return {"ok": False, "servers": [], "error": str(e)}
