@@ -48,6 +48,7 @@ class OpenWrtClient:
                         "jsonrpc": "2.0", "id": 1, "method": "call",
                         "params": [self._token, service, method, params or {}],
                     },
+                    cookies={"sysauth": self._token, "sysauth_https": self._token},
                 )
                 result = r.json().get("result")
                 if isinstance(result, list) and result[0] == 0:

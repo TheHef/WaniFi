@@ -135,6 +135,7 @@ async def debug_openwrt(_=Depends(require_auth)):
                     "jsonrpc": "2.0", "id": 1, "method": "call",
                     "params": [token, "network.interface", "dump", {}],
                 },
+                cookies={"sysauth": token, "sysauth_https": token},
             )
             try:
                 ubus_body = r.json()
