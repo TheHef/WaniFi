@@ -125,18 +125,31 @@ async def debug_openwrt(_=Depends(require_auth)):
         result["steps"].append({"step": "auth", "ok": False, "detail": str(e)})
         return result
 
-    # Step 3: raw interface dump
-    client = OpenWrtClient(url, password, username)
+    # Step 3: raw ubus call — show full response so we can diagnose ACL issues
+    ubus_url = url.rstrip("/") + "/cgi-bin/luci/rpc/ubus"
     try:
-        ifaces = await client.get_interfaces()
-        result["steps"].append({
-            "step": "interfaces", "ok": bool(ifaces),
-            "detail": f"{len(ifaces)} interface(s) returned",
-            "raw": ifaces,
-        })
+        async with httpx.AsyncClient(verify=False, timeout=10) as http:
+            r = await http.post(
+                ubus_url,
+                json={
+                    "jsonrpc": "2.0", "id": 1, "method": "call",
+                    "params": [token, "network.interface", "dump", {}],
+                },
+            )
+            try:
+                ubus_body = r.json()
+            except Exception:
+                ubus_body = r.text[:500]
+            ubus_result = ubus_body.get("result") if isinstance(ubus_body, dict) else None
+            code = ubus_result[0] if isinstance(ubus_result, list) else None
+            ifaces = ubus_result[1].get("interface", []) if isinstance(ubus_result, list) and code == 0 and isinstance(ubus_result[1], dict) else []
+            result["steps"].append({
+                "step": "interfaces",
+                "ok": bool(ifaces),
+                "detail": f"HTTP {r.status_code} — ubus code={code} — {len(ifaces)} interface(s)",
+                "raw": ubus_body,
+            })
     except Exception as e:
         result["steps"].append({"step": "interfaces", "ok": False, "detail": str(e)})
-    finally:
-        await client.close()
 
     return result
