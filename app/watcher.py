@@ -929,13 +929,13 @@ async def watcher_loop():
             state.last_check = datetime.now(timezone.utc).isoformat()
             state.last_error = None
 
-            await a_set_state("last_wans",    json.dumps(wans))
-            await a_set_state("gateway_info", json.dumps(gw_info))
-            await a_set_state("active_wan",   new_state)
-
             previous = state.current_wan
             if previous != new_state:
                 changed_at = datetime.now(timezone.utc).isoformat()
+                # Persist state and WAN data only on change, not every heartbeat
+                await a_set_state("active_wan",   new_state)
+                await a_set_state("last_wans",    json.dumps(wans))
+                await a_set_state("gateway_info", json.dumps(gw_info))
                 if previous is not None:
                     await a_log_event("info", f"WAN state change: {previous} -> {new_state}")
                     await apply_rules(new_state)
@@ -992,10 +992,11 @@ async def watcher_loop():
                 await client.close()
             raise
         except Exception as e:
-            state.last_error = str(e)
-            await a_log_event("error", f"Watcher error: {e}")
+            msg = str(e) or repr(e) or type(e).__name__
+            state.last_error = msg
+            await a_log_event("error", f"Watcher error: {msg}")
             _create_task(send_notification(
-                "WaniFi Watcher Error", str(e), priority="low", tags="x",
+                "WaniFi Watcher Error", msg, priority="low", tags="x",
                 event="error",
             ))
             if client:
