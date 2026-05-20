@@ -73,6 +73,7 @@ window.app = function () {
     rules: [], events: [], containers: [], discoveredWans: [], agents: [],
     agentContainers: [], agentContainersLoading: false,
     agentDockerAction: 'stop', agentDockerContainer: '',
+    newAgentName: '', newAgentKey: '', agentMsg: '', keyTab: 'cli', keyMode: 'docker',
     newRule: { rule_type: 'host_command', name: '', container: '', trigger: 'failover', action: 'stop', command: '', delay_seconds: 0 },
     confirmModal: { open: false, label: '', confirm: () => {} },
     editModal:    { open: false, rule: {} },
@@ -188,16 +189,18 @@ window.app = function () {
 
     async refreshLive() {
       try {
-        const [s, r, e, c] = await Promise.all([
+        const [s, r, e, c, a] = await Promise.all([
           fetch('/api/status').then(r => r.json()),
           fetch('/api/rules').then(r => r.json()),
           fetch('/api/events').then(r => r.json()),
           fetch('/api/containers').then(r => r.json()),
+          fetch('/api/agents').then(r => r.json()),
         ]);
         this.status     = s;
         this.rules      = r.rules;
         this.events     = e.events;
         this.containers = c.containers;
+        this.agents     = a;
         this.appConnected = true;
         await this.loadStats();
       } catch { this.appConnected = false; }
@@ -1056,6 +1059,43 @@ window.app = function () {
     // ---- Agents -----------------------------------------------------------
     async loadAgents() {
       try { this.agents = await fetch('/api/agents').then(r => r.json()); } catch {}
+    },
+
+    async addAgent() {
+      if (!this.newAgentName.trim()) return;
+      const data = await fetch('/api/agents', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({name: this.newAgentName.trim()})
+      }).then(r => r.json());
+      this.newAgentKey = data.api_key;
+      this.keyTab = 'cli';
+      this.newAgentName = '';
+      await this.loadAgents();
+    },
+
+    async deleteAgent(id) {
+      await fetch('/api/agents/' + id, {method: 'DELETE'});
+      await this.loadAgents();
+    },
+
+    cliSnippet() {
+      const url = window.location.origin;
+      const extra = this.keyMode === 'full' ? ' \\\n  --privileged \\\n  --pid host' : '';
+      return `docker run -d \\\n  --name wanifi-agent \\\n  -e WANIFI_URL=${url} \\\n  -e AGENT_API_KEY=${this.newAgentKey} \\\n  -v /var/run/docker.sock:/var/run/docker.sock${extra} \\\n  --restart unless-stopped \\\n  ghcr.io/thehef/wanifi-agent:latest`;
+    },
+
+    composeSnippet() {
+      const url = window.location.origin;
+      const extra = this.keyMode === 'full' ? '\n    privileged: true\n    pid: host' : '';
+      return `services:\n  wanifi-agent:\n    image: ghcr.io/thehef/wanifi-agent:latest\n    environment:\n      - WANIFI_URL=${url}\n      - AGENT_API_KEY=${this.newAgentKey}\n    volumes:\n      - /var/run/docker.sock:/var/run/docker.sock${extra}\n    restart: unless-stopped`;
+    },
+
+    copyKey() {
+      const text = this.keyTab === 'cli' ? this.cliSnippet() : this.composeSnippet();
+      navigator.clipboard.writeText(text);
+      this.agentMsg = 'Copied!';
+      setTimeout(() => this.agentMsg = '', 2000);
     },
 
     async loadAgentContainers() {

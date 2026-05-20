@@ -1322,53 +1322,7 @@
         <span class="text-sm font-medium" :class="gotifyMsg.startsWith('✓') ? 'text-emerald-400' : gotifyMsg === 'Sending…' ? 'text-slate-400' : 'text-red-400'" x-show="gotifyMsg" x-text="gotifyMsg"></span>
       </div>
     </div></div>
-  </div>  <div class="bg-slate-900 border border-slate-700/60 rounded-2xl p-5 mb-4"
-       x-data="{
-         agents: [],
-         newAgentName: '',
-         newAgentKey: '',
-         agentMsg: '',
-         keyTab: 'cli',
-         keyMode: 'docker',
-         async loadAgents() {
-           const r = await fetch('/api/agents');
-           this.agents = await r.json();
-         },
-         async addAgent() {
-           if (!this.newAgentName.trim()) return;
-           const r = await fetch('/api/agents', {
-             method: 'POST',
-             headers: {'Content-Type':'application/json'},
-             body: JSON.stringify({name: this.newAgentName.trim()})
-           });
-           const data = await r.json();
-           this.newAgentKey = data.api_key;
-           this.keyTab = 'cli';
-           this.newAgentName = '';
-           await this.loadAgents();
-         },
-         async deleteAgent(id) {
-           await fetch('/api/agents/' + id, {method: 'DELETE'});
-           await this.loadAgents();
-         },
-         cliSnippet() {
-           const url = window.location.origin;
-           const extra = this.keyMode === 'full' ? ' \\\n  --privileged \\\n  --pid host' : '';
-           return `docker run -d \\\n  --name wanifi-agent \\\n  -e WANIFI_URL=${url} \\\n  -e AGENT_API_KEY=${this.newAgentKey} \\\n  -v /var/run/docker.sock:/var/run/docker.sock${extra} \\\n  --restart unless-stopped \\\n  ghcr.io/thehef/wanifi-agent:latest`;
-         },
-         composeSnippet() {
-           const url = window.location.origin;
-           const extra = this.keyMode === 'full' ? '\n    privileged: true\n    pid: host' : '';
-           return `services:\n  wanifi-agent:\n    image: ghcr.io/thehef/wanifi-agent:latest\n    environment:\n      - WANIFI_URL=${url}\n      - AGENT_API_KEY=${this.newAgentKey}\n    volumes:\n      - /var/run/docker.sock:/var/run/docker.sock${extra}\n    restart: unless-stopped`;
-         },
-         copyKey() {
-           const text = this.keyTab === 'cli' ? this.cliSnippet() : this.composeSnippet();
-           navigator.clipboard.writeText(text);
-           this.agentMsg = 'Copied!';
-           setTimeout(() => this.agentMsg = '', 2000);
-         }
-       }"
-       x-init="loadAgents()">
+  </div>  <div class="bg-slate-900 border border-slate-700/60 rounded-2xl p-5 mb-4">
     <div class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Agents</div>
 
     <!-- Registered agents -->
@@ -1376,7 +1330,7 @@
       <template x-for="a in agents" :key="a.id">
         <div class="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-800 bg-slate-800/40">
           <span class="w-2 h-2 rounded-full shrink-0"
-                :class="a.online ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'"></span>
+                :class="a.online ? 'bg-emerald-400 animate-pulse' : 'bg-red-500'"></span>
           <span class="text-sm font-semibold text-slate-200 flex-1" x-text="a.name"></span>
           <span class="text-[10px] font-mono text-slate-600 truncate max-w-[10rem]" x-text="a.api_key.slice(0,16) + '…'"></span>
           <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold"
