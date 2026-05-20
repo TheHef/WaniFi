@@ -312,8 +312,10 @@
             <template x-if="openwrtSettings.openwrt_primary_iface">
               <div>
                 <div class="font-mono font-bold text-emerald-300 text-xs mb-1" x-text="openwrtSettings.openwrt_primary_iface"></div>
-                <div class="text-xs text-sky-400 font-mono"
+                <div class="text-xs text-sky-400 font-mono mb-2"
                      x-text="(openwrtDiscoveredIfaces.find(i => i.interface === openwrtSettings.openwrt_primary_iface) || {}).ip || ''"></div>
+                <input x-model="settings.primary_wan_name" placeholder="Display name"
+                       class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 transition">
               </div>
             </template>
             <template x-if="!openwrtSettings.openwrt_primary_iface">
@@ -332,8 +334,10 @@
             <template x-if="openwrtSettings.openwrt_failover_iface">
               <div>
                 <div class="font-mono font-bold text-amber-300 text-xs mb-1" x-text="openwrtSettings.openwrt_failover_iface"></div>
-                <div class="text-xs text-sky-400 font-mono"
+                <div class="text-xs text-sky-400 font-mono mb-2"
                      x-text="(openwrtDiscoveredIfaces.find(i => i.interface === openwrtSettings.openwrt_failover_iface) || {}).ip || ''"></div>
+                <input x-model="settings.failover_wan_name" placeholder="Display name"
+                       class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition">
               </div>
             </template>
             <template x-if="!openwrtSettings.openwrt_failover_iface">

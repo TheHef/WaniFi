@@ -28,8 +28,8 @@ async def api_status(_: bool = Depends(require_auth)):
             else bool(get_setting("unifi_host") and get_setting("unifi_api_key"))
         ),
         "docker_ok":          docker_ok(),
-        "primary_wan":        get_setting("primary_wan", "wan"),
-        "failover_wan":       get_setting("failover_wan", "wan2"),
+        "primary_wan":        get_setting("openwrt_primary_iface", "wan")   if get_setting("router_type", "unifi") in ("openwrt", "glinet") else get_setting("primary_wan", "wan"),
+        "failover_wan":       get_setting("openwrt_failover_iface", "wwan") if get_setting("router_type", "unifi") in ("openwrt", "glinet") else get_setting("failover_wan", "wan2"),
         "primary_wan_name":   get_setting("primary_wan_name", ""),
         "failover_wan_name":  get_setting("failover_wan_name", ""),
         "raw_wans":           state.last_wans,

@@ -1047,7 +1047,15 @@ async def watcher_loop():
                     owrt_last_settings = current
 
                 ifaces   = await owrt_client.get_interfaces()
-                state.last_wans = ifaces
+                # Normalize to match the shape the dashboard expects from UniFi raw_wans
+                state.last_wans = [
+                    {
+                        **i,
+                        "subsystem": i.get("interface", ""),
+                        "wan_ip": (i.get("ipv4-address") or [{}])[0].get("address", ""),
+                    }
+                    for i in ifaces
+                ]
                 new_state = determine_active_wan_openwrt(ifaces, primary, failover)
 
             else:
