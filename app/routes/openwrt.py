@@ -270,23 +270,30 @@ async def debug_openwrt_stats(_=Depends(require_auth)):
 
         dev_name = primary_obj.get("device", "") or iface_status.get("device", "") or iface_status.get("l3_device", "")
         device_stats = await client.get_device_stats(dev_name) if dev_name else {}
-        proc_net_dev = await client.read_proc_net_dev()
-        luci_stats   = await client.get_luci_realtime_stats(dev_name) if dev_name else {}
+        # Raw responses — show everything so we can find what works
+        import httpx as _httpx
+        base = url.rstrip("/")
+        raw = {}
+        for label, svc, method, params in [
+            ("network_device_raw",    "network.device",  "status",          {"name": dev_name} if dev_name else {}),
+            ("network_iface_raw",     f"network.interface.{primary}", "status", {}),
+            ("luci_realtime_raw",     "luci",            "getRealtimeStats", {"device": dev_name, "mode": "network"} if dev_name else {}),
+            ("luci_rpc_netdevs_raw",  "luci-rpc",        "getNetworkDevices", {}),
+            ("gl_clients_speed_raw",  "gl-clients",      "get_speed",        {}),
+            ("file_read_proc_raw",    "file",            "read",             {"path": "/proc/net/dev"}),
+        ]:
+            try:
+                async with _httpx.AsyncClient(verify=False, timeout=8) as h:
+                    r = await h.post(
+                        f"{base}/ubus",
+                        json={"jsonrpc": "2.0", "id": 1, "method": "call",
+                              "params": [client._token, svc, method, params]},
+                    )
+                    raw[label] = r.json()
+            except Exception as exc:
+                raw[label] = {"error": str(exc)}
 
-        return {
-            "ok": True,
-            "primary_iface": primary,
-            "source1_dump_statistics":       primary_obj.get("statistics"),
-            "source1_dump_device":           primary_obj.get("device"),
-            "source2_ifstatus_statistics":   iface_status.get("statistics"),
-            "source2_ifstatus_device":       iface_status.get("device"),
-            "source2_ifstatus_l3_device":    iface_status.get("l3_device"),
-            "source3_netdev_stats":          device_stats,
-            "source4_proc_net_dev":          proc_net_dev.get(dev_name) if dev_name else None,
-            "source4_proc_net_dev_all":      proc_net_dev,
-            "source5_luci_realtime":         luci_stats,
-            "dev_name_used":                 dev_name,
-        }
+        return {"ok": True, "primary_iface": primary, "dev_name": dev_name, "raw_responses": raw}
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
     finally:
