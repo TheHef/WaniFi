@@ -101,17 +101,17 @@
                :class="status.active_wan === 'failover' ? 'bg-amber-500/8 border-amber-500/25' : 'bg-slate-800/50 border-slate-700/50'">
             <div class="flex items-center gap-2.5">
               <span class="w-1.5 h-1.5 rounded-full shrink-0 mt-0.5"
-                    :class="status.active_wan === 'failover' ? 'bg-amber-400 animate-pulse' : 'bg-slate-700'"></span>
+                    :class="status.active_wan === 'failover' ? 'bg-amber-400 animate-pulse' : 'bg-amber-500/40'"></span>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-1.5">
                   <span class="text-sm font-semibold truncate"
-                        :class="status.active_wan === 'failover' ? 'text-amber-300' : 'text-slate-500'"
+                        :class="status.active_wan === 'failover' ? 'text-amber-300' : 'text-amber-500/60'"
                         x-text="status.failover_wan_name || 'Failover WAN'"></span>
                   <span class="text-[10px] font-mono text-slate-600 shrink-0" x-text="status.failover_wan"></span>
                 </div>
               </div>
               <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0"
-                    :class="status.active_wan === 'failover' ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-800 text-slate-600 border border-slate-700'">
+                    :class="status.active_wan === 'failover' ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-500/10 text-amber-500/60'">
                 <span x-text="status.active_wan === 'failover' ? 'Active' : 'Standby'"></span>
               </span>
             </div>
