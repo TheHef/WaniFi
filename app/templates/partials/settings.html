@@ -522,8 +522,8 @@
 
     </div>
 
-    <div class="border-t border-slate-800 mb-6"></div>    <div x-show="integrations.emby" x-transition class="mb-6">
-      <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Emby</div>
+    <div class="border-t border-slate-800 mb-6"></div>    <div x-show="integrations.emby" x-data="{ open: false }" x-transition class="mb-6">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Emby</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Server URL</label>
@@ -548,8 +548,8 @@
               :class="embyMsg.startsWith('✓') ? 'text-emerald-400' : embyMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'"
               x-show="embyMsg" x-text="embyMsg"></span>
       </div>
-    </div>    <div x-show="integrations.jellyfin" x-transition class="mb-6" :class="integrations.emby ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Jellyfin</div>
+    </div></div>    <div x-show="integrations.jellyfin" x-data="{ open: false }" x-transition class="mb-6" :class="integrations.emby ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Jellyfin</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Server URL</label>
@@ -574,8 +574,8 @@
               :class="jellyfinMsg.startsWith('✓') ? 'text-emerald-400' : jellyfinMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'"
               x-show="jellyfinMsg" x-text="jellyfinMsg"></span>
       </div>
-    </div>    <div x-show="integrations.plex" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Plex</div>
+    </div></div>    <div x-show="integrations.plex" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Plex</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Server URL</label>
@@ -600,8 +600,8 @@
               :class="plexMsg.startsWith('✓') ? 'text-emerald-400' : plexMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'"
               x-show="plexMsg" x-text="plexMsg"></span>
       </div>
-    </div>    <div x-show="integrations.qb" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin || integrations.plex) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">qBittorrent</div>
+    </div></div>    <div x-show="integrations.qb" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin || integrations.plex) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">qBittorrent</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-3 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">WebUI URL</label>
@@ -631,8 +631,8 @@
               :class="qbMsg.startsWith('✓') ? 'text-emerald-400' : qbMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'"
               x-show="qbMsg" x-text="qbMsg"></span>
       </div>
-    </div>    <div x-show="integrations.sabnzbd" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-[#F5A623] uppercase tracking-wider mb-4">SABnzbd</div>
+    </div></div>    <div x-show="integrations.sabnzbd" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#F5A623] uppercase tracking-wider">SABnzbd</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Server URL</label>
@@ -655,9 +655,9 @@
         <button @click="testSabnzbd()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="sabnzbdMsg.startsWith('✓') ? 'text-emerald-400' : sabnzbdMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="sabnzbdMsg" x-text="sabnzbdMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.transmission" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-[#C33B2E] uppercase tracking-wider mb-4">Transmission</div>
+    </div></div>
+    <div x-show="integrations.transmission" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#C33B2E] uppercase tracking-wider">Transmission</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-3 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">RPC URL</label>
@@ -685,9 +685,9 @@
         <button @click="testTransmission()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="transmissionMsg.startsWith('✓') ? 'text-emerald-400' : transmissionMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="transmissionMsg" x-text="transmissionMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.deluge" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-[#88B04B] uppercase tracking-wider mb-4">Deluge</div>
+    </div></div>
+    <div x-show="integrations.deluge" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#88B04B] uppercase tracking-wider">Deluge</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Web UI URL</label>
@@ -709,9 +709,9 @@
         <button @click="testDeluge()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="delugeMsg.startsWith('✓') ? 'text-emerald-400' : delugeMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="delugeMsg" x-text="delugeMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.discord" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-[#5865F2] uppercase tracking-wider mb-4">Discord</div>
+    </div></div>
+    <div x-show="integrations.discord" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#5865F2] uppercase tracking-wider">Discord</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div>
         <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Webhook URL
           <span x-show="discordSettings.discord_webhook_url_set" class="text-emerald-500 normal-case font-normal ml-1">(already saved)</span>
@@ -726,9 +726,9 @@
         <button @click="testDiscord()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Send test</button>
         <span class="text-sm font-medium" :class="discordMsg.startsWith('✓') ? 'text-emerald-400' : discordMsg === 'Sending…' ? 'text-slate-400' : 'text-red-400'" x-show="discordMsg" x-text="discordMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.telegram" x-transition class="mb-6" :class="(integrations.discord || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-[#26A5E4] uppercase tracking-wider mb-4">Telegram</div>
+    </div></div>
+    <div x-show="integrations.telegram" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.discord || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#26A5E4] uppercase tracking-wider">Telegram</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Bot Token
@@ -752,9 +752,9 @@
         <button @click="testTelegram()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Send test</button>
         <span class="text-sm font-medium" :class="telegramMsg.startsWith('✓') ? 'text-emerald-400' : telegramMsg === 'Sending…' ? 'text-slate-400' : 'text-red-400'" x-show="telegramMsg" x-text="telegramMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.pushover" x-transition class="mb-6" :class="(integrations.discord || integrations.telegram || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-[#F83600] uppercase tracking-wider mb-4">Pushover</div>
+    </div></div>
+    <div x-show="integrations.pushover" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.discord || integrations.telegram || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#F83600] uppercase tracking-wider">Pushover</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">App Token
@@ -777,9 +777,9 @@
         <button @click="testPushover()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Send test</button>
         <span class="text-sm font-medium" :class="pushoverMsg.startsWith('✓') ? 'text-emerald-400' : pushoverMsg === 'Sending…' ? 'text-slate-400' : 'text-red-400'" x-show="pushoverMsg" x-text="pushoverMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.homeassistant" x-transition class="mb-6" :class="(integrations.discord || integrations.telegram || integrations.pushover || integrations.ntfy || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-[#18BCF2] uppercase tracking-wider mb-4">Home Assistant</div>
+    </div></div>
+    <div x-show="integrations.homeassistant" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.discord || integrations.telegram || integrations.pushover || integrations.ntfy || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#18BCF2] uppercase tracking-wider">Home Assistant</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
@@ -802,9 +802,9 @@
         <button @click="testHa()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="haMsg.startsWith('✓') ? 'text-emerald-400' : haMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="haMsg" x-text="haMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.proxmox" x-transition class="mb-6" :class="(integrations.homeassistant || integrations.discord || integrations.telegram || integrations.pushover || integrations.ntfy || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-[#E57000] uppercase tracking-wider mb-4">Proxmox</div>
+    </div></div>
+    <div x-show="integrations.proxmox" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.homeassistant || integrations.discord || integrations.telegram || integrations.pushover || integrations.ntfy || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#E57000] uppercase tracking-wider">Proxmox</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
@@ -838,9 +838,9 @@
         <button @click="testProxmox()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="proxmoxMsg.startsWith('✓') ? 'text-emerald-400' : proxmoxMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="proxmoxMsg" x-text="proxmoxMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.sonarr" x-transition class="mb-6" :class="(integrations.proxmox || integrations.homeassistant || integrations.discord || integrations.telegram || integrations.pushover || integrations.ntfy || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-[#35C5F4] uppercase tracking-wider mb-4">Sonarr</div>
+    </div></div>
+    <div x-show="integrations.sonarr" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.proxmox || integrations.homeassistant || integrations.discord || integrations.telegram || integrations.pushover || integrations.ntfy || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#35C5F4] uppercase tracking-wider">Sonarr</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
@@ -863,9 +863,9 @@
         <button @click="testSonarr()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="sonarrMsg.startsWith('✓') ? 'text-emerald-400' : sonarrMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="sonarrMsg" x-text="sonarrMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.radarr" x-transition class="mb-6" :class="(integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.discord || integrations.telegram || integrations.pushover || integrations.ntfy || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-[#FFC230] uppercase tracking-wider mb-4">Radarr</div>
+    </div></div>
+    <div x-show="integrations.radarr" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.discord || integrations.telegram || integrations.pushover || integrations.ntfy || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#FFC230] uppercase tracking-wider">Radarr</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
@@ -888,9 +888,9 @@
         <button @click="testRadarr()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="radarrMsg.startsWith('✓') ? 'text-emerald-400' : radarrMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="radarrMsg" x-text="radarrMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.pihole" x-transition class="mb-6" :class="(integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.portainer || integrations.truenas || integrations.unraid || integrations.nodered || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-red-400 uppercase tracking-wider mb-4">Pi-hole</div>
+    </div></div>
+    <div x-show="integrations.pihole" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.portainer || integrations.truenas || integrations.unraid || integrations.nodered || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-red-400 uppercase tracking-wider">Pi-hole</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
@@ -913,9 +913,9 @@
         <button @click="testPihole()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="piholeMsg.startsWith('✓') ? 'text-emerald-400' : piholeMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="piholeMsg" x-text="piholeMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.adguard" x-transition class="mb-6" :class="(integrations.pihole || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.portainer || integrations.truenas || integrations.unraid || integrations.nodered || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-4">AdGuard Home</div>
+    </div></div>
+    <div x-show="integrations.adguard" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.pihole || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.portainer || integrations.truenas || integrations.unraid || integrations.nodered || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">AdGuard Home</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-3 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
@@ -943,9 +943,9 @@
         <button @click="testAdguard()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="adguardMsg.startsWith('✓') ? 'text-emerald-400' : adguardMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="adguardMsg" x-text="adguardMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.portainer" x-transition class="mb-6" :class="(integrations.adguard || integrations.pihole || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-[#13BEF9] uppercase tracking-wider mb-4">Portainer</div>
+    </div></div>
+    <div x-show="integrations.portainer" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.adguard || integrations.pihole || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#13BEF9] uppercase tracking-wider">Portainer</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-3 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
@@ -975,9 +975,9 @@
         <button @click="testPortainer()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="portainerMsg.startsWith('✓') ? 'text-emerald-400' : portainerMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="portainerMsg" x-text="portainerMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.truenas" x-transition class="mb-6" :class="(integrations.portainer || integrations.adguard || integrations.pihole || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-[#2783C6] uppercase tracking-wider mb-4">TrueNAS</div>
+    </div></div>
+    <div x-show="integrations.truenas" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.portainer || integrations.adguard || integrations.pihole || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#2783C6] uppercase tracking-wider">TrueNAS</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
@@ -1000,9 +1000,9 @@
         <button @click="testTruenas()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="truenasMsg.startsWith('✓') ? 'text-emerald-400' : truenasMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="truenasMsg" x-text="truenasMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.unraid" x-transition class="mb-6" :class="(integrations.truenas || integrations.portainer || integrations.adguard || integrations.pihole || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-[#FF6600] uppercase tracking-wider mb-4">Unraid</div>
+    </div></div>
+    <div x-show="integrations.unraid" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.truenas || integrations.portainer || integrations.adguard || integrations.pihole || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#FF6600] uppercase tracking-wider">Unraid</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
@@ -1025,9 +1025,9 @@
         <button @click="testUnraid()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="unraidMsg.startsWith('✓') ? 'text-emerald-400' : unraidMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="unraidMsg" x-text="unraidMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.nodered" x-transition class="mb-6" :class="(integrations.unraid || integrations.truenas || integrations.portainer || integrations.adguard || integrations.pihole || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-[#C0392B] uppercase tracking-wider mb-4">Node-RED</div>
+    </div></div>
+    <div x-show="integrations.nodered" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.unraid || integrations.truenas || integrations.portainer || integrations.adguard || integrations.pihole || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge || integrations.nzbget) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#C0392B] uppercase tracking-wider">Node-RED</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-3 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
@@ -1055,9 +1055,9 @@
         <button @click="testNodered()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="noderedMsg.startsWith('✓') ? 'text-emerald-400' : noderedMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="noderedMsg" x-text="noderedMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.nzbget" x-transition class="mb-6" :class="(integrations.nodered || integrations.unraid || integrations.truenas || integrations.portainer || integrations.adguard || integrations.pihole || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-4">NZBGet</div>
+    </div></div>
+    <div x-show="integrations.nzbget" x-data="{ open: false }" x-transition class="mb-6" :class="(integrations.nodered || integrations.unraid || integrations.truenas || integrations.portainer || integrations.adguard || integrations.pihole || integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">NZBGet</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-3 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
@@ -1085,11 +1085,11 @@
         <button @click="testNzbget()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="nzbgetMsg.startsWith('✓') ? 'text-emerald-400' : nzbgetMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="nzbgetMsg" x-text="nzbgetMsg"></span>
       </div>
-    </div>
+    </div></div>
 
     <!-- NPM -->
-    <div x-show="integrations.npm" x-transition class="mb-6 pt-6 border-t border-slate-800">
-      <div class="text-xs font-semibold text-[#e74c3c] uppercase tracking-wider mb-4">Nginx Proxy Manager</div>
+    <div x-show="integrations.npm" x-data="{ open: false }" x-transition class="mb-6 pt-6 border-t border-slate-800">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#e74c3c] uppercase tracking-wider">Nginx Proxy Manager</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-3 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">URL</label>
@@ -1114,11 +1114,11 @@
         <button @click="testNpm()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="npmMsg.startsWith('✓') ? 'text-emerald-400' : npmMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="npmMsg" x-text="npmMsg"></span>
       </div>
-    </div>
+    </div></div>
 
     <!-- Cloudflare -->
-    <div x-show="integrations.cloudflare" x-transition class="mb-6 pt-6 border-t border-slate-800">
-      <div class="text-xs font-semibold text-[#F6821F] uppercase tracking-wider mb-4">Cloudflare</div>
+    <div x-show="integrations.cloudflare" x-data="{ open: false }" x-transition class="mb-6 pt-6 border-t border-slate-800">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-[#F6821F] uppercase tracking-wider">Cloudflare</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Zone ID</label>
@@ -1142,11 +1142,11 @@
         <button @click="testCloudflare()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="cloudflareMsg.startsWith('✓') ? 'text-emerald-400' : cloudflareMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="cloudflareMsg" x-text="cloudflareMsg"></span>
       </div>
-    </div>
+    </div></div>
 
     <!-- NUT / UPS -->
-    <div x-show="integrations.nut" x-transition class="mb-6 pt-6 border-t border-slate-800">
-      <div class="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-4">UPS / NUT</div>
+    <div x-show="integrations.nut" x-data="{ open: false }" x-transition class="mb-6 pt-6 border-t border-slate-800">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-amber-400 uppercase tracking-wider">UPS / NUT</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-3 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">NUT Host</label>
@@ -1181,10 +1181,10 @@
         <button @click="testNut()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Test Connection</button>
         <span class="text-sm font-medium" :class="nutMsg.startsWith('✓') ? 'text-emerald-400' : nutMsg === 'Testing…' ? 'text-slate-400' : 'text-red-400'" x-show="nutMsg" x-text="nutMsg"></span>
       </div>
-    </div>
+    </div></div>
 
-    <div x-show="integrations.ntfy" x-transition :class="(integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.discord || integrations.telegram || integrations.pushover || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
-      <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">ntfy Notifications</div>
+    <div x-show="integrations.ntfy" x-data="{ open: false }" x-transition :class="(integrations.radarr || integrations.sonarr || integrations.proxmox || integrations.homeassistant || integrations.discord || integrations.telegram || integrations.pushover || integrations.emby || integrations.jellyfin || integrations.plex || integrations.qb || integrations.sabnzbd || integrations.transmission || integrations.deluge) ? 'pt-6 border-t border-slate-800' : ''">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">ntfy Notifications</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Server URL</label>
@@ -1250,9 +1250,9 @@
               :class="notifyMsg.startsWith('✓') ? 'text-emerald-400' : notifyMsg === 'Sending…' ? 'text-slate-400' : 'text-red-400'"
               x-show="notifyMsg" x-text="notifyMsg"></span>
       </div>
-    </div>
-    <div x-show="integrations.gotify" x-transition class="pt-6 border-t border-slate-800 mt-6">
-      <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Gotify Notifications</div>
+    </div></div>
+    <div x-show="integrations.gotify" x-data="{ open: false }" x-transition class="pt-6 border-t border-slate-800 mt-6">
+      <button @click="open = !open" class="w-full flex items-center justify-between py-1 group"><span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Gotify Notifications</span><svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div x-show="open" x-transition class="mt-3">
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Server URL</label>
@@ -1310,7 +1310,7 @@
         <button @click="testGotify()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-5 py-2 text-sm transition">Send test notification</button>
         <span class="text-sm font-medium" :class="gotifyMsg.startsWith('✓') ? 'text-emerald-400' : gotifyMsg === 'Sending…' ? 'text-slate-400' : 'text-red-400'" x-show="gotifyMsg" x-text="gotifyMsg"></span>
       </div>
-    </div>
+    </div></div>
   </div>  <div class="bg-slate-900 border border-slate-700/60 rounded-2xl p-5">
     <div class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Backup &amp; Restore</div>
     <div class="flex gap-3 flex-wrap items-center">
