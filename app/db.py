@@ -67,6 +67,12 @@ def init_db():
                 isp TEXT
             );
             CREATE INDEX IF NOT EXISTS idx_speedtest_ts ON speedtest_results(ts);
+            CREATE TABLE IF NOT EXISTS agents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                api_key TEXT NOT NULL UNIQUE,
+                created_at INTEGER NOT NULL
+            );
             """
         )
         cols = {r[1] for r in conn.execute("PRAGMA table_info(rules)").fetchall()}
@@ -230,3 +236,32 @@ async def a_write_metric(info: dict):
 
 async def a_set_state(key: str, value: str):
     await asyncio.to_thread(set_state, key, value)
+
+
+# ---------------------------------------------------------------------------
+# Agents
+# ---------------------------------------------------------------------------
+def list_agents() -> list[dict]:
+    with db() as conn:
+        rows = conn.execute("SELECT id, name, api_key, created_at FROM agents ORDER BY id").fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_agent_by_key(api_key: str) -> Optional[dict]:
+    with db() as conn:
+        row = conn.execute("SELECT id, name, api_key, created_at FROM agents WHERE api_key=?", (api_key,)).fetchone()
+    return dict(row) if row else None
+
+
+def create_agent(name: str, api_key: str) -> dict:
+    ts = int(time.time())
+    with db() as conn:
+        conn.execute("INSERT INTO agents(name, api_key, created_at) VALUES(?,?,?)", (name, api_key, ts))
+        row = conn.execute("SELECT id, name, api_key, created_at FROM agents WHERE api_key=?", (api_key,)).fetchone()
+    return dict(row)
+
+
+def delete_agent(agent_id: int) -> bool:
+    with db() as conn:
+        n = conn.execute("DELETE FROM agents WHERE id=?", (agent_id,)).rowcount
+    return n > 0

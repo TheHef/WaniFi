@@ -12,6 +12,7 @@ from .auth import is_setup_done, require_auth_redirect
 from .config import APP_VERSION, log
 from .db import init_db
 from .routes import auth as auth_routes
+from .routes import agents as agent_routes
 from .routes import backup as backup_routes
 from .routes import downloaders as downloader_routes
 from .routes import events as events_routes
@@ -71,6 +72,7 @@ async def security_headers(request: Request, call_next) -> Response:
 
 auth_routes.init(templates)
 
+app.include_router(agent_routes.router)
 app.include_router(auth_routes.router)
 app.include_router(system_routes.router)
 app.include_router(rules_routes.router)
