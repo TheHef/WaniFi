@@ -58,10 +58,8 @@
       </div>
 
       <!-- MIDDLE: System -->
-      <div class="p-5 flex flex-col relative">
-        <div class="absolute inset-0 pointer-events-none transition-all duration-700 rounded-r-2xl"
-             :class="status.last_error ? 'bg-gradient-to-br from-red-500/4 to-transparent' : 'bg-gradient-to-br from-emerald-500/3 to-transparent'"></div>
-        <div class="relative z-10 flex flex-col flex-1">
+      <div class="p-5 flex flex-col">
+        <div class="flex flex-col flex-1">
           <div class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">System</div>
 
           <template x-if="status.last_error">
