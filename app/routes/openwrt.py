@@ -217,3 +217,44 @@ async def debug_openwrt(_=Depends(require_auth)):
         result["steps"].append({"step": "interfaces", "ok": False, "detail": str(e)})
 
     return result
+
+
+@router.get("/debug-stats")
+async def debug_openwrt_stats(_=Depends(require_auth)):
+    """Show raw ubus data for each throughput source so we can diagnose 0 Mbps."""
+    url      = get_setting("openwrt_url", "")
+    username = get_setting("openwrt_username", "root")
+    password = get_setting("openwrt_password", "")
+    primary  = get_setting("openwrt_primary_iface", "wan")
+    if not (url and password):
+        return JSONResponse({"ok": False, "error": "Not configured"}, status_code=400)
+
+    client = OpenWrtClient(url, password, username)
+    try:
+        if not await client._auth():
+            return JSONResponse({"ok": False, "error": "Auth failed"}, status_code=400)
+
+        ifaces = await client.get_interfaces()
+        imap = {i["interface"]: i for i in ifaces}
+        primary_obj = imap.get(primary, {})
+
+        iface_status = await client.get_interface_status(primary)
+
+        dev_name = primary_obj.get("device", "") or iface_status.get("device", "") or iface_status.get("l3_device", "")
+        device_stats = await client.get_device_stats(dev_name) if dev_name else {}
+
+        return {
+            "ok": True,
+            "primary_iface": primary,
+            "source1_dump_statistics":       primary_obj.get("statistics"),
+            "source1_dump_device":           primary_obj.get("device"),
+            "source2_ifstatus_statistics":   iface_status.get("statistics"),
+            "source2_ifstatus_device":       iface_status.get("device"),
+            "source2_ifstatus_l3_device":    iface_status.get("l3_device"),
+            "source3_netdev_stats":          device_stats,
+            "dev_name_used":                 dev_name,
+        }
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    finally:
+        await client.close()
