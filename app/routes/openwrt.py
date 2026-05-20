@@ -219,6 +219,34 @@ async def debug_openwrt(_=Depends(require_auth)):
     return result
 
 
+@router.get("/debug-list")
+async def debug_openwrt_list(_=Depends(require_auth)):
+    """List all available ubus services on the router."""
+    url      = get_setting("openwrt_url", "")
+    username = get_setting("openwrt_username", "root")
+    password = get_setting("openwrt_password", "")
+    if not (url and password):
+        return JSONResponse({"ok": False, "error": "Not configured"}, status_code=400)
+
+    client = OpenWrtClient(url, password, username)
+    try:
+        if not await client._auth():
+            return JSONResponse({"ok": False, "error": "Auth failed"}, status_code=400)
+
+        base = url.rstrip("/")
+        import httpx
+        async with httpx.AsyncClient(verify=False, timeout=10) as http:
+            r = await http.post(
+                f"{base}/ubus",
+                json={"jsonrpc": "2.0", "id": 1, "method": "list", "params": ["*"]},
+            )
+            return {"ok": True, "mode": client._mode, "services": r.json()}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    finally:
+        await client.close()
+
+
 @router.get("/debug-stats")
 async def debug_openwrt_stats(_=Depends(require_auth)):
     """Show raw ubus data for each throughput source so we can diagnose 0 Mbps."""
