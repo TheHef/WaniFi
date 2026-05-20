@@ -127,6 +127,25 @@ class OpenWrtClient:
         data = await self._ubus("network.device", "status", {"name": device_name})
         return (data or {}).get("statistics", {})
 
+    async def read_proc_net_dev(self) -> dict:
+        """Read /proc/net/dev via rpcd file service — returns {iface: {rx_bytes, tx_bytes}}."""
+        data = await self._ubus("file", "read", {"path": "/proc/net/dev"})
+        content = (data or {}).get("data", "")
+        if not content:
+            return {}
+        result = {}
+        for line in content.splitlines()[2:]:   # skip two header lines
+            if ":" not in line:
+                continue
+            name, rest = line.split(":", 1)
+            fields = rest.split()
+            if len(fields) >= 9:
+                result[name.strip()] = {
+                    "rx_bytes": int(fields[0]),
+                    "tx_bytes": int(fields[8]),
+                }
+        return result
+
     async def get_wan_interfaces(self) -> list[dict]:
         """Return WAN-candidate interfaces (excludes LAN, loopback, IPv6 aliases)."""
         ifaces = await self.get_interfaces()

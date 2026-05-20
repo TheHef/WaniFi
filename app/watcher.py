@@ -922,6 +922,12 @@ async def live_stats_loop():
                         dev_name = iface_obj.get("device", "")
                         if dev_name:
                             stats = await owrt_client.get_device_stats(dev_name)
+                    # 4. /proc/net/dev via rpcd file service (works on GL-iNet)
+                    if not stats.get("rx_bytes"):
+                        dev_name = iface_obj.get("device", "")
+                        if dev_name:
+                            proc = await owrt_client.read_proc_net_dev()
+                            stats = proc.get(dev_name, {})
                     rx = stats.get("rx_bytes", 0)
                     tx = stats.get("tx_bytes", 0)
                     now = time.monotonic()

@@ -242,6 +242,7 @@ async def debug_openwrt_stats(_=Depends(require_auth)):
 
         dev_name = primary_obj.get("device", "") or iface_status.get("device", "") or iface_status.get("l3_device", "")
         device_stats = await client.get_device_stats(dev_name) if dev_name else {}
+        proc_net_dev = await client.read_proc_net_dev()
 
         return {
             "ok": True,
@@ -252,6 +253,8 @@ async def debug_openwrt_stats(_=Depends(require_auth)):
             "source2_ifstatus_device":       iface_status.get("device"),
             "source2_ifstatus_l3_device":    iface_status.get("l3_device"),
             "source3_netdev_stats":          device_stats,
+            "source4_proc_net_dev":          proc_net_dev.get(dev_name) if dev_name else None,
+            "source4_proc_net_dev_all":      proc_net_dev,
             "dev_name_used":                 dev_name,
         }
     except Exception as e:
