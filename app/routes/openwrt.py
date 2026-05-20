@@ -102,14 +102,23 @@ async def debug_openwrt(_=Depends(require_auth)):
                 auth_url,
                 json={"id": 1, "method": "login", "params": [username, password]},
             )
-            body = r.json()
-            token = body.get("result", "")
-            auth_ok = bool(token and token.replace("0", ""))
-            result["steps"].append({
-                "step": "auth", "ok": auth_ok,
-                "detail": f"HTTP {r.status_code} — result={token!r}",
-                "raw": body,
-            })
+            raw_text = r.text[:500]  # first 500 chars of response
+            try:
+                body = r.json()
+                token = body.get("result", "")
+                auth_ok = bool(token and token.replace("0", ""))
+                result["steps"].append({
+                    "step": "auth", "ok": auth_ok,
+                    "detail": f"HTTP {r.status_code} — result={token!r}",
+                    "raw": body,
+                })
+            except Exception:
+                auth_ok = False
+                result["steps"].append({
+                    "step": "auth", "ok": False,
+                    "detail": f"HTTP {r.status_code} — response is not JSON",
+                    "raw_text": raw_text,
+                })
             if not auth_ok:
                 return result
     except Exception as e:
