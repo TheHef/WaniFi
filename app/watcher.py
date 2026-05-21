@@ -906,44 +906,25 @@ async def live_stats_loop():
                 wan_state = state.current_wan or "down"
                 info = build_live_info_openwrt(ifaces, primary, failover, wan_state)
 
-                # Throughput — diff rx/tx bytes; try multiple sources (dump may lack stats on GL-iNet)
+                # Throughput — luci-rpc.getNetworkDevices has kernel stats on GL-iNet
                 active_iface = primary if wan_state == "primary" else (failover if wan_state == "failover" else None)
                 if active_iface:
                     imap = {i["interface"]: i for i in ifaces}
-                    iface_obj = imap.get(active_iface, {})
-                    # 1. statistics block in the dump
-                    stats = iface_obj.get("statistics") or {}
-                    # 2. individual interface status (includes statistics on OpenWrt 22+)
-                    if not stats.get("rx_bytes"):
-                        istatus = await owrt_client.get_interface_status(active_iface)
-                        stats = istatus.get("statistics") or {}
-                    # 3. network.device via kernel device name
-                    if not stats.get("rx_bytes"):
-                        dev_name = iface_obj.get("device", "")
-                        if dev_name:
-                            stats = await owrt_client.get_device_stats(dev_name)
-                    # 4. /proc/net/dev via rpcd file service
-                    if not stats.get("rx_bytes"):
-                        dev_name = iface_obj.get("device", "")
-                        if dev_name:
-                            proc = await owrt_client.read_proc_net_dev()
-                            stats = proc.get(dev_name, {})
-                    # 5. luci.getRealtimeStats (network mode) — LuCI's own realtime graph source
-                    if not stats.get("rx_bytes"):
-                        dev_name = iface_obj.get("device", "")
-                        if dev_name:
-                            stats = await owrt_client.get_luci_realtime_stats(dev_name)
-                    rx = stats.get("rx_bytes", 0)
-                    tx = stats.get("tx_bytes", 0)
-                    now = time.monotonic()
-                    if active_iface in _owrt_prev_bytes and rx:
-                        p_rx, p_tx, p_t = _owrt_prev_bytes[active_iface]
-                        dt = now - p_t
-                        if dt > 0 and rx >= p_rx and tx >= p_tx:
-                            info["active_wan_rx_mbps"] = round((rx - p_rx) * 8 / dt / 1_000_000, 2)
-                            info["active_wan_tx_mbps"] = round((tx - p_tx) * 8 / dt / 1_000_000, 2)
-                    if rx:
-                        _owrt_prev_bytes[active_iface] = (rx, tx, now)
+                    dev_name = imap.get(active_iface, {}).get("device", "")
+                    if dev_name:
+                        net_devs = await owrt_client.get_network_devices()
+                        dev_stats = net_devs.get(dev_name, {})
+                        rx = dev_stats.get("rx_bytes", 0)
+                        tx = dev_stats.get("tx_bytes", 0)
+                        now = time.monotonic()
+                        if active_iface in _owrt_prev_bytes and rx:
+                            p_rx, p_tx, p_t = _owrt_prev_bytes[active_iface]
+                            dt = now - p_t
+                            if dt > 0 and rx >= p_rx and tx >= p_tx:
+                                info["active_wan_rx_mbps"] = round((rx - p_rx) * 8 / dt / 1_000_000, 2)
+                                info["active_wan_tx_mbps"] = round((tx - p_tx) * 8 / dt / 1_000_000, 2)
+                        if rx:
+                            _owrt_prev_bytes[active_iface] = (rx, tx, now)
 
                 # System info — CPU load + memory
                 sys_info = await owrt_client.get_system_info()

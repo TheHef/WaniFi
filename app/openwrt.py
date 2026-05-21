@@ -127,6 +127,21 @@ class OpenWrtClient:
         data = await self._ubus("network.device", "status", {"name": device_name})
         return (data or {}).get("statistics", {})
 
+    async def get_network_devices(self) -> dict:
+        """Return all kernel devices with stats via luci-rpc.getNetworkDevices.
+        Returns {devname: {rx_bytes, tx_bytes}} for devices that have stats."""
+        data = await self._ubus("luci-rpc", "getNetworkDevices", {})
+        if not data:
+            return {}
+        result = {}
+        for name, dev in data.items():
+            s = dev.get("stats", {})
+            rx = s.get("rx_bytes")
+            tx = s.get("tx_bytes")
+            if rx is not None and tx is not None:
+                result[name] = {"rx_bytes": rx, "tx_bytes": tx}
+        return result
+
     async def get_luci_realtime_stats(self, device: str) -> dict:
         """Return cumulative rx/tx bytes via luci.getRealtimeStats (network mode).
         Returns {rx_bytes, tx_bytes} or {} if unavailable."""
