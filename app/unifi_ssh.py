@@ -44,6 +44,9 @@ class UniFiSSHClient:
         self._password = password
         self._conn     = None
         self._prev_bytes: dict = {}  # iface -> (rx_bytes, tx_bytes, monotonic_ts)
+        # Cache for adopted-device list (refreshed every 120 s to avoid hitting
+        # MongoDB on every live-stats poll without being permanently stale).
+        self._adopted_cache: Optional[tuple[float, list[dict]]] = None
 
     # ── Connection ───────────────────────────────────────────────────────────
 
@@ -391,6 +394,26 @@ class UniFiSSHClient:
             pass
         return result
 
+    async def _get_extra_devices_cached(self, gw_model: str, gw_name: str) -> list[dict]:
+        """Return adopted non-gateway devices with a 120 s TTL cache.
+
+        Used by get_gateway_info() so the live-stats loop (every ~5 s) doesn't
+        hammer MongoDB on every tick.  Returns list of {model, name} dicts.
+        """
+        now = time.monotonic()
+        if self._adopted_cache is None or now - self._adopted_cache[0] > 120:
+            adopted = await self._query_adopted_devices()
+            # Filter out the main gateway (identified by matching model AND name)
+            extra = [
+                d for d in adopted
+                if not (d.get("model") == gw_model and d.get("name") == gw_name)
+            ]
+            # Secondary filter: if model matches many devices, exclude by name only
+            if not extra and len(adopted) > 1:
+                extra = [d for d in adopted if d.get("name") != gw_name]
+            self._adopted_cache = (now, extra)
+        return self._adopted_cache[1]
+
     # ── Public API (shape-compatible with UniFiClient) ───────────────────────
 
     async def discover_wans(self) -> list[dict]:
@@ -568,6 +591,7 @@ class UniFiSSHClient:
 
                 uptime_stats: dict = data.get("uptime_stats") or {}
                 if_table: list[dict] = data.get("if_table") or []
+                geo_info: dict       = data.get("geo_info")  or {}
                 uplink_raw = data.get("uplink")
 
                 if uptime_stats:
@@ -586,15 +610,21 @@ class UniFiSSHClient:
                             entry  = uptime_stats[matched_key]
                             avail  = entry.get("availability", 0)
                             status = "ok" if avail and avail >= 100.0 else "down"
-                            # Resolve IP from if_table using the WAN comment
-                            wan_ip = ""
+                            # Resolve IP and ISP from if_table / geo_info
+                            wan_ip   = ""
+                            isp_name: Optional[str] = (geo_info.get(matched_key) or {}).get("isp_name")
                             for iface in if_table:
                                 if (iface.get("comment") or "").lower() == matched_key.lower():
                                     wan_ip = iface.get("ip", "")
                                     break
-                            health.append({"subsystem": wan_key, "status": status, "wan_ip": wan_ip})
+                            health.append({
+                                "subsystem": wan_key,
+                                "status":    status,
+                                "wan_ip":    wan_ip,
+                                "isp_name":  isp_name,
+                            })
                         else:
-                            health.append({"subsystem": wan_key, "status": "down", "wan_ip": ""})
+                            health.append({"subsystem": wan_key, "status": "down", "wan_ip": "", "isp_name": None})
                     return health
 
                 # No uptime_stats — fall back to uplink string / ip field
@@ -604,16 +634,18 @@ class UniFiSSHClient:
                     )
                     if active_iface:
                         active_comment = (active_iface.get("comment") or "").lower()
-                        wan_ip = active_iface.get("ip", "")
+                        wan_ip   = active_iface.get("ip", "")
+                        isp_p    = (geo_info.get(primary.upper())  or {}).get("isp_name")
+                        isp_f    = (geo_info.get(failover.upper()) or {}).get("isp_name")
                         if active_comment == failover.lower():
                             return [
-                                {"subsystem": primary,  "status": "down", "wan_ip": ""},
-                                {"subsystem": failover, "status": "ok",   "wan_ip": wan_ip},
+                                {"subsystem": primary,  "status": "down", "wan_ip": "",     "isp_name": isp_p},
+                                {"subsystem": failover, "status": "ok",   "wan_ip": wan_ip, "isp_name": isp_f},
                             ]
                         else:
                             return [
-                                {"subsystem": primary,  "status": "ok",   "wan_ip": wan_ip},
-                                {"subsystem": failover, "status": "down", "wan_ip": ""},
+                                {"subsystem": primary,  "status": "ok",   "wan_ip": wan_ip, "isp_name": isp_p},
+                                {"subsystem": failover, "status": "down", "wan_ip": "",     "isp_name": isp_f},
                             ]
 
                 elif isinstance(uplink_raw, dict):
@@ -627,17 +659,17 @@ class UniFiSSHClient:
                         ).lower()
                         if active_id == failover.lower():
                             return [
-                                {"subsystem": primary,  "status": "down", "wan_ip": ""},
-                                {"subsystem": failover, "status": "ok",   "wan_ip": wan_ip},
+                                {"subsystem": primary,  "status": "down", "wan_ip": "",     "isp_name": None},
+                                {"subsystem": failover, "status": "ok",   "wan_ip": wan_ip, "isp_name": None},
                             ]
                         return [
-                            {"subsystem": primary,  "status": "ok",   "wan_ip": wan_ip},
-                            {"subsystem": failover, "status": "down", "wan_ip": ""},
+                            {"subsystem": primary,  "status": "ok",   "wan_ip": wan_ip, "isp_name": None},
+                            {"subsystem": failover, "status": "down", "wan_ip": "",     "isp_name": None},
                         ]
                     else:
                         return [
-                            {"subsystem": primary,  "status": "down", "wan_ip": ""},
-                            {"subsystem": failover, "status": "down", "wan_ip": ""},
+                            {"subsystem": primary,  "status": "down", "wan_ip": "", "isp_name": None},
+                            {"subsystem": failover, "status": "down", "wan_ip": "", "isp_name": None},
                         ]
         except Exception:
             pass
@@ -678,6 +710,21 @@ class UniFiSSHClient:
             if mca_text and "{" in mca_text:
                 parsed = self._parse_mca_dump(mca_text, self._host)
                 if parsed:
+                    # Populate extra_devices from adopted-device cache (120 s TTL)
+                    # so the failover WAN card shows the correct device model/name
+                    # (e.g. U5G-Max instead of UCG-Max) without a MongoDB round-trip
+                    # on every live-stats tick.
+                    try:
+                        extras = await self._get_extra_devices_cached(
+                            parsed.get("gw_model", ""),
+                            parsed.get("gw_name",  ""),
+                        )
+                        parsed["extra_devices"] = [
+                            {"model": d.get("model", ""), "name": d.get("name", "")}
+                            for d in extras
+                        ]
+                    except Exception:
+                        pass   # keep extra_devices: [] on any error
                     return parsed
         except Exception:
             pass
