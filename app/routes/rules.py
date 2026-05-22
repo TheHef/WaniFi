@@ -162,6 +162,11 @@ def _validate(payload: RuleIn):
     elif t == "nut":
         if payload.action not in VALID_NUT_ACTIONS:
             raise HTTPException(400, f"action must be one of {VALID_NUT_ACTIONS}")
+    elif t == "remote_agent":
+        if payload.action not in ("docker", "host_command"):
+            raise HTTPException(400, "action must be 'docker' or 'host_command'")
+        if not payload.container.strip():
+            raise HTTPException(400, "Agent API key required for remote_agent rules")
     else:
         raise HTTPException(400, f"Unknown rule_type: {t!r}")
 
@@ -324,6 +329,20 @@ async def run_rule(rule_id: int, _: bool = Depends(require_auth)):
         ok, msg = await run_cloudflare_action(action)
     elif t == "nut":
         ok, msg = await run_nut_action(action)
+    elif t == "remote_agent":
+        from ..agent_hub import send_command as agent_send
+        agent_key = rule["container"]
+        cmd_type = rule["action"]
+        cmd_payload: dict = {"type": cmd_type}
+        if cmd_type == "docker":
+            parts = (rule.get("command") or "").split("|", 1)
+            cmd_payload["action"]    = parts[0].strip()
+            cmd_payload["container"] = parts[1].strip() if len(parts) > 1 else ""
+        else:
+            cmd_payload["command"] = rule.get("command") or ""
+        result = await agent_send(agent_key, cmd_payload)
+        ok  = bool(result and result.get("ok"))
+        msg = (result.get("message") or result.get("error") or str(result)) if result else "No response"
     else:
         ok, msg = container_action(rule["container"], action)
 

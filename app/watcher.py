@@ -651,9 +651,13 @@ async def run_unifi_rule_action(action: str, value: str = "") -> tuple[bool, str
 
 async def run_webhook_action(url: str, method: str = "POST") -> tuple[bool, str]:
     import httpx
+    _ALLOWED_METHODS = {"GET", "POST", "PUT", "PATCH", "DELETE"}
+    m = method.upper()
+    if m not in _ALLOWED_METHODS:
+        return False, f"Invalid HTTP method: {method!r}"
     try:
         async with httpx.AsyncClient(timeout=10, verify=False) as client:
-            r = await getattr(client, method.lower())(url)
+            r = await getattr(client, m.lower())(url)
             return r.status_code < 400, f"HTTP {r.status_code}"
     except Exception as e:
         return False, str(e)

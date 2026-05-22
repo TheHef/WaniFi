@@ -54,6 +54,9 @@ def handle_docker(action: str, container: str) -> dict:
         return {"ok": False, "error": str(e)}
 
 
+_MAX_OUTPUT = 4096
+
+
 def handle_host_command(command: str) -> dict:
     if not command.strip():
         return {"ok": False, "error": "Empty command"}
@@ -66,8 +69,8 @@ def handle_host_command(command: str) -> dict:
         )
         return {
             "ok": result.returncode == 0,
-            "stdout": result.stdout.strip(),
-            "stderr": result.stderr.strip(),
+            "stdout": result.stdout.strip()[:_MAX_OUTPUT],
+            "stderr": result.stderr.strip()[:_MAX_OUTPUT],
             "returncode": result.returncode,
         }
     except subprocess.TimeoutExpired:

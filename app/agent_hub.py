@@ -13,6 +13,11 @@ _agents: dict[str, dict] = {}
 
 
 def register(api_key: str, name: str, ws: WebSocket):
+    old = _agents.get(api_key)
+    if old:
+        fut: asyncio.Future | None = old.get("pending")
+        if fut and not fut.done():
+            fut.set_exception(RuntimeError("Agent reconnected — previous connection replaced"))
     _agents[api_key] = {"ws": ws, "name": name, "connected_at": int(time.time()), "pending": None}
     log.info("Agent connected: %s", name)
 
@@ -46,8 +51,7 @@ async def send_command(api_key: str, command: dict) -> Optional[dict]:
     if not entry:
         return {"ok": False, "error": "Agent not connected"}
 
-    loop = asyncio.get_event_loop()
-    fut: asyncio.Future = loop.create_future()
+    fut: asyncio.Future = asyncio.get_running_loop().create_future()
     entry["pending"] = fut
     try:
         await entry["ws"].send_text(json.dumps(command))
