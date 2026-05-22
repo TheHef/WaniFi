@@ -126,7 +126,14 @@ async def debug_unifi_ssh(_: bool = Depends(require_auth)):
             ("mca_dump",     "mca-dump 2>/dev/null || echo 'NOT_FOUND'"),
             ("ip_route",     "ip route show 2>/dev/null"),
             ("ip_route_all", "ip route show table all 2>/dev/null | head -40"),
+            ("ip_tunnel",    "ip tunnel show 2>/dev/null"),
             ("hostname",     "hostname 2>/dev/null"),
+            # ── Device discovery diagnostics ──────────────────────────────────
+            ("db_mongosh",   "which mongosh 2>/dev/null && mongosh --quiet localhost/ace --eval 'db.device.find({},{model:1,name:1,mac:1,ip:1,_id:0}).forEach(d=>print(JSON.stringify(d)))' 2>/dev/null || echo 'mongosh_not_found'"),
+            ("db_mongo",     "which mongo 2>/dev/null && mongo --quiet localhost/ace --eval 'db.device.find({},{model:1,name:1,mac:1,ip:1}).forEach(function(d){print(JSON.stringify(d))})' 2>/dev/null || echo 'mongo_not_found'"),
+            ("db_socket",    "ls /var/run/mongodb/ /run/mongodb/ 2>/dev/null || echo 'no_mongo_socket'"),
+            ("db_files",     "find /data/unifi/data/sites /mnt/data/unifi-os/unifi/data/sites -name '*.json' 2>/dev/null | head -10 || echo 'no_site_files'"),
+            ("arp_table",    "ip neigh show 2>/dev/null | head -20"),
         ]:
             try:
                 result[label] = await client.run_raw(cmd)
