@@ -24,7 +24,7 @@ const ICONS = {
 
 const NAMES = {
   'OPENWRT':   'OpenWrt Router',
-  'GLMT6000':  'GL-MT6000',
+  'GLMT6000':  'Flint 2',
   'UCGMAX':    'UCG-Max',
   'UCGULTRA':  'UCG-Ultra',
   'UDM':       'Dream Machine',
