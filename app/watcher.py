@@ -1021,6 +1021,8 @@ async def watcher_loop():
     owrt_last_settings: Optional[tuple] = None
 
     last_purge_day: Optional[str] = None
+    _last_err_msg:  Optional[str] = None
+    _last_err_time: float         = 0.0
 
     while True:
         try:
@@ -1147,6 +1149,7 @@ async def watcher_loop():
                 await asyncio.to_thread(purge_old_events, retention)
                 last_purge_day = today
 
+            _last_err_msg = None
             await asyncio.sleep(interval)
         except asyncio.CancelledError:
             log.info("Watcher loop cancelled")
@@ -1157,11 +1160,15 @@ async def watcher_loop():
         except Exception as e:
             msg = str(e) or repr(e) or type(e).__name__
             state.last_error = msg
-            await a_log_event("error", f"Watcher error: {msg}")
-            _create_task(send_notification(
-                "WaniFi Watcher Error", msg, priority="low", tags="x",
-                event="error",
-            ))
+            now = time.monotonic()
+            if msg != _last_err_msg or now - _last_err_time >= 300:
+                await a_log_event("error", f"Watcher error: {msg}")
+                _create_task(send_notification(
+                    "WaniFi Watcher Error", msg, priority="low", tags="x",
+                    event="error",
+                ))
+                _last_err_msg  = msg
+                _last_err_time = now
             if unifi_client:
                 await unifi_client.close()
             if owrt_client:

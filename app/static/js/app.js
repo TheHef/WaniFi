@@ -473,7 +473,7 @@ window.app = function () {
       if (!d) return;
       const rows = d.events || [];
       const lines = rows.map(e => {
-        const ts = new Date(e.ts * 1000).toLocaleString('sv-SE', { hour12: false }).replace('T', ' ');
+        const ts = new Date(e.ts).toLocaleString('sv-SE', { hour12: false }).replace('T', ' ');
         const lvl = (e.level || 'info').toUpperCase().padEnd(5);
         return `${ts}  [${lvl}]  ${e.message}`;
       });
