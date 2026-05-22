@@ -11,7 +11,7 @@
     </select>
     <button @click="exportEvents()"
             class="group flex items-center justify-center overflow-hidden min-w-[2rem] h-8 px-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-500 text-slate-300 transition-all duration-200">
-      <span class="inline-flex max-w-0 group-hover:max-w-[8rem] overflow-hidden transition-all duration-200 opacity-0 group-hover:opacity-100 whitespace-nowrap">
+      <span class="inline-flex max-w-0 group-hover:max-w-[8rem] overflow-hidden transition-all duration-200 [transition-delay:180ms] group-hover:[transition-delay:0ms] opacity-0 group-hover:opacity-100 whitespace-nowrap">
         <span class="pr-1.5">Export</span>
       </span>
       <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -20,7 +20,7 @@
     </button>
     <button @click="clearAllEvents()"
             class="group flex items-center justify-center overflow-hidden min-w-[2rem] h-8 px-2 text-xs font-semibold rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 hover:border-red-500/50 text-red-400 transition-all duration-200">
-      <span class="inline-flex max-w-0 group-hover:max-w-[8rem] overflow-hidden transition-all duration-200 opacity-0 group-hover:opacity-100 whitespace-nowrap">
+      <span class="inline-flex max-w-0 group-hover:max-w-[8rem] overflow-hidden transition-all duration-200 [transition-delay:180ms] group-hover:[transition-delay:0ms] opacity-0 group-hover:opacity-100 whitespace-nowrap">
         <span class="pr-1.5">Clear all events</span>
       </span>
       <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
