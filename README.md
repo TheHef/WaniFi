@@ -13,9 +13,9 @@
 
 ---
 
-Self-hosted dashboard for UniFi WAN failover monitoring with rule-based automation.
+Self-hosted dashboard for WAN failover monitoring. Supports **UniFi** gateways and **OpenWrt / GL-iNet** routers.
 
-When your UniFi gateway switches to a failover WAN, WaniFi can automatically throttle downloads, cap streaming bitrate, disable DNS filtering, trigger home automations, run shell commands, protect infrastructure with Cloudflare Under Attack mode, and much more — all without any manual intervention.
+When your gateway switches to a failover WAN, WaniFi can automatically throttle downloads, cap streaming bitrate, disable DNS filtering, trigger home automations, run shell commands, protect infrastructure with Cloudflare Under Attack mode, and much more — all without any manual intervention.
 
 > **Heads up: this is a beta hobby project.**
 >
@@ -24,7 +24,7 @@ When your UniFi gateway switches to a failover WAN, WaniFi can automatically thr
 > figured I'd share it in case anyone else is in the same boat. Expect rough
 > edges, missing features, and code that an actual engineer would probably rewrite.
 >
-> Not affiliated with Ubiquiti or UniFi in any way. Just a UniFi user (and fan).
+> Not affiliated with Ubiquiti, UniFi, or GL-iNet in any way.
 
 ![Overview](docs/screenshots/overview.png)
 
@@ -37,9 +37,11 @@ When your UniFi gateway switches to a failover WAN, WaniFi can automatically thr
 - **Rule engine** — pair any trigger with any action; rules fire automatically on WAN state changes
 - **Speedtest** — run on demand or trigger automatically on failover; results stored and displayed in the dashboard
 - **Push notifications** — per-channel event toggles for failover, restored, high latency, and errors
+- **WaniFi Agent** — deploy a lightweight agent on remote machines to control their Docker containers and run host commands
 - **Backup / restore** — full JSON export and import of all settings, rules, and events
 - **Single-user login** — bcrypt password, rate-limited login (10 attempts / 5 min / IP)
 - **Self-contained** — SQLite only, all JS/CSS bundled, no CDN calls
+- **OpenWrt / GL-iNet support** *(experimental)* — monitor failover on OpenWrt-based routers via ubus JSON-RPC
 
 ---
 
@@ -90,6 +92,7 @@ These three are top-level toggles and appear outside any category group.
 | **Nginx Proxy Manager** | Enable/disable any proxy host by domain name or numeric ID |
 | **Cloudflare** | Enable/disable Under Attack mode · purge cache · enable/disable development mode |
 | **NUT / UPS** | Get status · beeper enable/disable · shutdown.return · shutdown.stayoff · load.off |
+| **WaniFi Agent** | Stop · start · restart · pause · unpause containers on a remote agent · run host command |
 
 ### 🌐 Network
 
@@ -161,14 +164,27 @@ To update: `docker compose pull && docker compose up -d`
 
 On first visit you'll be redirected to `/setup` to choose an admin password. The bcrypt hash is stored in the local SQLite database — no env vars needed.
 
-### 2. UniFi controller
+### 2. Network / router
 
-Go to **Settings → Network**:
+Go to **Settings → Network** and choose your router type.
+
+#### UniFi
 
 - **Controller URL** — `https://<your-UCG-or-UDM-IP>`
 - **API Key** — generate one in UniFi OS → Settings → Control Plane → Integrations → API Keys (requires UniFi OS 3.x+)
 - Click **Test Connection** — your WAN interfaces appear as chips
 - Assign one to **Primary WAN** and one to **Failover WAN**, give them friendly names, and hit **Save**
+
+#### OpenWrt / GL-iNet *(experimental)*
+
+> OpenWrt support is functional but still has rough edges. Treat it as a beta feature.
+
+- **Router URL** — `http://<router-ip>` (the router's LAN IP)
+- **Username / Password** — your router's admin credentials
+- Click **Test Connection** — WAN interfaces are detected automatically
+- Assign **Primary WAN** and **Failover WAN** and hit **Save**
+
+Throughput stats come from `luci-rpc`, which requires the `luci-mod-rpc` package. If your router doesn't have it, latency and WAN state will still work but throughput will show zero.
 
 ### 3. Enable integrations
 
@@ -210,6 +226,42 @@ Use **Settings → Backup** to export a full JSON snapshot of all settings, rule
 
 ---
 
+## WaniFi Agent
+
+The agent is a lightweight container you deploy on **other machines** in your network. Once connected, WaniFi can control Docker containers and run shell commands on those machines — just like it can on its own host.
+
+**Use cases:**
+- Restart a container on a separate NAS or server when failover hits
+- Run a script on another machine when the connection is restored
+
+### How it works
+
+1. In **Settings → Agents**, create a new agent and copy the generated API key
+2. Deploy `wanifi-agent` on the remote machine with that key
+3. The agent connects back to your WaniFi server over WebSocket — no inbound ports needed on the remote machine
+4. Once it shows as **Online** in Settings, you can use it as a target in rules
+
+### Agent compose.yaml
+
+```yaml
+services:
+  wanifi-agent:
+    image: ghcr.io/thehef/wanifi-agent:latest
+    container_name: wanifi-agent
+    restart: unless-stopped
+    environment:
+      WANIFI_URL: "http://192.168.1.100:4444"   # your WaniFi server
+      AGENT_API_KEY: "your-key-here"
+    privileged: true
+    pid: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+```
+
+> `privileged: true` and `pid: host` are only needed if you want the agent to run **host commands**. For Docker-only use, drop both and keep just the socket mount.
+
+---
+
 ## Events
 
 Every state change, rule firing, error, and manual action is logged with a timestamp and severity level. Filter by level or search by message; rows can be deleted individually or cleared all at once.
@@ -236,7 +288,7 @@ WaniFi runs with `privileged: true`, `pid: host`, and a mounted Docker socket. A
 
 - **Keep it on your LAN.** Use a VPN (WireGuard, Tailscale) if you need remote access.
 - **No MFA.** If that isn't enough for your threat model, put an auth proxy in front (e.g. Authelia).
-- **Backup `data/wanifi.db`.** This file holds your UniFi API key, all integration credentials, and the password hash.
+- **Backup `data/wanifi.db`.** This file holds your router API key, all integration credentials, and the password hash.
 - **No external requests at runtime.** Alpine.js, Chart.js, and Tailwind CSS are all bundled inside the container — no CDN calls, no third-party scripts.
 - **Security headers.** Every response includes `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, and `Referrer-Policy: strict-origin-when-cross-origin`.
 
