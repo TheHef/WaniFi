@@ -58,10 +58,10 @@
             x-text="liveConnected
               ? (settings.router_type === 'unifi' ? 'UniFi Connected' : 'OpenWrt Connected')
               : 'Router not connected'"></span>
-      <template x-if="versionStatus !== null">
+      <template x-if="versionStatus !== null && versionStatus.up_to_date !== null">
         <span class="text-slate-700">|</span>
       </template>
-      <template x-if="versionStatus !== null">
+      <template x-if="versionStatus !== null && versionStatus.up_to_date !== null">
         <span class="text-xs font-medium"
               :class="versionStatus.up_to_date ? 'text-emerald-400' : 'text-red-400'"
               :title="'Running: ' + (versionStatus.current || '?') + '  Latest: ' + (versionStatus.latest || '?')"

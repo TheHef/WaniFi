@@ -40,10 +40,13 @@ async def get_version(_=Depends(require_auth)):
 
     current = _read_current_sha()
     latest  = _cache["latest_sha"] or ""
+
+    # If VERSION file is missing (pre-build-arg image) or GitHub unreachable, hide the badge
+    if current == "dev" or not latest:
+        return {"current": current, "latest": latest[:7] if len(latest) > 7 else latest, "up_to_date": None}
+
     up_to_date = (
-        current == "dev"
-        or not latest
-        or current == latest
+        current == latest
         or latest.startswith(current)
         or current.startswith(latest[:7])
     )
