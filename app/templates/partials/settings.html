@@ -248,14 +248,21 @@
   <div x-show="settings.router_type === 'openwrt'">
     <div class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">OpenWrt</div>
 
+    <!-- Placeholder: no interfaces discovered yet -->
+    <div x-show="openwrtDiscoveredIfaces.filter(i => i.up).length === 0"
+         class="bg-slate-800/50 border border-dashed border-slate-700 rounded-2xl p-8 text-center mb-5">
+      <div class="text-3xl mb-3 opacity-20">🔒</div>
+      <div class="text-slate-500 text-sm">Fill in the OpenWrt connection below and click <span class="text-sky-400 font-medium">Test Connection</span> to discover your WAN interfaces</div>
+    </div>
+
     <!-- Discovered interfaces drag-drop -->
-    <div class="mb-5">
+    <div x-show="openwrtDiscoveredIfaces.filter(i => i.up).length > 0" class="mb-5">
       <p class="text-xs text-slate-500 mb-3">Drag your WAN interfaces to the correct slots:</p>
       <div class="grid md:grid-cols-[minmax(0,0.28fr)_1fr_240px] gap-0 items-stretch">
 
         <!-- Draggable interface cards (up only) -->
         <div class="flex flex-col gap-3">
-          <div x-show="openwrtDiscoveredIfaces.filter(i => i.up).length > 0" class="flex flex-col gap-3 h-full">
+          <div class="flex flex-col gap-3 h-full">
             <template x-for="iface in openwrtDiscoveredIfaces.filter(i => i.up)" :key="iface.interface">
               <div draggable="true"
                    @dragstart="$event.dataTransfer.setData('owrt_iface', JSON.stringify(iface))"
@@ -271,10 +278,6 @@
                 </div>
               </div>
             </template>
-          </div>
-          <div x-show="openwrtDiscoveredIfaces.filter(i => i.up).length === 0"
-               class="bg-slate-800/50 border border-dashed border-slate-700 rounded-xl p-4 text-center">
-            <div class="text-slate-500 text-xs">Test Connection first</div>
           </div>
         </div>
 
