@@ -46,7 +46,7 @@
     </div>
   </div>
   <div class="max-w-6xl mx-auto px-4 flex items-center gap-1 border-t border-slate-800/60">
-    <template x-for="t in [['dashboard','Overview'],['rules','Rules'],['events','Events']]" :key="t[0]">
+    <template x-for="t in [['dashboard','Overview'],['rules','Rules'],['events','Log']]" :key="t[0]">
       <button @click="tab = t[0]"
               class="px-4 py-3 text-sm font-medium border-b-2 transition"
               :class="tab === t[0]
