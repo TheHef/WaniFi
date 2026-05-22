@@ -64,7 +64,7 @@
       <template x-if="versionStatus !== null && versionStatus.up_to_date !== null">
         <span class="text-xs font-medium"
               :class="versionStatus.up_to_date ? 'text-emerald-400' : 'text-red-400'"
-              :title="'Running: ' + (versionStatus.current || '?') + '  Latest: ' + (versionStatus.latest || '?')"
+              :title="versionStatus.up_to_date ? 'Running latest' : ('Running: ' + (versionStatus.current || '?') + '  Latest: ' + (versionStatus.latest || '?'))"
               x-text="versionStatus.up_to_date ? 'WaniFi up to date ✓' : 'WaniFi UPDATE AVAILABLE!'"></span>
       </template>
     </div>

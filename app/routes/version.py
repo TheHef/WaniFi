@@ -41,9 +41,13 @@ async def get_version(_=Depends(require_auth)):
     current = _read_current_sha()
     latest  = _cache["latest_sha"] or ""
 
-    # If VERSION file is missing (pre-build-arg image) or GitHub unreachable, hide the badge
-    if current == "dev" or not latest:
-        return {"current": current, "latest": latest[:7] if len(latest) > 7 else latest, "up_to_date": None}
+    # If GitHub is unreachable we can't determine status — hide badge
+    if not latest:
+        return {"current": current, "latest": "", "up_to_date": None}
+
+    # No VERSION file means image predates SHA baking — newer image exists
+    if current == "dev":
+        return {"current": "dev", "latest": latest[:7], "up_to_date": False}
 
     up_to_date = (
         current == latest
