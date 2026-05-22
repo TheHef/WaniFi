@@ -320,6 +320,77 @@ class UniFiSSHClient:
             "extra_devices": [],
         }
 
+    # ── Device discovery helpers (all read-only) ────────────────────────────
+
+    async def _query_adopted_devices(self) -> list[dict]:
+        """Read adopted UniFi device records from local MongoDB (read-only find).
+
+        Tries mongosh (UniFi OS 3+ / MongoDB 6+) then the older mongo client.
+        Returns a list of {model, name, mac, ip} dicts — one per adopted device.
+        """
+        # Both commands are SELECT-equivalent (find with projection, no writes).
+        js_expr = (
+            "db.device.find({},"
+            "{model:1,name:1,mac:1,ip:1,_id:0})"
+            ".forEach(d=>print(JSON.stringify(d)))"
+        )
+        cmds = [
+            f"mongosh --quiet localhost/ace --eval '{js_expr}' 2>/dev/null",
+            f"mongo    --quiet localhost/ace --eval '{js_expr}' 2>/dev/null",
+        ]
+        for cmd in cmds:
+            try:
+                out = await self._run(cmd)
+                if not out:
+                    continue
+                devices: list[dict] = []
+                for line in out.splitlines():
+                    line = line.strip()
+                    if not line.startswith("{"):
+                        continue          # skip mongosh banner / warnings
+                    try:
+                        d = json.loads(line)
+                        if d.get("model"):
+                            devices.append({
+                                "model": d.get("model", ""),
+                                "name":  d.get("name",  ""),
+                                "mac":   d.get("mac",   ""),
+                                "ip":    d.get("ip",    ""),
+                            })
+                    except Exception:
+                        pass
+                if devices:
+                    return devices
+            except Exception:
+                pass
+        return []
+
+    async def _get_gre_remotes(self) -> dict[str, str]:
+        """Read GRE tunnel remote IPs via 'ip tunnel show' (read-only).
+
+        Returns {linux_iface_name: remote_ip}, e.g. {"gre1": "192.168.0.50"}.
+        The remote IP is the LAN-side address of the device (e.g. U5G-Max)
+        that terminates the tunnel on the other end.
+        """
+        result: dict[str, str] = {}
+        try:
+            text = await self._run("ip tunnel show 2>/dev/null")
+            for line in text.splitlines():
+                # e.g.: gre1: gre remote 192.168.0.50 local 192.168.0.1 dev eth0 …
+                parts = line.split()
+                if not parts:
+                    continue
+                iface = parts[0].rstrip(":")
+                if "remote" in parts:
+                    idx = parts.index("remote")
+                    if idx + 1 < len(parts):
+                        remote = parts[idx + 1]
+                        if remote and remote != "any":
+                            result[iface] = remote
+        except Exception:
+            pass
+        return result
+
     # ── Public API (shape-compatible with UniFiClient) ───────────────────────
 
     async def discover_wans(self) -> list[dict]:
@@ -331,8 +402,14 @@ class UniFiSSHClient:
           wan_ip       – current WAN IP
           isp_name     – ISP name from geo_info if available
           active       – True for the currently active uplink
-          device_model – gateway model (reported by mca-dump)
-          device_name  – gateway hostname
+          device_model – model of the device providing this WAN
+          device_name  – name/hostname of the device providing this WAN
+
+        Device attribution logic:
+          - Native ethernet/SFP ports (eth*, sfp*) → the gateway itself
+          - GRE tunnel interfaces (gre*) → match by remote IP against MongoDB
+            adopted-device records; fall back to first non-gateway adopted device
+          - Other non-native interfaces → first unmatched adopted device
         """
         try:
             mca_text = await self._run("mca-dump 2>/dev/null")
@@ -342,70 +419,135 @@ class UniFiSSHClient:
         except Exception:
             return []
 
-        uplink_raw   = data.get("uplink", "")
-        if_table:    list[dict] = data.get("if_table") or []
-        geo_info:    dict = data.get("geo_info")    or {}
-        uptime_stats: dict = data.get("uptime_stats") or {}
+        uplink_raw    = data.get("uplink", "")
+        if_table:     list[dict] = data.get("if_table")    or []
+        geo_info:     dict       = data.get("geo_info")    or {}
+        uptime_stats: dict       = data.get("uptime_stats") or {}
         gw_model = data.get("model", "")
         gw_name  = data.get("hostname") or data.get("name", "")
 
-        if if_table:
-            # UCG-Max layout: find all WAN interfaces in if_table
-            wan_ifaces = [
-                i for i in if_table
-                if (i.get("comment") or "").upper().startswith("WAN")
-            ]
-            result: list[dict] = []
-            for iface in wan_ifaces:
-                comment    = iface.get("comment", "")       # "WAN", "WAN3", …
-                name_lower = comment.lower()                 # "wan", "wan3", …
-
-                # Active = the interface whose Linux name matches the uplink string
-                is_active = isinstance(uplink_raw, str) and iface.get("name") == uplink_raw
-
-                # Status from uptime_stats if available, else from if_table "up" flag
-                status = "down"
-                if comment in uptime_stats:
-                    avail  = uptime_stats[comment].get("availability", 0)
-                    status = "ok" if avail and avail >= 100.0 else "down"
-                elif iface.get("up"):
-                    status = "ok"
-
-                # ISP from geo_info
-                isp_name: Optional[str] = None
-                if comment in geo_info:
-                    isp_name = geo_info[comment].get("isp_name")
-
-                result.append({
-                    "subsystem":    name_lower,
-                    "status":       status,
-                    "wan_ip":       iface.get("ip", ""),
-                    "isp_name":     isp_name,
-                    "active":       is_active,
+        # ── Older UDM layout (uplink is a dict, no if_table) ─────────────────
+        if not if_table:
+            if isinstance(uplink_raw, dict):
+                active_name = (
+                    uplink_raw.get("comment") or
+                    uplink_raw.get("name")    or
+                    uplink_raw.get("type")    or "wan"
+                ).lower()
+                wan_ip = uplink_raw.get("ip", "")
+                return [{
+                    "subsystem":    active_name,
+                    "status":       "ok" if wan_ip else "down",
+                    "wan_ip":       wan_ip,
+                    "isp_name":     None,
+                    "active":       True,
                     "device_model": gw_model,
                     "device_name":  gw_name,
-                })
-            return result
+                }]
+            return []
 
-        # Older UDM layout (uplink is a dict) — build minimal list from uplink data
-        if isinstance(uplink_raw, dict):
-            active_name = (
-                uplink_raw.get("comment") or
-                uplink_raw.get("name")    or
-                uplink_raw.get("type")    or "wan"
-            ).lower()
-            wan_ip = uplink_raw.get("ip", "")
-            return [{
-                "subsystem":    active_name,
-                "status":       "ok" if wan_ip else "down",
-                "wan_ip":       wan_ip,
-                "isp_name":     None,
-                "active":       True,
-                "device_model": gw_model,
-                "device_name":  gw_name,
-            }]
+        # ── UCG-Max layout: WAN interfaces from if_table ──────────────────────
+        wan_ifaces = [
+            i for i in if_table
+            if (i.get("comment") or "").upper().startswith("WAN")
+        ]
 
-        return []
+        # Determine which WAN interfaces use non-native Linux interfaces
+        # (GRE tunnels etc.) so we only run the extra SSH reads when needed.
+        has_gre = any(
+            (i.get("name") or "").startswith("gre") for i in wan_ifaces
+        )
+        has_non_native = any(
+            not (i.get("name") or "").startswith(("eth", "sfp"))
+            for i in wan_ifaces
+        )
+
+        # Fetch adopted devices from MongoDB (read-only) only when there are
+        # non-native WAN interfaces that need device attribution.
+        adopted: list[dict] = []
+        gre_remotes: dict[str, str] = {}
+        if has_non_native:
+            if has_gre:
+                adopted, gre_remotes = await asyncio.gather(
+                    self._query_adopted_devices(),
+                    self._get_gre_remotes(),
+                )
+            else:
+                adopted = await self._query_adopted_devices()
+
+        # Extra devices = adopted minus the gateway itself (identified by model+name)
+        extra_adopted = [
+            d for d in adopted
+            if not (d.get("model") == gw_model and d.get("name") == gw_name)
+        ]
+        # If all adopted share the same model, fall back to name-only exclusion
+        if not extra_adopted and len(adopted) > 1:
+            extra_adopted = [d for d in adopted if d.get("name") != gw_name]
+
+        result: list[dict] = []
+        for iface in wan_ifaces:
+            comment    = iface.get("comment", "")   # "WAN", "WAN3", …
+            linux_name = iface.get("name",    "")   # "eth4", "gre1", …
+            name_lower = comment.lower()             # "wan", "wan3", …
+
+            is_active = isinstance(uplink_raw, str) and linux_name == uplink_raw
+
+            # Status: prefer uptime_stats (reliable), else if_table "up" flag
+            status = "down"
+            if comment in uptime_stats:
+                avail  = uptime_stats[comment].get("availability", 0)
+                status = "ok" if avail and avail >= 100.0 else "down"
+            elif iface.get("up"):
+                status = "ok"
+
+            # ISP name from geo_info
+            isp_name: Optional[str] = None
+            if comment in geo_info:
+                isp_name = geo_info[comment].get("isp_name")
+
+            # ── Device attribution ────────────────────────────────────────────
+            dev_model = gw_model
+            dev_name  = gw_name
+
+            if linux_name.startswith(("eth", "sfp")):
+                # Physical port on the gateway itself — no lookup needed
+                pass
+
+            elif linux_name.startswith("gre") and extra_adopted:
+                # GRE tunnel → try to match remote IP to an adopted device's IP
+                remote_ip = gre_remotes.get(linux_name, "")
+                matched = next(
+                    (d for d in extra_adopted if d.get("ip") == remote_ip),
+                    None,
+                )
+                if matched is None:
+                    # No IP match (e.g. GRE over public IP / CGNAT) →
+                    # use the first unmatched extra device
+                    matched = extra_adopted[0]
+                if matched:
+                    dev_model = matched.get("model", "") or gw_model
+                    dev_name  = matched.get("name",  "") or gw_name
+                    # Remove so the same device isn't assigned to two WANs
+                    if matched in extra_adopted:
+                        extra_adopted.remove(matched)
+
+            elif extra_adopted:
+                # Other non-native interface (PPPoE, VLAN, …)
+                matched = extra_adopted.pop(0)
+                dev_model = matched.get("model", "") or gw_model
+                dev_name  = matched.get("name",  "") or gw_name
+
+            result.append({
+                "subsystem":    name_lower,
+                "status":       status,
+                "wan_ip":       iface.get("ip", ""),
+                "isp_name":     isp_name,
+                "active":       is_active,
+                "device_model": dev_model,
+                "device_name":  dev_name,
+            })
+
+        return result
 
     async def get_gateway_health(self, primary: str = "wan", failover: str = "wan2") -> list[dict]:
         """Return a minimal WAN health list that ``determine_active_wan()`` can consume.
