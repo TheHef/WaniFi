@@ -468,6 +468,24 @@ window.app = function () {
       };
     },
 
+    async exportEvents() {
+      const d = await fetch('/api/events?limit=100000').then(r => r.json()).catch(() => null);
+      if (!d) return;
+      const rows = d.events || [];
+      const lines = rows.map(e => {
+        const ts = new Date(e.ts * 1000).toLocaleString('sv-SE', { hour12: false }).replace('T', ' ');
+        const lvl = (e.level || 'info').toUpperCase().padEnd(5);
+        return `${ts}  [${lvl}]  ${e.message}`;
+      });
+      const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+      const url  = URL.createObjectURL(blob);
+      const a    = Object.assign(document.createElement('a'), {
+        href: url, download: `wanifi-events-${new Date().toISOString().slice(0,10)}.txt`,
+      });
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+
     clearAllEvents() {
       this.confirmModal = {
         open: true, label: 'All events will be permanently deleted',
