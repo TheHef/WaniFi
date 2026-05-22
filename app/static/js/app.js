@@ -199,7 +199,7 @@ window.app = function () {
       this.timer     = setInterval(() => this.refreshLive(),     5000);
       this.liveTimer = setInterval(() => this.refreshLiveStats(), 2000);
       this.checkVersion();
-      setInterval(() => this.checkVersion(), 3600000);
+      setInterval(() => this.checkVersion(), 300000);
     },
 
     // ---- Version check ----------------------------------------------------

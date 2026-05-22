@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/version")
 
 _VERSION_FILE = Path(__file__).parent.parent / "VERSION"
 _GH_API_URL   = "https://api.github.com/repos/TheHef/WaniFi/commits/main"
-_CACHE_TTL    = 3600
+_CACHE_TTL    = 300  # 5 minutes — well within GitHub's 60 req/hour unauthenticated limit
 
 _cache: dict = {"ts": 0.0, "latest_sha": None}
 
