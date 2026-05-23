@@ -340,13 +340,29 @@ window.app = function () {
         site: this.settings.unifi_site,
         primary_wan: this.settings.primary_wan,
         failover_wan: this.settings.failover_wan,
-        openwrt_url: this.openwrtSettings.openwrt_url,
-        openwrt_primary_iface: this.openwrtSettings.openwrt_primary_iface,
-        openwrt_failover_iface: this.openwrtSettings.openwrt_failover_iface,
+        openwrt_url: this.openwrtSettings?.openwrt_url,
+        openwrt_primary_iface: this.openwrtSettings?.openwrt_primary_iface,
+        openwrt_failover_iface: this.openwrtSettings?.openwrt_failover_iface,
         active_wan: live.active_wan,
         active_wan_ip: live.active_wan_ip,
         extra_devices: live.extra_devices || [],
       };
+      // In SSH mode, also fetch the SSH diagnostics (device discovery etc.)
+      if (this.settings.unifi_ssh_mode) {
+        this.debugMsg = 'Running SSH diagnostics…';
+        try {
+          const ssh = await fetch('/api/settings/debug-ssh').then(r => r.json()).catch(() => ({}));
+          if (ssh.ok && ssh.results) {
+            // Exclude the giant mca_dump field — we only need the diagnostic fields
+            const { mca_dump, ...diag } = ssh.results;
+            dump.ssh_diagnostics = diag;
+          } else {
+            dump.ssh_diagnostics = { error: ssh.error || 'Failed' };
+          }
+        } catch (e) {
+          dump.ssh_diagnostics = { error: e.message };
+        }
+      }
       console.log('WaniFi debug:', dump);
       this.debugMsg = JSON.stringify(dump, null, 2);
     },
