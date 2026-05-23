@@ -915,12 +915,61 @@ class UniFiSSHClient:
             {"subsystem": failover, "status": "ok", "wan_ip": routes[1]["via"]},
         ]
 
+    def _calc_net_wan_throughput(self, net_dev_text: str, wan_iface: str) -> tuple[float, float]:
+        """Compute internet-only throughput from /proc/net/dev deltas.
+
+        Subtracts VPN overlay interfaces (tunovpnc*, wgsrv*, wgsts*) whose
+        encrypted traffic runs over the physical WAN port, inflating its counters.
+        Returns (rx_mbps, tx_mbps) for actual internet traffic only.
+        """
+        VPN_PREFIXES = ("tunovpnc", "wgsrv", "wgsts")
+        dev_stats = self._parse_proc_net_dev(net_dev_text)
+        if wan_iface not in dev_stats:
+            return 0.0, 0.0
+
+        now = time.monotonic()
+        rx_wan, tx_wan = dev_stats[wan_iface]
+        rx_mbps = tx_mbps = 0.0
+
+        if wan_iface in self._prev_bytes:
+            p_rx, p_tx, p_t = self._prev_bytes[wan_iface]
+            dt = now - p_t
+            if dt > 0 and rx_wan >= p_rx:
+                net_rx = float(rx_wan - p_rx)
+                net_tx = float(tx_wan - p_tx)
+                # Subtract VPN overlay bytes so only internet traffic remains
+                for iface, (rx_now, tx_now) in dev_stats.items():
+                    if not any(iface.startswith(p) for p in VPN_PREFIXES):
+                        continue
+                    prev = self._prev_bytes.get(iface)
+                    if prev:
+                        p_rx2, p_tx2, _ = prev
+                        if rx_now >= p_rx2:
+                            net_rx -= rx_now - p_rx2
+                        if tx_now >= p_tx2:
+                            net_tx -= tx_now - p_tx2
+                rx_mbps = round(max(0.0, net_rx) * 8 / dt / 1_000_000, 2)
+                tx_mbps = round(max(0.0, net_tx) * 8 / dt / 1_000_000, 2)
+
+        # Store current counters for WAN + VPN interfaces
+        for iface, (rx, tx) in dev_stats.items():
+            if iface == wan_iface or any(iface.startswith(p) for p in VPN_PREFIXES):
+                self._prev_bytes[iface] = (rx, tx, now)
+
+        return rx_mbps, tx_mbps
+
     async def get_gateway_info(self) -> dict:
         """Return live gateway stats compatible with ``UniFiClient.get_gateway_info()``."""
 
-        # ── Try mca-dump first (UDM / UCG / UDR / UDM-Pro) ──────────────────
+        # ── Try mca-dump + /proc/net/dev in parallel (UDM / UCG / UDR / UDM-Pro) ──
         try:
-            mca_text = await self._run("mca-dump 2>/dev/null")
+            mca_text, net_dev_text = await asyncio.gather(
+                self._run("mca-dump 2>/dev/null"),
+                self._run("cat /proc/net/dev 2>/dev/null"),
+                return_exceptions=True,
+            )
+            mca_text     = mca_text     if isinstance(mca_text,     str) else ""
+            net_dev_text = net_dev_text if isinstance(net_dev_text, str) else ""
             if mca_text and "{" in mca_text:
                 parsed = self._parse_mca_dump(mca_text, self._host)
                 if parsed:
@@ -943,6 +992,21 @@ class UniFiSSHClient:
                         ]
                     except Exception:
                         pass   # keep extra_devices: [] on any error
+                    # Override mca-dump rx_rate/tx_rate (which includes VPN overlay
+                    # traffic on the physical WAN port) with a corrected /proc/net/dev
+                    # delta that subtracts WireGuard and UniFi VPN tunnel bytes.
+                    if net_dev_text:
+                        try:
+                            raw = json.loads(mca_text.replace("\x00", ""))
+                            wan_iface = raw.get("uplink", "")
+                            if isinstance(wan_iface, str) and wan_iface:
+                                rx_c, tx_c = self._calc_net_wan_throughput(
+                                    net_dev_text, wan_iface
+                                )
+                                parsed["active_wan_rx_mbps"] = rx_c
+                                parsed["active_wan_tx_mbps"] = tx_c
+                        except Exception:
+                            pass
                     return parsed
         except Exception:
             pass
