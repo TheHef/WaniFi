@@ -395,77 +395,110 @@ class UniFiSSHClient:
         return result
 
     async def _probe_device_at(self, ip: str) -> dict:
-        """SSH into a secondary UniFi device via the gateway as a jump host.
+        """SSH into a secondary UniFi device to read its model and hostname.
 
         Read-only: only reads /proc/ubnthal/system_info and hostname.
-        Uses the same SSH credentials as the main gateway — UniFi shares the
-        same SSH password across all adopted devices in a network.
 
-        The gateway (self._conn) is used as an SSH tunnel so that devices on
-        internal management subnets (e.g. 192.168.50.2) that are not directly
-        reachable from the WaniFi host can still be probed.
+        Strategy 1 (preferred): run ``ssh`` from the gateway shell.
+        UniFi OS installs pre-shared SSH keys between the gateway and every
+        adopted device, so the gateway can SSH in without a password.
+        This works even when the target's management IP is on an internal
+        subnet unreachable from the WaniFi host (e.g. 192.168.50.2).
 
-        Works generically for any UniFi device (U5G-Max, UCG-Ultra, UDM, USG,
-        UAP, USW, …) that responds to SSH and runs UniFi OS or AirOS.
+        Strategy 2 (fallback): asyncssh direct-tcpip channel through the
+        already-open gateway connection (jump-host proxy), using the shared
+        SSH password.  Requires AllowTcpForwarding on the gateway's sshd.
 
         Returns {model, name, ip} — fields may be empty on any SSH failure.
         """
         result: dict = {"model": "", "name": "", "ip": ip}
         if not _HAS_ASYNCSSH:
             return result
+
+        # The remote command — no single quotes so it's safe inside either
+        # double-quoted shell argument or passed directly via asyncssh.
+        remote_cmd = (
+            "cat /proc/ubnthal/system_info 2>/dev/null; "
+            "echo ---HOSTNAME---; "
+            "hostname 2>/dev/null"
+        )
+        raw = ""
+
+        # ── Strategy 1: ssh client on the gateway shell ──────────────────────
+        # UniFi OS pre-installs host keys for inter-device management, so the
+        # gateway can usually SSH into any adopted device without a password.
+        # We suppress stderr (2>/dev/null) so a connection failure just returns
+        # empty output rather than raising an exception.
         try:
-            # Ensure the gateway connection is open so we can use it as a tunnel
-            await self._ensure_connected()
-            # Connect to the secondary device through the gateway (jump host).
-            # asyncssh multiplexes this over the existing SSH channel — read-only.
-            conn = await asyncssh.connect(
-                ip,
-                port=self._port,
-                username=self._username,
-                password=self._password,
-                known_hosts=None,
-                connect_timeout=8,
-                tunnel=self._conn,   # proxy through the already-open gateway conn
+            shell_cmd = (
+                f"ssh -o StrictHostKeyChecking=no "
+                f"-o ConnectTimeout=5 "
+                f"-o BatchMode=yes "
+                f"-p {self._port} "
+                f'{self._username}@{ip} "{remote_cmd}" 2>/dev/null'
             )
+            out = await self._run(shell_cmd)
+            if out and "---HOSTNAME---" in out:
+                raw = out
+                log.debug("SSH probe (shell) succeeded for %s", ip)
+        except Exception as e:
+            log.debug("SSH probe (shell) failed for %s: %s", ip, e)
+
+        # ── Strategy 2: asyncssh direct-tcpip (jump host) ────────────────────
+        # Use the already-open gateway connection as a TCP tunnel so the target
+        # device does not need to be directly reachable from WaniFi.
+        # Requires AllowTcpForwarding on the gateway's sshd.
+        if not raw:
             try:
-                r = await conn.run(
-                    "cat /proc/ubnthal/system_info 2>/dev/null; "
-                    "echo '---HOSTNAME---'; hostname 2>/dev/null",
-                    check=False,
-                    timeout=10,
+                await self._ensure_connected()
+                conn = await asyncssh.connect(
+                    ip,
+                    port=self._port,
+                    username=self._username,
+                    password=self._password,
+                    known_hosts=None,
+                    connect_timeout=8,
+                    tunnel=self._conn,
                 )
-                raw = (r.stdout or "").strip()
-            finally:
-                conn.close()
+                try:
+                    r = await conn.run(remote_cmd, check=False, timeout=10)
+                    raw = (r.stdout or "").strip()
+                    if raw:
+                        log.debug("SSH probe (jump host) succeeded for %s", ip)
+                finally:
+                    conn.close()
+            except Exception as e:
+                log.debug("SSH probe (jump host) failed for %s: %s", ip, e)
 
-            if "---HOSTNAME---" in raw:
-                info_part, _, host_part = raw.partition("---HOSTNAME---")
-            else:
-                info_part, host_part = raw, ""
+        if not raw:
+            return result
 
-            # Parse key=value lines from /proc/ubnthal/system_info
-            # Common keys: shortname, name, board_name, systemid
-            fields: dict[str, str] = {}
-            for line in info_part.splitlines():
-                if "=" in line:
-                    k, _, v = line.partition("=")
-                    fields[k.strip().lower()] = v.strip()
+        # ── Parse output ─────────────────────────────────────────────────────
+        if "---HOSTNAME---" in raw:
+            info_part, _, host_part = raw.partition("---HOSTNAME---")
+        else:
+            info_part, host_part = raw, ""
 
-            model = (
-                fields.get("shortname") or
-                fields.get("name")      or
-                fields.get("board_name") or
-                ""
-            )
-            hostname = host_part.strip().splitlines()[0] if host_part.strip() else ""
+        # Parse key=value lines from /proc/ubnthal/system_info
+        # Common keys: shortname, name, board_name, systemid
+        fields: dict[str, str] = {}
+        for line in info_part.splitlines():
+            if "=" in line:
+                k, _, v = line.partition("=")
+                fields[k.strip().lower()] = v.strip()
 
-            if model:
-                result["model"] = model
-            if hostname:
-                result["name"] = hostname
+        model = (
+            fields.get("shortname") or
+            fields.get("name")      or
+            fields.get("board_name") or
+            ""
+        )
+        hostname = host_part.strip().splitlines()[0] if host_part.strip() else ""
 
-        except Exception:
-            pass  # SSH refused / wrong creds / timeout → return {ip} only
+        if model:
+            result["model"] = model
+        if hostname:
+            result["name"] = hostname
 
         return result
 

@@ -144,11 +144,29 @@ async def debug_unifi_ssh(_: bool = Depends(require_auth)):
             gre_remotes = await client._get_gre_remotes()
             probe_results: dict = {}
             for iface, remote_ip in gre_remotes.items():
+                probe_info: dict = {"ip": remote_ip}
+                # Strategy 1 raw: run ssh client on the gateway shell directly
+                # so we can see the exact output / error for diagnosis.
+                try:
+                    shell_out = await client.run_raw(
+                        f"ssh -o StrictHostKeyChecking=no "
+                        f"-o ConnectTimeout=5 "
+                        f"-o BatchMode=yes "
+                        f"-p {port} "
+                        f'{username}@{remote_ip} '
+                        f'"cat /proc/ubnthal/system_info 2>/dev/null; '
+                        f'echo ---HOSTNAME---; hostname 2>/dev/null" 2>&1'
+                    )
+                    probe_info["shell_ssh_raw"] = shell_out or "(empty output)"
+                except Exception as se:
+                    probe_info["shell_ssh_raw"] = f"ERROR: {se}"
+                # Full probe (Strategy 1 then Strategy 2)
                 try:
                     probe = await client._probe_device_at(remote_ip)
-                    probe_results[iface] = probe
+                    probe_info.update(probe)
                 except Exception as pe:
-                    probe_results[iface] = {"error": str(pe), "ip": remote_ip}
+                    probe_info["probe_error"] = str(pe)
+                probe_results[iface] = probe_info
             result["gre_probes"] = probe_results
         except Exception as ge:
             result["gre_probes"] = {"error": str(ge)}
