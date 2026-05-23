@@ -394,25 +394,115 @@ class UniFiSSHClient:
             pass
         return result
 
-    async def _get_extra_devices_cached(self, gw_model: str, gw_name: str) -> list[dict]:
-        """Return adopted non-gateway devices with a 120 s TTL cache.
+    async def _probe_device_at(self, ip: str) -> dict:
+        """SSH directly into a secondary UniFi device and read its model/hostname.
 
-        Used by get_gateway_info() so the live-stats loop (every ~5 s) doesn't
-        hammer MongoDB on every tick.  Returns list of {model, name} dicts.
+        Read-only: only reads /proc/ubnthal/system_info and hostname.
+        Uses the same SSH credentials as the main gateway — UniFi shares the
+        same SSH password across all adopted devices in a network.
+
+        Works generically for any UniFi device (U5G-Max, UCG-Ultra, UDM, USG,
+        UAP, USW, …) that responds to SSH and runs UniFi OS or AirOS.
+
+        Returns {model, name, ip} — fields may be empty on any SSH failure.
+        """
+        result: dict = {"model": "", "name": "", "ip": ip}
+        if not _HAS_ASYNCSSH:
+            return result
+        try:
+            conn = await asyncssh.connect(
+                ip,
+                port=self._port,
+                username=self._username,
+                password=self._password,
+                known_hosts=None,
+                connect_timeout=5,
+            )
+            try:
+                r = await conn.run(
+                    "cat /proc/ubnthal/system_info 2>/dev/null; "
+                    "echo '---HOSTNAME---'; hostname 2>/dev/null",
+                    check=False,
+                    timeout=8,
+                )
+                raw = (r.stdout or "").strip()
+            finally:
+                conn.close()
+
+            if "---HOSTNAME---" in raw:
+                info_part, _, host_part = raw.partition("---HOSTNAME---")
+            else:
+                info_part, host_part = raw, ""
+
+            # Parse key=value lines from /proc/ubnthal/system_info
+            # Common keys: shortname, name, board_name, systemid
+            fields: dict[str, str] = {}
+            for line in info_part.splitlines():
+                if "=" in line:
+                    k, _, v = line.partition("=")
+                    fields[k.strip().lower()] = v.strip()
+
+            model = (
+                fields.get("shortname") or
+                fields.get("name")      or
+                fields.get("board_name") or
+                ""
+            )
+            hostname = host_part.strip().splitlines()[0] if host_part.strip() else ""
+
+            if model:
+                result["model"] = model
+            if hostname:
+                result["name"] = hostname
+
+        except Exception:
+            pass  # SSH refused / wrong creds / timeout → return {ip} only
+
+        return result
+
+    async def _get_extra_devices_cached(self, gw_model: str, gw_name: str) -> list[dict]:
+        """Return non-gateway WAN devices with a 120 s TTL cache.
+
+        Strategy 1: local MongoDB find() — works on some UniFi OS versions.
+        Strategy 2: SSH probe each GRE tunnel remote IP directly using the same
+          credentials (UniFi shares SSH password across all adopted devices).
+          Reads /proc/ubnthal/system_info → model, hostname, and the LAN IP
+          is taken from the tunnel remote address.
+
+        Returns list of {model, name, ip} dicts.
         """
         now = time.monotonic()
-        if self._adopted_cache is None or now - self._adopted_cache[0] > 120:
-            adopted = await self._query_adopted_devices()
-            # Filter out the main gateway (identified by matching model AND name)
+        if self._adopted_cache is not None and now - self._adopted_cache[0] <= 120:
+            return self._adopted_cache[1]
+
+        extra: list[dict] = []
+
+        # Strategy 1: MongoDB (may not be available on all UniFi OS versions)
+        adopted = await self._query_adopted_devices()
+        if adopted:
             extra = [
                 d for d in adopted
                 if not (d.get("model") == gw_model and d.get("name") == gw_name)
             ]
-            # Secondary filter: if model matches many devices, exclude by name only
             if not extra and len(adopted) > 1:
                 extra = [d for d in adopted if d.get("name") != gw_name]
-            self._adopted_cache = (now, extra)
-        return self._adopted_cache[1]
+
+        # Strategy 2: SSH into each GRE tunnel remote IP with the same credentials.
+        # The remote IP from 'ip tunnel show' is the device's LAN management IP,
+        # so we can SSH directly to it and read /proc/ubnthal/system_info.
+        if not extra:
+            gre_remotes = await self._get_gre_remotes()
+            if gre_remotes:
+                probes = await asyncio.gather(
+                    *[self._probe_device_at(ip) for ip in gre_remotes.values()],
+                    return_exceptions=True,
+                )
+                for probe in probes:
+                    if isinstance(probe, dict):
+                        extra.append(probe)
+
+        self._adopted_cache = (now, extra)
+        return extra
 
     # ── Public API (shape-compatible with UniFiClient) ───────────────────────
 
@@ -485,27 +575,17 @@ class UniFiSSHClient:
             for i in wan_ifaces
         )
 
-        # Fetch adopted devices from MongoDB (read-only) only when there are
-        # non-native WAN interfaces that need device attribution.
-        adopted: list[dict] = []
+        # Fetch extra (non-gateway) WAN devices via the cached resolution strategy:
+        #   Strategy 1: local MongoDB find() (may not be available on all OS versions)
+        #   Strategy 2: SSH probe each GRE tunnel remote IP using the same credentials
+        # gre_remotes is fetched separately so the attribution loop below can match
+        # by remote IP even when extra_adopted was built from SSH probes.
+        extra_adopted: list[dict] = []
         gre_remotes: dict[str, str] = {}
         if has_non_native:
-            if has_gre:
-                adopted, gre_remotes = await asyncio.gather(
-                    self._query_adopted_devices(),
-                    self._get_gre_remotes(),
-                )
-            else:
-                adopted = await self._query_adopted_devices()
-
-        # Extra devices = adopted minus the gateway itself (identified by model+name)
-        extra_adopted = [
-            d for d in adopted
-            if not (d.get("model") == gw_model and d.get("name") == gw_name)
-        ]
-        # If all adopted share the same model, fall back to name-only exclusion
-        if not extra_adopted and len(adopted) > 1:
-            extra_adopted = [d for d in adopted if d.get("name") != gw_name]
+            extra_adopted = await self._get_extra_devices_cached(gw_model, gw_name)
+        if has_gre:
+            gre_remotes = await self._get_gre_remotes()
 
         result: list[dict] = []
         for iface in wan_ifaces:
@@ -720,7 +800,11 @@ class UniFiSSHClient:
                             parsed.get("gw_name",  ""),
                         )
                         parsed["extra_devices"] = [
-                            {"model": d.get("model", ""), "name": d.get("name", "")}
+                            {
+                                "model": d.get("model", ""),
+                                "name":  d.get("name",  ""),
+                                "ip":    d.get("ip",    ""),
+                            }
                             for d in extras
                         ]
                     except Exception:
