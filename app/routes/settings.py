@@ -143,6 +143,17 @@ async def debug_unifi_ssh(_: bool = Depends(require_auth)):
             # ── Controller filesystem: sites dir + device JSON files ──────────
             ("ctrl_fs_sites",   "ls /mnt/data/unifi-os/unifi/data/sites/ 2>/dev/null || ls /data/unifi/data/sites/ 2>/dev/null || echo 'no_sites_dir'"),
             ("ctrl_fs_devices", "find /mnt/data /data /persistent -maxdepth 8 \\( -name 'device*.json' -o -name '*devices*.json' \\) 2>/dev/null | head -10 || echo 'no_device_files'"),
+            # ── Throughput field diagnostics ─────────────────────────────────
+            ("throughput_fields", (
+                "python3 -c \""
+                "import json,sys;"
+                "d=json.loads(open('/proc/ubnthal/mca-dump-min','rb').read().replace(b'\\x00',b'')) if False else json.loads(__import__('subprocess').check_output(['mca-dump']).replace(b'\\x00',b''));"
+                "u=d.get('uplink','');"
+                "ifs=d.get('if_table',[]);"
+                "a=next((i for i in ifs if i.get('name')==u),{});"
+                "print(json.dumps({'uplink':u,'rx_rate':a.get('rx_rate'),'rx_bytes_r':a.get('rx_bytes-r'),'tx_rate':a.get('tx_rate'),'tx_bytes_r':a.get('tx_bytes-r'),'speed':a.get('speed'),'full_keys':list(a.keys())}))"
+                "\" 2>/dev/null || echo 'python3_failed'"
+            )),
             # ── ULP backup file (Strategy 3 — present on UCG-Max) ────────────────
             ("ulp_devices_file", "cat /data/ulp-go/ws/backup_unifi_devices.json 2>/dev/null | head -c 6000 || echo 'ulp_file_not_found'"),
         ]:
