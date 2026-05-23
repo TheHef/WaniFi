@@ -395,11 +395,15 @@ class UniFiSSHClient:
         return result
 
     async def _probe_device_at(self, ip: str) -> dict:
-        """SSH directly into a secondary UniFi device and read its model/hostname.
+        """SSH into a secondary UniFi device via the gateway as a jump host.
 
         Read-only: only reads /proc/ubnthal/system_info and hostname.
         Uses the same SSH credentials as the main gateway — UniFi shares the
         same SSH password across all adopted devices in a network.
+
+        The gateway (self._conn) is used as an SSH tunnel so that devices on
+        internal management subnets (e.g. 192.168.50.2) that are not directly
+        reachable from the WaniFi host can still be probed.
 
         Works generically for any UniFi device (U5G-Max, UCG-Ultra, UDM, USG,
         UAP, USW, …) that responds to SSH and runs UniFi OS or AirOS.
@@ -410,20 +414,25 @@ class UniFiSSHClient:
         if not _HAS_ASYNCSSH:
             return result
         try:
+            # Ensure the gateway connection is open so we can use it as a tunnel
+            await self._ensure_connected()
+            # Connect to the secondary device through the gateway (jump host).
+            # asyncssh multiplexes this over the existing SSH channel — read-only.
             conn = await asyncssh.connect(
                 ip,
                 port=self._port,
                 username=self._username,
                 password=self._password,
                 known_hosts=None,
-                connect_timeout=5,
+                connect_timeout=8,
+                tunnel=self._conn,   # proxy through the already-open gateway conn
             )
             try:
                 r = await conn.run(
                     "cat /proc/ubnthal/system_info 2>/dev/null; "
                     "echo '---HOSTNAME---'; hostname 2>/dev/null",
                     check=False,
-                    timeout=8,
+                    timeout=10,
                 )
                 raw = (r.stdout or "").strip()
             finally:

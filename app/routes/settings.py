@@ -139,6 +139,19 @@ async def debug_unifi_ssh(_: bool = Depends(require_auth)):
                 result[label] = await client.run_raw(cmd)
             except Exception as e:
                 result[label] = f"ERROR: {e}"
+        # ── GRE probe: SSH into each tunnel remote via the gateway as jump host ──
+        try:
+            gre_remotes = await client._get_gre_remotes()
+            probe_results: dict = {}
+            for iface, remote_ip in gre_remotes.items():
+                try:
+                    probe = await client._probe_device_at(remote_ip)
+                    probe_results[iface] = probe
+                except Exception as pe:
+                    probe_results[iface] = {"error": str(pe), "ip": remote_ip}
+            result["gre_probes"] = probe_results
+        except Exception as ge:
+            result["gre_probes"] = {"error": str(ge)}
         return {"ok": True, "results": result}
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
