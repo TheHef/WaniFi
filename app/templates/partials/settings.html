@@ -149,6 +149,7 @@
                  x-show="deviceIcon(settings.gre_device_model)">
           </template>
           <select x-model="settings.gre_device_model"
+                  @change="settings.unifi_ssh_mode ? testUnifiSsh() : testUnifi()"
                   class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition">
             <option value="">— Auto-detect —</option>
             <option value="U5GMAX">U5G-Max</option>
