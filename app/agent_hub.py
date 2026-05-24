@@ -8,18 +8,36 @@ from fastapi import WebSocket
 
 from .config import log
 
-# api_key → {"ws": WebSocket, "name": str, "connected_at": int, "pending": Future | None}
+# api_key → {ws, name, connected_at, pending, caps}
+# caps: {"docker": bool|None, "host_command": bool|None, "ip": str, "hostname": str, "version": str}
 _agents: dict[str, dict] = {}
 
 
-def register(api_key: str, name: str, ws: WebSocket):
+def register(api_key: str, name: str, ws: WebSocket, caps: dict | None = None):
     old = _agents.get(api_key)
     if old:
         fut: asyncio.Future | None = old.get("pending")
         if fut and not fut.done():
             fut.set_exception(RuntimeError("Agent reconnected — previous connection replaced"))
-    _agents[api_key] = {"ws": ws, "name": name, "connected_at": int(time.time()), "pending": None}
+    _agents[api_key] = {
+        "ws":           ws,
+        "name":         name,
+        "connected_at": int(time.time()),
+        "pending":      None,
+        "caps":         caps or {},
+    }
     log.info("Agent connected: %s", name)
+
+
+def get_agent_runtime(api_key: str) -> dict | None:
+    """Return live runtime info for a connected agent, or None if offline."""
+    entry = _agents.get(api_key)
+    if not entry:
+        return None
+    return {
+        "connected_at": entry["connected_at"],
+        "caps":         entry.get("caps") or {},
+    }
 
 
 def unregister(api_key: str):

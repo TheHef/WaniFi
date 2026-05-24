@@ -4,7 +4,7 @@ import secrets
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
-from ..agent_hub import deliver_response, is_online, online_keys, register, send_command, unregister
+from ..agent_hub import deliver_response, get_agent_runtime, is_online, online_keys, register, send_command, unregister
 from ..auth import require_auth
 from ..db import create_agent, db as db_conn, delete_agent, get_agent_by_key, list_agents
 
@@ -24,7 +24,15 @@ async def get_agents(_=Depends(require_auth)):
     agents = list_agents()
     keys = online_keys()
     for a in agents:
-        a["online"] = a["api_key"] in keys
+        key = a["api_key"]
+        a["online"] = key in keys
+        runtime = get_agent_runtime(key)
+        if runtime:
+            a["connected_at"] = runtime["connected_at"]
+            a["caps"] = runtime["caps"]
+        else:
+            a["connected_at"] = None
+            a["caps"] = {}
     return agents
 
 
@@ -109,8 +117,9 @@ async def agent_ws(ws: WebSocket):
         return
 
     api_key = agent["api_key"]
+    caps = msg.get("caps") or {}
     await ws.send_text(_json.dumps({"ok": True}))
-    register(api_key, agent["name"], ws)
+    register(api_key, agent["name"], ws, caps)
     try:
         while True:
             data = await ws.receive_text()
