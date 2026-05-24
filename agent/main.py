@@ -65,16 +65,49 @@ def detect_caps() -> dict:
     except Exception:
         pass
 
-    # Best-effort outbound IP
+    # Host IP: with pid:host, /proc/1/net/fib_trie is the HOST's routing table.
+    # Parse it for "host LOCAL" entries and prefer non-Docker-bridge addresses.
     ip = ""
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.settimeout(2)
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-        s.close()
+        candidates = []
+        prev_ip = None
+        with open("/proc/1/net/fib_trie") as f:
+            for line in f:
+                s = line.strip()
+                if s.startswith("-- "):
+                    candidate = s[3:].split("/")[0].strip()
+                    try:
+                        socket.inet_aton(candidate)
+                        prev_ip = candidate
+                    except Exception:
+                        prev_ip = None
+                elif "/32 host LOCAL" in s and prev_ip:
+                    if not prev_ip.startswith("127.") and not prev_ip.startswith("0."):
+                        candidates.append(prev_ip)
+                    prev_ip = None
+        # Prefer real LAN IPs — skip Docker bridge range (172.16-31.x.x)
+        for candidate in candidates:
+            parts = candidate.split(".")
+            if parts[0] == "172" and 16 <= int(parts[1]) <= 31:
+                continue
+            if not candidate.startswith("169.254."):
+                ip = candidate
+                break
+        if not ip and candidates:
+            ip = candidates[0]
     except Exception:
         pass
+
+    # Fallback: UDP trick (gives container IP, but better than nothing)
+    if not ip:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.settimeout(2)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+        except Exception:
+            pass
 
     return {
         "docker":       docker_ok,

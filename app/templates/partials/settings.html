@@ -1702,8 +1702,8 @@
              @drop.prevent="reorderAgents(agentDragSrcIndex, index); agentDragSrcIndex = null; agentDragOverIndex = null"
              @dragend="agentDragSrcIndex = null; agentDragOverIndex = null">
 
-          <!-- Header row: drag handle · status · name · hostname · badge · delete -->
-          <div class="flex items-center gap-3 px-4 py-3 cursor-grab">
+          <!-- Header row: drag · status · name · hostname · [caps] · Online · × -->
+          <div class="flex items-center gap-2.5 px-4 py-3 cursor-grab">
             <svg class="w-3.5 h-3.5 text-slate-700 shrink-0" fill="currentColor" viewBox="0 0 24 24">
               <circle cx="9" cy="5" r="1.2"/><circle cx="15" cy="5" r="1.2"/>
               <circle cx="9" cy="12" r="1.2"/><circle cx="15" cy="12" r="1.2"/>
@@ -1716,6 +1716,27 @@
               <span x-show="a.online && a.caps?.hostname"
                     class="text-xs text-slate-500 font-mono truncate hidden sm:block"
                     x-text="a.caps?.hostname"></span>
+            </div>
+            <!-- Capability badges — right-aligned in header -->
+            <div class="flex items-center gap-1.5 shrink-0">
+              <div class="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold border"
+                   :class="a.caps?.docker ? 'bg-[#248CEF]/10 border-[#248CEF]/30 text-[#248CEF]' : 'bg-slate-800/50 border-slate-700/50 text-slate-500'">
+                <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+                </svg>
+                <span>Docker</span>
+                <span class="font-normal opacity-60"
+                      x-text="!a.online ? '?' : a.caps?.docker ? 'connected' : 'no socket'"></span>
+              </div>
+              <div class="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold border"
+                   :class="a.caps?.host_command ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-slate-800/50 border-slate-700/50 text-slate-500'">
+                <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>Host Cmd</span>
+                <span class="font-normal opacity-60"
+                      x-text="!a.online ? '?' : a.caps?.host_command ? 'enabled' : 'disabled'"></span>
+              </div>
             </div>
             <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0"
                   :class="a.online ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700/50 text-slate-500'"
@@ -1731,34 +1752,8 @@
           <!-- Expanded details -->
           <div class="px-4 pb-4 border-t border-slate-800/60">
 
-            <!-- Capability badges -->
-            <div class="flex flex-wrap gap-2 pt-3 mb-3">
-              <!-- Docker -->
-              <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border"
-                   :class="a.caps?.docker ? 'bg-[#248CEF]/10 border-[#248CEF]/30 text-[#248CEF]' : 'bg-slate-800/50 border-slate-700/50 text-slate-500'">
-                <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
-                </svg>
-                <span>Docker</span>
-                <span class="font-normal"
-                      :class="a.caps?.docker ? 'text-[#248CEF]/60' : 'text-slate-600'"
-                      x-text="!a.online ? 'unknown' : a.caps?.docker ? 'connected' : 'no socket'"></span>
-              </div>
-              <!-- Host Command -->
-              <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border"
-                   :class="a.caps?.host_command ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-slate-800/50 border-slate-700/50 text-slate-500'">
-                <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                <span>Host Command</span>
-                <span class="font-normal"
-                      :class="a.caps?.host_command ? 'text-red-400/60' : 'text-slate-600'"
-                      x-text="!a.online ? 'unknown' : a.caps?.host_command ? 'enabled' : 'disabled'"></span>
-              </div>
-            </div>
-
             <!-- Info grid: IP · Connected · Version -->
-            <div class="grid grid-cols-3 gap-2 mb-3">
+            <div class="grid grid-cols-3 gap-2 mb-3 pt-3">
               <div class="bg-slate-900/60 rounded-lg px-3 py-2">
                 <div class="text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-0.5">IP Address</div>
                 <div class="text-xs font-mono text-slate-300" x-text="(a.online && a.caps?.ip) ? a.caps.ip : '—'"></div>
@@ -1780,9 +1775,12 @@
                 <span class="text-[10px] font-semibold text-slate-600 uppercase tracking-wider shrink-0">API Key</span>
                 <span class="text-[11px] font-mono text-slate-500 truncate" x-text="a.api_key.slice(0, 24) + '…'"></span>
               </div>
-              <button @click.stop="navigator.clipboard.writeText(a.api_key).then(() => { agentMsg = 'Copied!'; setTimeout(() => agentMsg = '', 2000) })"
-                      class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-slate-200 transition cursor-pointer shrink-0 whitespace-nowrap">
-                Copy key
+              <button @click.stop="navigator.clipboard.writeText(a.api_key).then(() => { copiedKey = a.id; setTimeout(() => copiedKey = null, 2000) })"
+                      class="text-xs px-3 py-1.5 rounded-lg border transition cursor-pointer shrink-0 whitespace-nowrap font-semibold"
+                      :class="copiedKey === a.id
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                        : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-400 hover:text-slate-200'">
+                <span x-text="copiedKey === a.id ? 'Copied ✓' : 'Copy key'"></span>
               </button>
             </div>
           </div>
