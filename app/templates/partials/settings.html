@@ -1712,11 +1712,8 @@
             </svg>
             <span class="w-2.5 h-2.5 rounded-full shrink-0"
                   :class="a.online ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'"></span>
-            <div class="flex-1 min-w-0 flex items-baseline gap-2">
+            <div class="flex-1 min-w-0">
               <span class="text-sm font-bold text-slate-100 truncate" x-text="a.name"></span>
-              <span x-show="a.online && a.caps?.hostname"
-                    class="text-xs text-slate-500 font-mono truncate hidden sm:block"
-                    x-text="a.caps?.hostname?.slice(0, 5)"></span>
             </div>
             <!-- Capability badges — right-aligned in header -->
             <div class="flex items-center gap-1.5 shrink-0">
@@ -1753,11 +1750,15 @@
           <!-- Expanded details -->
           <div class="px-4 pb-4 border-t border-slate-800/60">
 
-            <!-- Info grid: IP · Connected · Version -->
-            <div class="grid grid-cols-3 gap-2 mb-3 pt-3">
+            <!-- Info grid: IP · Hostname · Connected · Version -->
+            <div class="grid grid-cols-4 gap-2 mb-3 pt-3">
               <div class="bg-slate-900/60 rounded-lg px-3 py-2">
                 <div class="text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-0.5">IP Address</div>
                 <div class="text-xs font-mono text-slate-300" x-text="(a.online && a.caps?.ip) ? a.caps.ip : '—'"></div>
+              </div>
+              <div class="bg-slate-900/60 rounded-lg px-3 py-2">
+                <div class="text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-0.5">Hostname</div>
+                <div class="text-xs font-mono text-slate-300" x-text="(a.online && a.caps?.hostname) ? a.caps.hostname : '—'"></div>
               </div>
               <div class="bg-slate-900/60 rounded-lg px-3 py-2">
                 <div class="text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-0.5">Connected</div>
