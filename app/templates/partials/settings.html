@@ -1729,25 +1729,142 @@
     </div>
   </div>
 
-  <div x-show="settingsSection === 'backup'" class="bg-slate-900 border border-slate-700/60 rounded-2xl p-5">
-    <div class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Backup &amp; Restore</div>
-    <div class="flex gap-3 flex-wrap items-center">
-      <a href="/api/backup/export"
-         class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-4 py-2 text-sm transition inline-flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
-        </svg>
-        Export backup
-      </a>
-      <label class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-4 py-2 text-sm transition cursor-pointer inline-flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-        </svg>
-        Import backup
-        <input type="file" accept=".json,application/json" class="hidden" @change="importBackup($event)">
-      </label>
-      <div class="text-sm font-medium" :class="importMsg.startsWith('✓') ? 'text-emerald-400' : 'text-red-400'" x-show="importMsg" x-text="importMsg"></div>
+  <div x-show="settingsSection === 'backup'" class="space-y-4">
+
+    <!-- Manual backup actions -->
+    <div class="bg-slate-900 border border-slate-700/60 rounded-2xl p-5">
+      <div class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Backup &amp; Restore</div>
+      <div class="flex gap-3 flex-wrap items-center">
+        <button @click="saveBackupNow()"
+                class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-4 py-2 text-sm transition inline-flex items-center gap-2">
+          <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+          </svg>
+          Save backup
+        </button>
+        <a href="/api/backup/export"
+           class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-4 py-2 text-sm transition inline-flex items-center gap-2">
+          <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Export to file
+        </a>
+        <label class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl px-4 py-2 text-sm transition cursor-pointer inline-flex items-center gap-2">
+          <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12"/>
+          </svg>
+          Import from file
+          <input type="file" accept=".json,application/json" class="hidden" @change="importBackup($event)">
+        </label>
+        <span x-show="backupMsg || importMsg"
+              class="text-sm font-medium"
+              :class="(backupMsg || importMsg).startsWith('✓') ? 'text-emerald-400' : (backupMsg || importMsg).endsWith('…') ? 'text-slate-400' : 'text-red-400'"
+              x-text="backupMsg || importMsg"></span>
+      </div>
+      <p class="text-xs text-slate-600 mt-3">Backups include settings, rules and events. API keys and tokens are included — store files securely.</p>
     </div>
-    <p class="text-xs text-slate-600 mt-3">Backup includes settings, rules and events. API keys and tokens are included; store the file securely.</p>
+
+    <!-- Automatic backup schedule -->
+    <div class="bg-slate-900 border border-slate-700/60 rounded-2xl p-5">
+      <div class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Automatic Backups</div>
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="text-sm font-semibold text-slate-200">Scheduled backups</div>
+          <div class="text-xs text-slate-500 mt-0.5">Saved automatically to <code class="text-slate-400">/data/backups/</code></div>
+        </div>
+        <button @click="backupSchedule.enabled = !backupSchedule.enabled"
+                class="relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0"
+                :class="backupSchedule.enabled ? 'bg-blue-600' : 'bg-slate-700'">
+          <div class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform duration-200"
+               :class="backupSchedule.enabled ? 'translate-x-5' : ''"></div>
+        </button>
+      </div>
+      <div x-show="backupSchedule.enabled" x-transition class="flex flex-wrap gap-3 items-center">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400">Interval</span>
+          <select x-model="backupSchedule.interval"
+                  class="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500 transition">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400">Keep last</span>
+          <input type="number" x-model.number="backupSchedule.retention" min="1" max="100"
+                 class="w-16 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500 transition">
+          <span class="text-xs text-slate-400">backups</span>
+        </div>
+        <button @click="saveBackupSchedule()"
+                class="bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl px-4 py-1.5 text-sm transition">
+          Save
+        </button>
+        <span x-show="backupScheduleMsg"
+              class="text-sm font-medium"
+              :class="backupScheduleMsg.startsWith('✓') ? 'text-emerald-400' : 'text-red-400'"
+              x-text="backupScheduleMsg"></span>
+      </div>
+      <div x-show="!backupSchedule.enabled" class="mt-1">
+        <button @click="saveBackupSchedule()" x-show="!backupSchedule.enabled && backupScheduleMsg === ''"
+                class="text-xs text-slate-600 hover:text-slate-400 transition" style="display:none"></button>
+      </div>
+    </div>
+
+    <!-- Saved backups list -->
+    <div class="bg-slate-900 border border-slate-700/60 rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-4">
+        <div class="text-xs font-semibold text-slate-500 uppercase tracking-widest">Saved Backups</div>
+        <button @click="loadSavedBackups()"
+                class="text-xs text-slate-500 hover:text-slate-300 transition flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" :class="savedBackupsLoading ? 'animate-spin' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Refresh
+        </button>
+      </div>
+
+      <div x-show="savedBackups.length === 0 && !savedBackupsLoading"
+           class="text-xs text-slate-600 py-6 text-center">
+        No saved backups yet — click <span class="text-slate-400">Save backup</span> above to create one.
+      </div>
+
+      <div class="space-y-1.5">
+        <template x-for="b in savedBackups" :key="b.name">
+          <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-800/50 border border-slate-800 hover:border-slate-700 transition group">
+            <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0"
+                  :class="b.type === 'auto' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-700 text-slate-400'"
+                  x-text="b.type === 'auto' ? 'AUTO' : 'MANUAL'"></span>
+            <span class="text-xs text-slate-300 flex-1 font-mono truncate" x-text="b.name"></span>
+            <span class="text-xs text-slate-600 shrink-0" x-text="fmtBytes(b.size)"></span>
+            <span class="text-xs text-slate-600 shrink-0 hidden sm:block" x-text="fmtRelativeDate(b.created_at)"></span>
+            <!-- Download -->
+            <a :href="'/api/backup/download/' + encodeURIComponent(b.name)"
+               class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 hover:text-slate-200 hover:bg-slate-700 transition opacity-0 group-hover:opacity-100"
+               title="Download">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+            </a>
+            <!-- Restore -->
+            <button @click="restoreSavedBackup(b.name)"
+                    class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 hover:text-emerald-400 hover:bg-emerald-500/10 transition opacity-0 group-hover:opacity-100"
+                    title="Restore">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+            </button>
+            <!-- Delete -->
+            <button @click="deleteSavedBackup(b.name)"
+                    class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition opacity-0 group-hover:opacity-100"
+                    title="Delete">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
+        </template>
+      </div>
+    </div>
+
   </div>
 </section>

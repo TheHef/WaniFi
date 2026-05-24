@@ -1,21 +1,31 @@
 """Full backup / restore: settings, rules, events."""
 import json
+import re
 import time
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from ..auth import require_auth
-from ..db import db, invalidate_cache, log_event
+from ..config import BACKUP_DIR
+from ..db import db, get_setting, invalidate_cache, log_event, set_setting
 from .settings import EXPORT_KEYS   # single source of truth for all setting keys
 
 router = APIRouter(prefix="/api/backup")
 
 BACKUP_VERSION = 3
 
+_SAFE_NAME_RE = re.compile(r'^wanifi_[a-zA-Z0-9_-]+\.json$')
 
-@router.get("/export")
-async def export_backup(_: bool = Depends(require_auth)):
+
+def _safe_name(name: str) -> bool:
+    return bool(_SAFE_NAME_RE.match(name))
+
+
+# ── Shared helpers ────────────────────────────────────────────────────────────
+
+def _build_payload() -> dict:
+    """Build the full backup payload (shared by export, save, and scheduled backup)."""
     with db() as conn:
         rows = conn.execute(
             "SELECT key, value FROM settings WHERE key IN ({})".format(
@@ -35,37 +45,24 @@ async def export_backup(_: bool = Depends(require_auth)):
             "SELECT ts, level, message FROM events ORDER BY id"
         ).fetchall()]
 
-    payload = {
+    return {
         "wanifi_backup_version": BACKUP_VERSION,
-        "exported_at": datetime.now(timezone.utc).isoformat(),
-        "settings": settings,
-        "rules": rules,
-        "events": events,
+        "exported_at":           datetime.now(timezone.utc).isoformat(),
+        "settings":              settings,
+        "rules":                 rules,
+        "events":                events,
     }
-    filename = f"wanifi-backup-{time.strftime('%Y%m%d-%H%M%S')}.json"
-    return Response(
-        content=json.dumps(payload, indent=2),
-        media_type="application/json",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
 
 
-@router.post("/import")
-async def import_backup(request: Request, _: bool = Depends(require_auth)):
-    try:
-        payload = await request.json()
-    except Exception:
-        raise HTTPException(400, "Invalid JSON")
-
+def _apply_payload(payload: dict) -> dict:
+    """Write a backup payload into the DB. Returns counts dict."""
     version = payload.get("wanifi_backup_version") or payload.get("wanifi_export_version")
     if not version:
-        raise HTTPException(400, "Not a valid WaniFi backup file")
+        raise ValueError("Not a valid WaniFi backup file")
     if version > BACKUP_VERSION:
-        raise HTTPException(400, f"Backup version {version} is newer than supported ({BACKUP_VERSION})")
+        raise ValueError(f"Backup version {version} is newer than supported ({BACKUP_VERSION})")
 
     counts = {"settings": 0, "rules": 0, "events": 0}
-
-    # v1 was a flat settings-only payload; v2+ use a nested "settings" key
     settings = payload.get("settings")
     if settings is None and version == 1:
         settings = {k: payload[k] for k in EXPORT_KEYS if k in payload}
@@ -124,10 +121,149 @@ async def import_backup(request: Request, _: bool = Depends(require_auth)):
                 counts["events"] += 1
 
     invalidate_cache()
+    return counts
 
+
+def _enforce_retention(prefix: str, retention: int):
+    """Delete oldest auto backups beyond the retention count."""
+    files = sorted(
+        BACKUP_DIR.glob(f"wanifi_{prefix}_*.json"),
+        key=lambda f: f.stat().st_mtime,
+        reverse=True,
+    )
+    for old in files[retention:]:
+        try:
+            old.unlink()
+        except Exception:
+            pass
+
+
+# ── Existing endpoints ────────────────────────────────────────────────────────
+
+@router.get("/export")
+async def export_backup(_: bool = Depends(require_auth)):
+    payload  = _build_payload()
+    filename = f"wanifi-backup-{time.strftime('%Y%m%d-%H%M%S')}.json"
+    return Response(
+        content=json.dumps(payload, indent=2),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.post("/import")
+async def import_backup(request: Request, _: bool = Depends(require_auth)):
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(400, "Invalid JSON")
+    try:
+        counts = _apply_payload(payload)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     log_event(
         "info",
         f"Backup restored: {counts['settings']} settings, "
         f"{counts['rules']} rules, {counts['events']} events",
     )
     return {"ok": True, "imported": counts}
+
+
+# ── Saved-backup endpoints ────────────────────────────────────────────────────
+
+@router.post("/save")
+async def save_backup(_: bool = Depends(require_auth)):
+    """Save a manual backup to the on-disk backup store."""
+    payload  = _build_payload()
+    filename = f"wanifi_manual_{time.strftime('%Y%m%d-%H%M%S')}.json"
+    path     = BACKUP_DIR / filename
+    path.write_text(json.dumps(payload, indent=2))
+    return {"ok": True, "name": filename, "size": path.stat().st_size}
+
+
+@router.get("/list")
+async def list_backups(_: bool = Depends(require_auth)):
+    """Return metadata for all saved backups, newest first."""
+    files = sorted(
+        BACKUP_DIR.glob("wanifi_*.json"),
+        key=lambda f: f.stat().st_mtime,
+        reverse=True,
+    )
+    result = []
+    for f in files:
+        stat = f.stat()
+        result.append({
+            "name":       f.name,
+            "size":       stat.st_size,
+            "created_at": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+            "type":       "auto" if "_auto_" in f.name else "manual",
+        })
+    return result
+
+
+@router.get("/download/{name}")
+async def download_saved_backup(name: str, _: bool = Depends(require_auth)):
+    if not _safe_name(name):
+        raise HTTPException(400, "Invalid filename")
+    path = BACKUP_DIR / name
+    if not path.exists():
+        raise HTTPException(404, "Backup not found")
+    return Response(
+        content=path.read_bytes(),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{name}"'},
+    )
+
+
+@router.post("/restore-saved/{name}")
+async def restore_saved_backup(name: str, _: bool = Depends(require_auth)):
+    if not _safe_name(name):
+        raise HTTPException(400, "Invalid filename")
+    path = BACKUP_DIR / name
+    if not path.exists():
+        raise HTTPException(404, "Backup not found")
+    try:
+        payload = json.loads(path.read_text())
+        counts  = _apply_payload(payload)
+    except (ValueError, json.JSONDecodeError) as e:
+        raise HTTPException(400, str(e))
+    log_event(
+        "info",
+        f"Backup restored from {name}: {counts['settings']} settings, "
+        f"{counts['rules']} rules, {counts['events']} events",
+    )
+    return {"ok": True, "imported": counts}
+
+
+@router.delete("/{name}")
+async def delete_backup(name: str, _: bool = Depends(require_auth)):
+    if not _safe_name(name):
+        raise HTTPException(400, "Invalid filename")
+    path = BACKUP_DIR / name
+    if path.exists():
+        path.unlink()
+    return {"ok": True}
+
+
+# ── Schedule settings ─────────────────────────────────────────────────────────
+
+@router.get("/schedule")
+async def get_backup_schedule(_: bool = Depends(require_auth)):
+    return {
+        "enabled":   get_setting("backup_schedule_enabled",  "0") == "1",
+        "interval":  get_setting("backup_schedule_interval", "daily"),
+        "retention": int(get_setting("backup_retention_count", "10")),
+    }
+
+
+@router.post("/schedule")
+async def save_backup_schedule(request: Request, _: bool = Depends(require_auth)):
+    body = await request.json()
+    set_setting("backup_schedule_enabled",  "1" if body.get("enabled") else "0")
+    set_setting("backup_schedule_interval", body.get("interval", "daily"))
+    try:
+        retention = max(1, int(body.get("retention", 10)))
+    except (TypeError, ValueError):
+        retention = 10
+    set_setting("backup_retention_count", str(retention))
+    return {"ok": True}

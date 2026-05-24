@@ -3,9 +3,11 @@ import logging
 import os
 from pathlib import Path
 
-DATA_DIR = Path(os.environ.get("DATA_DIR", "/data"))
+DATA_DIR   = Path(os.environ.get("DATA_DIR", "/data"))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
-DB_PATH = DATA_DIR / "wanifi.db"
+DB_PATH    = DATA_DIR / "wanifi.db"
+BACKUP_DIR = DATA_DIR / "backups"
+BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 
 POLL_INTERVAL_DEFAULT = 60
 LIVE_INTERVAL = 2

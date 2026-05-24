@@ -7,6 +7,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from .config import (
+    BACKUP_DIR,
     LIVE_INTERVAL,
     METRICS_WRITE_INTERVAL,
     POLL_INTERVAL_DEFAULT,
@@ -20,6 +21,7 @@ from .db import (
     get_setting,
     get_state,
     purge_old_events,
+    set_setting,
 )
 from .docker_ops import container_action
 from .notify import send_notification
@@ -856,6 +858,32 @@ async def fire_trigger(trigger: str):
             )
 
 
+async def maybe_run_scheduled_backup():
+    """Save an automatic backup if the configured schedule interval has elapsed."""
+    if get_setting("backup_schedule_enabled", "0") != "1":
+        return
+    _intervals = {"daily": 86_400, "weekly": 604_800, "monthly": 2_592_000}
+    interval_sec = _intervals.get(get_setting("backup_schedule_interval", "daily"), 86_400)
+    try:
+        last_ts = float(get_setting("backup_last_auto_ts", "0"))
+    except ValueError:
+        last_ts = 0.0
+    if time.time() - last_ts < interval_sec:
+        return
+    try:
+        from .routes.backup import _build_payload, _enforce_retention
+        import json as _json
+        payload  = _build_payload()
+        filename = f"wanifi_auto_{time.strftime('%Y%m%d-%H%M%S')}.json"
+        (BACKUP_DIR / filename).write_text(_json.dumps(payload, indent=2))
+        retention = int(get_setting("backup_retention_count", "10"))
+        _enforce_retention("auto", retention)
+        set_setting("backup_last_auto_ts", str(time.time()))
+        await a_log_event("info", f"Scheduled backup saved: {filename}")
+    except Exception as e:
+        log.error("Scheduled backup failed: %s", e)
+
+
 async def apply_rules(new_state: str):
     trigger_map = {"failover": "failover", "primary": "restored", "down": "down"}
     trigger = trigger_map.get(new_state)
@@ -1229,6 +1257,8 @@ async def watcher_loop():
                 retention = int(get_setting("event_retention_days", "30"))
                 await asyncio.to_thread(purge_old_events, retention)
                 last_purge_day = today
+
+            await maybe_run_scheduled_backup()
 
             _last_err_msg = None
             await asyncio.sleep(interval)

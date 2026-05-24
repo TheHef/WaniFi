@@ -58,6 +58,10 @@ window.app = function () {
     speedtestSettings:   { speedtest_server_id: '', speedtest_server_name: '', speedtest_source_ip: '' },
     speedtestServers: [], speedtestServerSearch: '', speedtestServerOpen: false, speedtestServersLoading: false, speedtestServersError: '',
 
+    savedBackups: [], savedBackupsLoading: false,
+    backupSchedule: { enabled: false, interval: 'daily', retention: 10 },
+    backupMsg: '', backupScheduleMsg: '',
+
     embyMsg: '', jellyfinMsg: '', plexMsg: '',
     discordMsg: '', telegramMsg: '', pushoverMsg: '',
     sabnzbdMsg: '', transmissionMsg: '', delugeMsg: '',
@@ -204,6 +208,8 @@ window.app = function () {
       await this.loadSpeedtestSettings();
       await this.loadIntegrations();
       await this.loadAgents();
+      await this.loadSavedBackups();
+      await this.loadBackupSchedule();
       await this.loadStats();
       this._setDefaultRuleType();
 
@@ -1453,6 +1459,109 @@ window.app = function () {
           setTimeout(() => this.importMsg = '', 5000);
         },
       };
+    },
+
+    // ---- Backup helpers --------------------------------------------------
+    async loadSavedBackups() {
+      this.savedBackupsLoading = true;
+      try {
+        this.savedBackups = await fetch('/api/backup/list').then(r => r.json());
+      } catch { this.savedBackups = []; }
+      this.savedBackupsLoading = false;
+    },
+
+    async loadBackupSchedule() {
+      try {
+        this.backupSchedule = await fetch('/api/backup/schedule').then(r => r.json());
+      } catch {}
+    },
+
+    async saveBackupNow() {
+      this.backupMsg = 'Saving…';
+      try {
+        const r = await fetch('/api/backup/save', { method: 'POST' });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.ok) {
+          this.backupMsg = `✓ Saved ${d.name}`;
+          await this.loadSavedBackups();
+        } else {
+          this.backupMsg = '✗ Save failed';
+        }
+      } catch { this.backupMsg = '✗ Save failed'; }
+      setTimeout(() => this.backupMsg = '', 4000);
+    },
+
+    async saveBackupSchedule() {
+      this.backupScheduleMsg = 'Saving…';
+      try {
+        const r = await fetch('/api/backup/schedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.backupSchedule),
+        });
+        const d = await r.json().catch(() => ({}));
+        this.backupScheduleMsg = r.ok && d.ok ? '✓ Saved' : '✗ Failed';
+      } catch { this.backupScheduleMsg = '✗ Failed'; }
+      setTimeout(() => this.backupScheduleMsg = '', 3000);
+    },
+
+    async restoreSavedBackup(name) {
+      this.confirmModal = {
+        open: true,
+        label: `Restore "${name}"? This replaces all current settings, rules and events.`,
+        confirm: async () => {
+          this.confirmModal.open = false;
+          this.backupMsg = 'Restoring…';
+          try {
+            const r = await fetch(`/api/backup/restore-saved/${encodeURIComponent(name)}`, { method: 'POST' });
+            const d = await r.json().catch(() => ({}));
+            if (r.ok && d.ok) {
+              const c = d.imported || {};
+              this.backupMsg = `✓ Restored ${c.settings || 0} settings, ${c.rules || 0} rules, ${c.events || 0} events`;
+              await this.loadSettings();
+              await this.loadIntegrations();
+            } else {
+              this.backupMsg = `✗ ${d.detail || 'Restore failed'}`;
+            }
+          } catch { this.backupMsg = '✗ Restore failed'; }
+          setTimeout(() => this.backupMsg = '', 5000);
+        },
+      };
+    },
+
+    async deleteSavedBackup(name) {
+      this.confirmModal = {
+        open: true,
+        label: `Delete "${name}"? This cannot be undone.`,
+        confirm: async () => {
+          this.confirmModal.open = false;
+          try {
+            await fetch(`/api/backup/${encodeURIComponent(name)}`, { method: 'DELETE' });
+            await this.loadSavedBackups();
+          } catch {}
+        },
+      };
+    },
+
+    fmtBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+    },
+
+    fmtRelativeDate(iso) {
+      try {
+        const d = new Date(iso);
+        const diff = Date.now() - d.getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1)   return 'just now';
+        if (mins < 60)  return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24)   return `${hrs}h ago`;
+        const days = Math.floor(hrs / 24);
+        if (days < 7)   return `${days}d ago`;
+        return d.toLocaleDateString();
+      } catch { return iso; }
     },
 
     // ---- Small helpers ----------------------------------------------------
