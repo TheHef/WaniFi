@@ -80,7 +80,7 @@ def _apply_payload(payload: dict) -> dict:
                 counts["settings"] += 1
 
         rules = payload.get("rules")
-        if isinstance(rules, list):
+        if isinstance(rules, list) and len(rules) > 0:
             conn.execute("DELETE FROM rules")
             for idx, r in enumerate(rules):
                 conn.execute(

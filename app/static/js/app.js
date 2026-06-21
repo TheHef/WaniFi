@@ -282,25 +282,27 @@ window.app = function () {
       try {
         const data = await fetch('/api/live').then(r => r.json());
         this.liveStats = data;
-        this.liveConnected = Object.keys(data).length > 0;
-      } catch { this.liveConnected = false; }
+      } catch {}
     },
 
     async refreshLive() {
       try {
-        const [s, r, e, c, a] = await Promise.all([
-          fetch('/api/status').then(r => r.json()),
-          fetch('/api/rules').then(r => r.json()),
-          fetch('/api/events').then(r => r.json()),
-          fetch('/api/containers').then(r => r.json()),
-          fetch('/api/agents').then(r => r.json()),
+        const responses = await Promise.all([
+          fetch('/api/status'),
+          fetch('/api/rules'),
+          fetch('/api/events'),
+          fetch('/api/containers'),
+          fetch('/api/agents'),
         ]);
+        if (responses[0].status === 401) { location.href = '/login'; return; }
+        const [s, r, e, c, a] = await Promise.all(responses.map(res => res.json()));
         this.status     = s;
         this.rules      = r.rules;
         this.events     = e.events;
         this.containers = c.containers;
         this.agents     = a;
-        this.appConnected = true;
+        this.appConnected  = true;
+        this.liveConnected = !s.controller_offline;
         // Auto-detected integrations: lock toggle to runtime state, ignore DB value
         if (s.docker_ok       !== undefined) this.integrations.docker       = s.docker_ok;
         if (s.host_command_ok !== undefined) this.integrations.host_command = s.host_command_ok;

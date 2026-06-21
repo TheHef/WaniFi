@@ -710,7 +710,7 @@ async def fire_trigger(trigger: str):
 
         # Optional delay before executing
         delay = rule["delay_seconds"] if "delay_seconds" in rule.keys() else 0
-        if delay and delay > 0:
+        if delay > 0:
             await asyncio.sleep(delay)
 
         if rtype == "host_command":
@@ -1097,12 +1097,12 @@ async def live_stats_loop():
             raise
         except Exception as e:
             log.warning("Live stats error: %s", e)
-            if unifi_client:
-                await unifi_client.close()
-            if unifi_ssh_client:
-                await unifi_ssh_client.close()
-            if owrt_client:
-                await owrt_client.close()
+            for _c in (unifi_client, unifi_ssh_client, owrt_client):
+                if _c:
+                    try:
+                        await asyncio.wait_for(_c.close(), timeout=3.0)
+                    except Exception:
+                        pass
             unifi_client, unifi_last_settings, _cpu_ema = None, None, None
             unifi_ssh_client, unifi_ssh_last_settings = None, None
             owrt_client, owrt_last_settings = None, None
@@ -1121,9 +1121,10 @@ async def watcher_loop():
     owrt_client: Optional[OpenWrtClient] = None
     owrt_last_settings: Optional[tuple] = None
 
-    last_purge_day: Optional[str] = None
-    _last_err_msg:  Optional[str] = None
-    _last_err_time: float         = 0.0
+    last_purge_day:    Optional[str] = None
+    _last_err_msg:     Optional[str] = None
+    _last_err_time:    float         = 0.0
+    _just_reconnected: bool          = False
 
     while True:
         try:
@@ -1228,18 +1229,20 @@ async def watcher_loop():
 
             state.last_check = datetime.now(timezone.utc).isoformat()
             if state.controller_offline:
-                await a_log_event("info", "Controller reconnected")
+                await a_log_event("info", "Controller reconnected — skipping rule evaluation for one cycle")
                 state.controller_offline = False
+                _just_reconnected = True
             state.last_error = None
 
             previous = state.current_wan
             if previous != new_state:
                 changed_at = datetime.now(timezone.utc).isoformat()
-                # Persist state only on change, not every heartbeat
                 await a_set_state("active_wan", new_state)
-                if previous is not None:
+                if previous is not None and not _just_reconnected:
                     await a_log_event("info", f"WAN state change: {previous} -> {new_state}")
                     await apply_rules(new_state)
+                elif previous is not None and _just_reconnected:
+                    await a_log_event("info", f"WAN state after reconnect: {previous} -> {new_state} (rules suppressed)")
                     if new_state == "failover":
                         name = get_setting("failover_wan_name") or failover
                         _rx  = state.live_gw_info.get("active_wan_rx_mbps", 0)
@@ -1288,6 +1291,7 @@ async def watcher_loop():
 
             await maybe_run_scheduled_backup()
 
+            _just_reconnected = False
             _last_err_msg = None
             await asyncio.sleep(interval)
         except asyncio.CancelledError:
@@ -1315,12 +1319,12 @@ async def watcher_loop():
                 await a_log_event("error", f"Watcher error: {msg}")
                 _last_err_msg  = msg
                 _last_err_time = now
-            if unifi_client:
-                await unifi_client.close()
-            if unifi_ssh_client:
-                await unifi_ssh_client.close()
-            if owrt_client:
-                await owrt_client.close()
+            for _c in (unifi_client, unifi_ssh_client, owrt_client):
+                if _c:
+                    try:
+                        await asyncio.wait_for(_c.close(), timeout=3.0)
+                    except Exception:
+                        pass
             unifi_client, unifi_last_settings = None, None
             unifi_ssh_client, unifi_ssh_last_settings = None, None
             owrt_client, owrt_last_settings = None, None
