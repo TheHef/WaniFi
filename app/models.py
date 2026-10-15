@@ -22,6 +22,7 @@ VALID_WEBHOOK_ACTIONS      = ("send",)
 VALID_PIHOLE_ACTIONS       = ("enable", "disable")
 VALID_ADGUARD_ACTIONS      = ("enable_protection", "disable_protection")
 VALID_PORTAINER_ACTIONS    = ("start_container", "stop_container", "restart_container")
+VALID_ARCANE_ACTIONS       = ("start_container", "stop_container", "restart_container")
 VALID_TRUENAS_ACTIONS      = ("start_service", "stop_service", "restart_service")
 VALID_UNRAID_ACTIONS       = ("start_vm", "stop_vm", "pause_vm", "resume_vm")
 VALID_NODERED_ACTIONS      = ("trigger_flow",)
@@ -175,6 +176,12 @@ class PortainerSettingsIn(BaseModel):
     portainer_url: str = ""
     portainer_token: Optional[str] = None
     portainer_env_id: str = "1"
+
+
+class ArcaneSettingsIn(BaseModel):
+    arcane_url: str = ""
+    arcane_token: Optional[str] = None
+    arcane_env_id: str = "0"
 
 
 class TrueNASSettingsIn(BaseModel):

@@ -461,6 +461,28 @@ async def run_portainer_action(action: str, container_name: str = "") -> tuple[b
         await client.close()
 
 
+async def run_arcane_action(action: str, container_name: str = "") -> tuple[bool, str]:
+    from .arcane import ArcaneClient
+    url    = get_setting("arcane_url", "")
+    token  = get_setting("arcane_token", "")
+    env_id = get_setting("arcane_env_id", "0")
+    if not (url and token):
+        return False, "Arcane not configured"
+    client = ArcaneClient(url, token, env_id)
+    act_map = {
+        "start_container":   "start",
+        "stop_container":    "stop",
+        "restart_container": "restart",
+    }
+    docker_action = act_map.get(action)
+    if not docker_action:
+        return False, f"Unknown Arcane action: {action}"
+    try:
+        return await client.container_action(container_name, docker_action)
+    finally:
+        await client.close()
+
+
 async def run_truenas_action(action: str, service: str = "") -> tuple[bool, str]:
     from .truenas import TrueNASClient
     url     = get_setting("truenas_url", "")
@@ -693,6 +715,7 @@ async def fire_trigger(trigger: str):
             "pihole":        "integration_pihole",
             "adguard":       "integration_adguard",
             "portainer":     "integration_portainer",
+            "arcane":        "integration_arcane",
             "truenas":       "integration_truenas",
             "unraid":        "integration_unraid",
             "nodered":       "integration_nodered",
@@ -801,6 +824,9 @@ async def fire_trigger(trigger: str):
         elif rtype == "portainer":
             ok, msg = await run_portainer_action(rule["action"], rule["container"])
             await a_log_event("info" if ok else "error", f"Rule: Portainer {rule['action']} on {trigger} -> {msg}")
+        elif rtype == "arcane":
+            ok, msg = await run_arcane_action(rule["action"], rule["container"])
+            await a_log_event("info" if ok else "error", f"Rule: Arcane {rule['action']} on {trigger} -> {msg}")
         elif rtype == "truenas":
             ok, msg = await run_truenas_action(rule["action"], rule["container"])
             await a_log_event("info" if ok else "error", f"Rule: TrueNAS {rule['action']} on {trigger} -> {msg}")

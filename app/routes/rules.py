@@ -22,6 +22,7 @@ from ..models import (
     VALID_PIHOLE_ACTIONS,
     VALID_ADGUARD_ACTIONS,
     VALID_PORTAINER_ACTIONS,
+    VALID_ARCANE_ACTIONS,
     VALID_TRUENAS_ACTIONS,
     VALID_UNRAID_ACTIONS,
     VALID_NODERED_ACTIONS,
@@ -49,6 +50,7 @@ from ..watcher import (
     run_pihole_action,
     run_adguard_action,
     run_portainer_action,
+    run_arcane_action,
     run_truenas_action,
     run_unraid_action,
     run_nodered_action,
@@ -125,6 +127,11 @@ def _validate(payload: RuleIn):
             raise HTTPException(400, f"action must be one of {VALID_PORTAINER_ACTIONS}")
         if not payload.container.strip():
             raise HTTPException(400, "container name required for portainer rules")
+    elif t == "arcane":
+        if payload.action not in VALID_ARCANE_ACTIONS:
+            raise HTTPException(400, f"action must be one of {VALID_ARCANE_ACTIONS}")
+        if not payload.container.strip():
+            raise HTTPException(400, "container name required for arcane rules")
     elif t == "truenas":
         if payload.action not in VALID_TRUENAS_ACTIONS:
             raise HTTPException(400, f"action must be one of {VALID_TRUENAS_ACTIONS}")
@@ -193,6 +200,7 @@ def _default_name(payload: RuleIn) -> str:
         "pihole":    f"Pi-hole: {payload.action}",
         "adguard":   f"AdGuard: {payload.action}",
         "portainer": f"Portainer: {payload.container} {payload.action}",
+        "arcane":    f"Arcane: {payload.container} {payload.action}",
         "truenas":   f"TrueNAS: {payload.container} {payload.action}",
         "unraid":    f"Unraid: {payload.container} {payload.action}",
         "nodered":   f"Node-RED: {payload.command}",
@@ -311,6 +319,8 @@ async def run_rule(rule_id: int, _: bool = Depends(require_auth)):
         ok, msg = await run_adguard_action(action)
     elif t == "portainer":
         ok, msg = await run_portainer_action(action, value)
+    elif t == "arcane":
+        ok, msg = await run_arcane_action(action, value)
     elif t == "truenas":
         ok, msg = await run_truenas_action(action, value)
     elif t == "unraid":

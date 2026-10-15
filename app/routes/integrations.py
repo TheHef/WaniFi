@@ -14,7 +14,7 @@ INTEGRATION_KEYS = (
     "ntfy", "discord", "telegram", "pushover",
     "homeassistant", "proxmox", "sonarr", "radarr",
     "pihole", "adguard",
-    "portainer", "truenas", "unraid",
+    "portainer", "arcane", "truenas", "unraid",
     "nodered", "nzbget", "gotify",
     "speedtest", "npm", "cloudflare", "nut",
 )

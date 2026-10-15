@@ -47,6 +47,7 @@ window.app = function () {
     piholeSettings:      { pihole_url: '', pihole_token_set: false },
     adguardSettings:     { adguard_url: '', adguard_username: '', adguard_password_set: false },
     portainerSettings:   { portainer_url: '', portainer_token_set: false, portainer_env_id: '1' },
+    arcaneSettings:      { arcane_url: '', arcane_token_set: false, arcane_env_id: '0' },
     truenasSettings:     { truenas_url: '', truenas_api_key_set: false },
     unraidSettings:      { unraid_url: '', unraid_api_key_set: false },
     noderedSettings:     { nodered_url: '', nodered_username: '', nodered_password_set: false },
@@ -67,7 +68,7 @@ window.app = function () {
     sabnzbdMsg: '', transmissionMsg: '', delugeMsg: '',
     haMsg: '', proxmoxMsg: '', sonarrMsg: '', radarrMsg: '',
     piholeMsg: '', adguardMsg: '',
-    portainerMsg: '', truenasMsg: '', unraidMsg: '',
+    portainerMsg: '', arcaneMsg: '', truenasMsg: '', unraidMsg: '',
     noderedMsg: '', gotifyMsg: '', nzbgetMsg: '',
     npmMsg: '', cloudflareMsg: '', nutMsg: '', speedtestMsg: '',
     speedtestRunning: false, speedtestError: '',
@@ -79,7 +80,7 @@ window.app = function () {
       ntfy: false, discord: false, telegram: false, pushover: false,
       homeassistant: false, proxmox: false, sonarr: false, radarr: false,
       pihole: false, adguard: false,
-      portainer: false, truenas: false, unraid: false,
+      portainer: false, arcane: false, truenas: false, unraid: false,
       nodered: false, nzbget: false, gotify: false,
       speedtest: false, npm: false, cloudflare: false, nut: false,
     },
@@ -237,6 +238,7 @@ window.app = function () {
       await this.loadPiholeSettings();
       await this.loadAdguardSettings();
       await this.loadPortainerSettings();
+      await this.loadArcaneSettings();
       await this.loadTruenasSettings();
       await this.loadUnraidSettings();
       await this.loadNoderedSettings();
@@ -1071,6 +1073,28 @@ window.app = function () {
       setTimeout(() => this.portainerMsg = '', 5000);
     },
 
+    // ---- Arcane -----------------------------------------------------------
+    async loadArcaneSettings() {
+      this.arcaneSettings = await fetch('/api/arcane-settings').then(r => r.json());
+    },
+    async saveArcaneSettings() {
+      const payload = { arcane_url: this.arcaneSettings.arcane_url, arcane_env_id: this.arcaneSettings.arcane_env_id };
+      const token = this.$refs.arcaneToken?.value;
+      if (token) payload.arcane_token = token;
+      const r = await fetch('/api/arcane-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const d = await r.json().catch(() => ({}));
+      this.arcaneMsg = (r.ok && d.ok) ? '✓ Saved' : '✗ Error';
+      await this.loadArcaneSettings();
+      setTimeout(() => this.arcaneMsg = '', 3000);
+    },
+    async testArcane() {
+      await this.saveArcaneSettings();
+      this.arcaneMsg = 'Testing…';
+      const d = await fetch('/api/test-arcane', { method: 'POST' }).then(r => r.json());
+      this.arcaneMsg = d.ok ? '✓ Connected' : '✗ ' + (d.error || 'Failed');
+      setTimeout(() => this.arcaneMsg = '', 5000);
+    },
+
     // ---- TrueNAS ----------------------------------------------------------
     async loadTruenasSettings() {
       this.truenasSettings = await fetch('/api/truenas-settings').then(r => r.json());
@@ -1405,6 +1429,7 @@ window.app = function () {
         ['pihole',        'pihole',        'disable'],
         ['adguard',       'adguard',       'disable_protection'],
         ['portainer',     'portainer',     'stop_container'],
+        ['arcane',        'arcane',        'stop_container'],
         ['truenas',       'truenas',       'stop_service'],
         ['unraid',        'unraid',        'stop_vm'],
         ['nodered',       'nodered',       'trigger_flow'],
@@ -1434,13 +1459,13 @@ window.app = function () {
           if (['emby', 'jellyfin', 'plex', 'sonarr', 'radarr'].includes(name))                       this.categoryOpen.media = true;
           else if (['qb', 'sabnzbd', 'transmission', 'deluge', 'nzbget'].includes(name))              this.categoryOpen.downloaders = true;
           else if (['ntfy', 'discord', 'telegram', 'pushover', 'gotify'].includes(name))              this.categoryOpen.notifications = true;
-          else if (['homeassistant', 'proxmox', 'portainer', 'truenas', 'unraid', 'nodered'].includes(name)) this.categoryOpen.homelab = true;
+          else if (['homeassistant', 'proxmox', 'portainer', 'arcane', 'truenas', 'unraid', 'nodered'].includes(name)) this.categoryOpen.homelab = true;
           else if (['pihole', 'adguard', 'speedtest'].includes(name))                                 this.categoryOpen.network = true;
           else if (['npm', 'cloudflare', 'nut'].includes(name))                                       this.categoryOpen.homelab = true;
           // Auto-expand the settings section for integrations that have one
           const hasSettings = ['emby','jellyfin','plex','qb','sabnzbd','transmission','deluge',
             'sonarr','radarr','nzbget','discord','telegram','pushover','ntfy','gotify',
-            'homeassistant','proxmox','portainer','truenas','unraid','nodered',
+            'homeassistant','proxmox','portainer','arcane','truenas','unraid','nodered',
             'adguard','pihole','npm','cloudflare','nut'];
           if (hasSettings.includes(name)) this.openIntegration = name;
         }

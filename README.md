@@ -86,6 +86,7 @@ These three are top-level toggles and appear outside any category group.
 | **Home Assistant** | Call webhook · turn on/off entity |
 | **Proxmox** | Start · stop · shutdown · suspend · resume VM or LXC |
 | **Portainer** | Start · stop · restart container |
+| **Arcane** | Start · stop · restart container |
 | **TrueNAS** | Start · stop · restart service |
 | **Unraid** | Start · stop · pause · resume VM |
 | **Node-RED** | Trigger any HTTP-in flow endpoint |

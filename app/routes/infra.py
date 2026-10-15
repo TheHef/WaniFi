@@ -1,4 +1,4 @@
-"""Settings and test endpoints for Portainer, TrueNAS, Unraid, Node-RED, NPM, Cloudflare, NUT, Speedtest."""
+"""Settings and test endpoints for Portainer, Arcane, TrueNAS, Unraid, Node-RED, NPM, Cloudflare, NUT, Speedtest."""
 import asyncio
 import json
 from fastapi import APIRouter, Depends
@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from ..auth import require_auth
 from ..db import get_setting, set_setting
 from ..models import (
+    ArcaneSettingsIn,
     CloudflareSettingsIn,
     NodeRedSettingsIn,
     NpmSettingsIn,
@@ -50,6 +51,42 @@ async def test_portainer(_: bool = Depends(require_auth)):
     client = PortainerClient(url, token, env_id)
     try:
         ok, msg = await client.get_endpoints()
+        return {"ok": ok, "error": None if ok else msg}
+    finally:
+        await client.close()
+
+
+# ---- Arcane -----------------------------------------------------------------
+
+@router.get("/api/arcane-settings")
+async def get_arcane_settings(_: bool = Depends(require_auth)):
+    return {
+        "arcane_url":       get_setting("arcane_url", ""),
+        "arcane_token_set": bool(get_setting("arcane_token")),
+        "arcane_env_id":    get_setting("arcane_env_id", "0"),
+    }
+
+
+@router.post("/api/arcane-settings")
+async def save_arcane_settings(payload: ArcaneSettingsIn, _: bool = Depends(require_auth)):
+    set_setting("arcane_url",    payload.arcane_url.strip())
+    set_setting("arcane_env_id", payload.arcane_env_id.strip() or "0")
+    if payload.arcane_token:
+        set_setting("arcane_token", payload.arcane_token.strip())
+    return {"ok": True}
+
+
+@router.post("/api/test-arcane")
+async def test_arcane(_: bool = Depends(require_auth)):
+    from ..arcane import ArcaneClient
+    url    = get_setting("arcane_url", "")
+    token  = get_setting("arcane_token", "")
+    env_id = get_setting("arcane_env_id", "0")
+    if not (url and token):
+        return {"ok": False, "error": "Arcane not configured"}
+    client = ArcaneClient(url, token, env_id)
+    try:
+        ok, msg = await client.test_connection()
         return {"ok": ok, "error": None if ok else msg}
     finally:
         await client.close()
